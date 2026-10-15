@@ -5,7 +5,7 @@ import { OPEN } from './data/questions.js';
 import { LESSONS } from './data/lessons.js';
 import { getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, notionLink, week, todayPlan } from './private.js';
 import { getToken, setToken, clearToken, looksLikeToken, syncFromNotion } from './notion.js';
-import { buildQuiz, QUIZ_CATEGORIES, FAECHER, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, prepare, shuffle } from './quizgen.js';
+import { buildQuiz, QUIZ_CATEGORIES, FAECHER, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked } from './quizgen.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -192,6 +192,7 @@ function renderToday() {
 
   const totalQ = Object.values(s.quiz).reduce((a, q) => ({ r: a.r + q.r, w: a.w + q.w }), { r: 0, w: 0 });
   const acc = totalQ.r + totalQ.w ? Math.round((totalQ.r / (totalQ.r + totalQ.w)) * 100) : null;
+  const weak = weakTopics(3);
 
   view.innerHTML = `
     ${isIOS && !standalone ? `<div class="card install small">📲 <b>Uygulama olarak yükle:</b> Safari'de alttaki <b>Paylaş</b> düğmesine dokun → <b>Ana Ekrana Ekle</b>. Böylece tam ekran ve çevrimdışı çalışır.</div>` : ''}
@@ -219,6 +220,11 @@ function renderToday() {
     <div class="list">
       ${tasks.map((t) => `<a class="task" href="${t.href}"><span class="check ${t.done ? 'done' : ''}">${t.done ? '✓' : ''}</span><span class="grow">${t.label}</span><span class="chev">›</span></a>`).join('')}
     </div>
+
+    ${weak.length ? `<div class="section-title">Zayıf konular</div>
+    <div class="list">
+      ${weak.map((t) => `<a href="#/test?kat=${encodeURIComponent(t.topic)}"><span class="grow">${esc(topicLabel(t.topic))}<div class="muted small">%${Math.round(t.acc * 100)} doğru · ${t.total} cevap</div></span><span class="mini">Test et</span></a>`).join('')}
+    </div>` : ''}
 
     ${LESSONS.length ? `<a class="card row" href="#/dersler" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">Notion'dan</div><h2>Ders notları</h2><div class="muted small">${LESSONS.length} ders · özet, test, terimler</div></span><span class="chev">›</span></a>` : ''}
 
@@ -413,6 +419,8 @@ function renderLessonNote([id]) {
 
 // ───────────────────────── Quiz ─────────────────────────
 let quiz = null;
+
+const topicLabel = (t) => (t.startsWith('Ders: ') ? t.slice(6) + ' (ders)' : t === 'Gemischt' ? 'Karışık' : t);
 let quizCat = 'Gemischt';
 
 function renderQuizStart(_, params = new URLSearchParams()) {
@@ -435,7 +443,7 @@ function renderQuizStart(_, params = new URLSearchParams()) {
       </div>
       <button class="btn block" id="startQuiz" style="margin-top:16px">${store.get().settings.quizGoal} soruluk testi başlat</button>
     </div>
-    <p class="muted small" style="padding:0 4px">Sorular Almanca, açıklamalar Türkçe. Kas/kemik/eklem soruları anatomi verilerinden her seferinde yeniden üretilir.${weak ? ` Şu ana kadar <b>${weak}</b> soruda daha çok hata yaptın.` : ''}</p>
+    <p class="muted small" style="padding:0 4px">Sorular Almanca, açıklamalar Türkçe. Kas/kemik/eklem soruları anatomi verilerinden her seferinde yeniden üretilir; yanlış yaptıkların ve uzun süredir görmediklerin daha sık gelir. Kas seviyesi: <b>${muscleLevel()}/3</b>${romUnlocked() ? ' · ROM soruları açık' : ''}.${weak ? ` Şu ana kadar <b>${weak}</b> soruda daha çok hata yaptın.` : ''}</p>
   `;
   $$('[data-cat]').forEach((b) => b.addEventListener('click', () => { quizCat = b.dataset.cat; renderQuizStart(); }));
   $('#startQuiz').addEventListener('click', () => {

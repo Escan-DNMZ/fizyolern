@@ -110,6 +110,7 @@ export function dueCount(cards) {
 export function recordQuiz(qid, correct) {
   const s = state.quiz[qid] || { r: 0, w: 0 };
   if (correct) s.r++; else s.w++;
+  s.st = correct ? (s.st || 0) + 1 : 0; // richtige Antworten in Folge
   s.last = today();
   state.quiz[qid] = s;
   const d = day();
