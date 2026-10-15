@@ -88,10 +88,10 @@ export function isDue(cardId) {
 export function isNew(cardId) { return !state.srs[cardId]; }
 
 // Karten für eine Sitzung: fällige zuerst, dann neue bis zum Tageslimit
-export function buildSession(cards) {
+export function buildSession(cards, { noNewLimit = false } = {}) {
   const due = cards.filter((c) => isDue(c.id)).sort((a, b) => state.srs[a.id].due.localeCompare(state.srs[b.id].due));
   const introducedToday = Object.keys(state.srs).filter((id) => state.srs[id].first === today()).length;
-  const newLimit = Math.max(0, state.settings.newPerDay - introducedToday);
+  const newLimit = noNewLimit ? Infinity : Math.max(0, state.settings.newPerDay - introducedToday);
   const fresh = cards.filter((c) => isNew(c.id)).slice(0, newLimit);
   return [...due, ...fresh];
 }

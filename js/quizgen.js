@@ -2,6 +2,7 @@
 import { MUSCLES, BONES, JOINTS } from './data/anatomy.js';
 import { VOCAB } from './data/vocab.js';
 import { MCQ } from './data/questions.js';
+import { LESSONS } from './data/lessons.js';
 
 export function shuffle(arr) {
   const a = [...arr];
@@ -66,7 +67,12 @@ export function vocabQuestion(v, pool = VOCAB) {
     : mk(`g:vtr:${v.id}`, 'Vokabeln', `Wie sagt man auf Deutsch: „${v.tr}“?`, v.de, others.map((o) => o.de), v.ex || `${v.tr} = ${v.de}`);
 }
 
-export const QUIZ_CATEGORIES = ['Gemischt', 'Muskeln', 'Knochen', 'Gelenke', 'Anatomie', 'Neuro', 'Klinik', 'Vokabeln'];
+// Fragen aus den Notion-Ders-Notları
+export const lessonMcq = (l) => l.mcq.map((q, i) => ({ id: `L:${l.id}:${i}`, cat: l.fach, lesson: l.id, q: q.q, o: q.o, a: 0, x: q.x }));
+export const ALL_LESSON_MCQ = () => LESSONS.flatMap(lessonMcq);
+export const FAECHER = [...new Set(LESSONS.map((l) => l.fach))];
+
+export const QUIZ_CATEGORIES = ['Gemischt', ...FAECHER.map((f) => 'Ders: ' + f), 'Muskeln', 'Knochen', 'Gelenke', 'Anatomie', 'Neuro', 'Klinik', 'Vokabeln'];
 
 export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = []) {
   const vocabPool = [...VOCAB, ...extraVocab];
@@ -80,10 +86,16 @@ export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = []) {
     Vokabeln: () => pick(vocabPool, n * 2).map((v) => vocabQuestion(v, vocabPool)).filter(Boolean),
   };
   let qs;
-  if (category === 'Gemischt') {
-    // Ausgewogene Mischung: handgeschriebene Fragen + generierte
+  if (category.startsWith('Ders: ') || category.startsWith('Lektion: ')) {
+    // Ein Fach („Ders: Hygiene“) oder eine einzelne Lektion („Lektion: hygiene-1“)
+    const keys = category.split(': ')[1].split(',');
+    qs = ALL_LESSON_MCQ().filter((q) => keys.includes(q.cat) || keys.includes(q.lesson));
+  } else if (category === 'Gemischt') {
+    // Ausgewogene Mischung: Unterrichtsfragen aus Notion + handgeschriebene + generierte
+    const lessonQs = ALL_LESSON_MCQ();
     qs = [
-      ...pick(MCQ, Math.ceil(n * 0.4)),
+      ...pick(lessonQs, lessonQs.length ? Math.ceil(n * 0.4) : 0),
+      ...pick(MCQ, Math.ceil(n * (lessonQs.length ? 0.2 : 0.4))),
       ...pick(pools.Muskeln(), Math.ceil(n * 0.3)),
       ...pick([...pools.Knochen(), ...JOINTS.flatMap(jointQuestions)], Math.ceil(n * 0.15)),
       ...pick(pools.Vokabeln(), Math.ceil(n * 0.15)),

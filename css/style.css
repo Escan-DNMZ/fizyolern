@@ -95,7 +95,7 @@ main#view {
 .la { font-style: italic; color: var(--muted); }
 .row { display: flex; gap: 8px; align-items: center; }
 .row.wrap { flex-wrap: wrap; }
-.spacer { flex: 1; }
+.spacer, .row .grow { flex: 1; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
 .btn {

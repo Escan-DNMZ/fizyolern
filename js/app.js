@@ -2,7 +2,9 @@ import * as store from './store.js';
 import { MUSCLES, BONES, JOINTS, ALL_STRUCTURES, findStructure } from './data/anatomy.js';
 import { VOCAB, VOCAB_CATEGORIES } from './data/vocab.js';
 import { OPEN } from './data/questions.js';
-import { buildQuiz, QUIZ_CATEGORIES, muscleQuestions, boneQuestions, jointQuestions, prepare, shuffle } from './quizgen.js';
+import { LESSONS } from './data/lessons.js';
+import { getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, notionLink, week, todayPlan } from './private.js';
+import { buildQuiz, QUIZ_CATEGORIES, FAECHER, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, prepare, shuffle } from './quizgen.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -20,6 +22,13 @@ function toast(msg) {
 
 const KIND_LABEL = { muscle: 'Kas', bone: 'Kemik', joint: 'Eklem' };
 const allVocab = () => [...VOCAB, ...store.get().customVocab];
+
+// Offene Fragen: zuerst die aus den Notion-Ders-Notları, dann die allgemeinen
+const ALL_OPEN = [
+  ...LESSONS.flatMap((l) => l.open.map((q, i) => ({ id: `LO:${l.id}:${i}`, cat: l.fach, lesson: l.id, q: q.q, a: q.a, kw: q.kw }))),
+  ...OPEN,
+];
+const lessonVocab = (filter) => LESSONS.filter(filter).flatMap((l) => l.vocab.map((v) => ({ ...v, id: 'lv:' + v.de, cat: l.fach })));
 
 // ───────────────────────── Tagesauswahl ─────────────────────────
 function hashDate(s) { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; }
@@ -51,6 +60,21 @@ function deckCards(deck) {
       back: `<div class="big">${esc(rev ? v.de : v.tr)}</div>${v.ex ? `<div class="sub">„${esc(v.ex)}“</div>` : ''}`,
     }));
   }
+  if (deck === 'fehler') {
+    return fehlerList().map((f) => ({
+      id: f.id, tag: '✗ ' + f.fach, front: f.q,
+      back: `<div class="detail" style="font-size:15px"><b>${esc(f.a)}</b><br><br><span class="muted">🇹🇷 ${esc(f.tr)}</span></div>`,
+    }));
+  }
+  if (deck.startsWith('ders:')) {
+    const fach = deck.slice(5);
+    const seen = new Set();
+    return lessonVocab((l) => l.fach === fach).filter((v) => !seen.has(v.id) && seen.add(v.id)).map((v) => ({
+      id: v.id, tag: fach,
+      front: rev ? v.tr : v.de,
+      back: `<div class="big">${esc(rev ? v.de : v.tr)}</div>${v.ex ? `<div class="sub">„${esc(v.ex)}“</div>` : ''}`,
+    }));
+  }
   if (deck === 'muscles') {
     return MUSCLES.map((m) => ({
       id: 'm:' + m.id, tag: 'Kas', front: m.la, frontSub: m.de,
@@ -73,6 +97,8 @@ function deckCards(deck) {
 }
 
 const DECKS = () => [
+  ...(fehlerList().length ? [{ id: 'fehler', name: '✗ Hatalarım', sub: 'Notion testlerinde yanlış yaptıkların (öncelikli)' }] : []),
+  ...FAECHER.map((f) => ({ id: 'ders:' + f, name: 'Ders: ' + f, sub: 'Ders notlarındaki terimler' })),
   { id: 'vocab', name: 'Tüm kelimeler', sub: `${allVocab().length} kelime` },
   ...VOCAB_CATEGORIES.map((c) => ({ id: 'vocab:' + c, name: c, sub: 'Kelimeler' })),
   ...(store.get().customVocab.length ? [{ id: 'vocab:Eigene', name: 'Kendi kelimelerim', sub: `${store.get().customVocab.length} kelime` }] : []),
@@ -95,6 +121,8 @@ const routes = {
   liste: { title: 'Kelime Listesi', tab: 'kartlar', render: renderWordList, back: '#/kartlar' },
   '3d': { title: '3D Anatomi', tab: '3d', render: render3D },
   ders: { title: 'Ders', tab: 'bugun', render: renderLesson, back: 'history' },
+  dersler: { title: 'Ders Notları', tab: 'bugun', render: renderLessonList, back: '#/bugun' },
+  not: { title: 'Ders Notu', tab: 'bugun', render: renderLessonNote, back: '#/dersler' },
   ayarlar: { title: 'Ayarlar', tab: null, render: renderSettings, back: '#/bugun' },
 };
 
@@ -133,7 +161,13 @@ function renderToday() {
   const vocabCards = deckCards('vocab');
   const due = store.dueCount(vocabCards) + ['muscles', 'bones', 'joints'].reduce((n, k) => n + store.dueCount(deckCards(k)), 0);
 
+  const plan = todayPlan();
+  const fehlerCards = deckCards('fehler');
+  const fehlerOpen = fehlerCards.filter((c) => store.isNew(c.id) || store.isDue(c.id)).length;
   const tasks = [
+    ...(fehlerOpen || d.fehler ? [{ done: !fehlerOpen, label: `✗ Hatalarımı tekrar et <span class="muted">(${fehlerOpen} kart)</span>`, href: '#/oturum/fehler' }] : []),
+    ...(plan && plan.test.length && FAECHER.some((f) => plan.test.includes(f))
+      ? [{ done: !!d.morning, label: `Sabah testi: <b>${esc(plan.test.join(' + '))}</b>`, href: `#/test?kat=${encodeURIComponent('Ders: ' + plan.test.join(','))}` }] : []),
     { done: d.lesson, label: `Günün kası: <b>${esc(m.la)}</b>`, href: `#/ders/${m.id}` },
     { done: d.lesson2, label: `Günün ${b.kind === 'bone' ? 'kemiği' : 'eklemi'}: <b>${esc(b.de)}</b>`, href: `#/ders/${b.id}` },
     { done: d.cards >= s.settings.cardsGoal, label: `${s.settings.cardsGoal} kart tekrar et <span class="muted">(${d.cards}/${s.settings.cardsGoal})</span>`, href: '#/oturum/vocab' },
@@ -169,9 +203,17 @@ function renderToday() {
       </div>
     </div>
 
+    ${plan ? `<div class="card">
+      <div class="eyebrow">Bugünkü dersler · KW ${week().kw}</div>
+      ${plan.kurse.length ? plan.kurse.map((k) => `<div class="small">📚 ${esc(k)}</div>`).join('') : '<div class="small muted">Bugün ders yok.</div>'}
+      ${plan.note ? `<p class="small muted" style="margin-bottom:0">📝 ${esc(plan.note)}</p>` : ''}
+    </div>` : ''}
+
     <div class="list">
       ${tasks.map((t) => `<a class="task" href="${t.href}"><span class="check ${t.done ? 'done' : ''}">${t.done ? '✓' : ''}</span><span class="grow">${t.label}</span><span class="chev">›</span></a>`).join('')}
     </div>
+
+    ${LESSONS.length ? `<a class="card row" href="#/dersler" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">Notion'dan</div><h2>Ders notları</h2><div class="muted small">${LESSONS.length} ders · özet, test, terimler</div></span><span class="chev">›</span></a>` : ''}
 
     <div class="card">
       <div class="eyebrow">Günün kası</div>
@@ -207,7 +249,7 @@ function renderToday() {
 
 function nextOpenQuestion() {
   const done = store.get().open;
-  return OPEN.find((q) => !done[q.id]) || [...OPEN].sort((a, b) => (done[a.id].score - done[b.id].score) || done[a.id].last.localeCompare(done[b.id].last))[0];
+  return ALL_OPEN.find((q) => !done[q.id]) || [...ALL_OPEN].sort((a, b) => (done[a.id].score - done[b.id].score) || done[a.id].last.localeCompare(done[b.id].last))[0];
 }
 
 // ───────────────────────── Lektion (Muskel/Knochen/Gelenk) ─────────────────────────
@@ -316,11 +358,65 @@ function renderLesson([id]) {
   });
 }
 
+// ───────────────────────── Ders-Notları (aus Notion) ─────────────────────────
+function lessonProgress(l) {
+  const st = store.get();
+  const qs = l.mcq.map((_, i) => st.quiz[`L:${l.id}:${i}`]).filter(Boolean);
+  const right = qs.filter((q) => q.r > 0 && q.r >= q.w).length;
+  return { seen: qs.length, right, total: l.mcq.length };
+}
+
+function renderLessonList() {
+  const byFach = {};
+  LESSONS.forEach((l) => (byFach[l.fach] = byFach[l.fach] || []).push(l));
+  view.innerHTML = `
+    <p class="muted small" style="padding:0 4px">Notion'daki ders notlarından hazırlandı: kısa özet, test, açık uçlu sorular ve terimler.</p>
+    ${Object.entries(byFach).map(([fach, ls]) => `
+      <div class="section-title" lang="de">${esc(fach)}</div>
+      <div class="list">${ls.map((l) => {
+        const p = lessonProgress(l);
+        const badge = !p.seen ? '<span class="badge">yeni</span>' : `<span class="badge ${p.right / p.total >= 0.8 ? 'good' : 'warn'}">${p.right}/${p.total}</span>`;
+        return `<a href="#/not/${encodeURIComponent(l.id)}"><span class="grow small" lang="de">${esc(l.title)}</span>${badge}<span class="chev">›</span></a>`;
+      }).join('')}</div>`).join('') || '<p class="empty">Henüz ders notu yok.</p>'}
+  `;
+}
+
+function renderLessonNote([id]) {
+  const l = LESSONS.find((x) => x.id === id);
+  if (!l) { view.innerHTML = '<p class="empty">Bulunamadı.</p>'; return; }
+  $('#title').textContent = l.fach;
+  const opens = ALL_OPEN.filter((q) => q.lesson === l.id);
+  view.innerHTML = `
+    <div class="card">
+      <div class="eyebrow" lang="de">${esc(l.fach)}</div>
+      <h2 lang="de">${esc(l.title)}</h2>
+      <div class="grid2" style="margin-top:12px">
+        <a class="btn" href="#/test?kat=${encodeURIComponent('Lektion: ' + l.id)}">Test (${l.mcq.length} soru)</a>
+        ${notionLink(l.id) ? `<a class="btn ghost" href="${esc(notionLink(l.id))}" target="_blank" rel="noopener">Notion'da aç</a>` : ''}
+      </div>
+    </div>
+    <div class="section-title">Özet (Kernaussagen)</div>
+    <div class="list">${l.kern.map((k) => `<div style="display:block"><div lang="de">${esc(k.de)}</div><div class="muted small">🇹🇷 ${esc(k.tr)}</div></div>`).join('')}</div>
+    ${opens.length ? `<div class="section-title">Açık uçlu sorular</div><div class="list">${opens.map((q) => `<a href="#/soru/${encodeURIComponent(q.id)}"><span class="grow small" lang="de">${esc(q.q)}</span><span class="chev">›</span></a>`).join('')}</div>` : ''}
+    <div class="section-title">Terimler</div>
+    <div class="list">${l.vocab.map((v) => `<div><span class="grow"><b lang="de">${esc(v.de)}</b><div class="small">${esc(v.tr)}</div></span></div>`).join('')}</div>
+    <a class="btn ghost block" href="#/oturum/${encodeURIComponent('ders:' + l.fach)}">Terimleri kartlarla çalış</a>
+  `;
+}
+
 // ───────────────────────── Quiz ─────────────────────────
 let quiz = null;
 let quizCat = 'Gemischt';
 
-function renderQuizStart() {
+function renderQuizStart(_, params = new URLSearchParams()) {
+  const kat = params.get('kat');
+  if (kat) {
+    // Direktstart, z. B. Morgentest aus dem Tagesplan oder Test zu einer Lektion
+    quizCat = kat;
+    history.replaceState(null, '', '#/test');
+    quiz = { qs: buildQuiz(kat, store.get().settings.quizGoal, store.get().customVocab), i: 0, right: 0, wrong: [], finished: false, cat: kat };
+    if (!quiz.qs.length) { quiz = null; toast('Bu kategori için soru yok'); } else return renderQuizQuestion();
+  }
   if (quiz && !quiz.finished) return renderQuizQuestion();
   const stats = store.get().quiz;
   const weak = Object.entries(stats).filter(([, v]) => v.w > v.r).length;
@@ -328,7 +424,7 @@ function renderQuizStart() {
     <div class="card">
       <h2>Kategori seç</h2>
       <div class="chips" style="margin-top:10px">
-        ${QUIZ_CATEGORIES.map((c) => `<button class="chip ${c === quizCat ? 'on' : ''}" data-cat="${c}">${c === 'Gemischt' ? 'Karışık' : c}</button>`).join('')}
+        ${[...QUIZ_CATEGORIES, ...(QUIZ_CATEGORIES.includes(quizCat) ? [] : [quizCat])].map((c) => `<button class="chip ${c === quizCat ? 'on' : ''}" data-cat="${esc(c)}">${c === 'Gemischt' ? 'Karışık' : esc(c)}</button>`).join('')}
       </div>
       <button class="btn block" id="startQuiz" style="margin-top:16px">${store.get().settings.quizGoal} soruluk testi başlat</button>
     </div>
@@ -337,7 +433,7 @@ function renderQuizStart() {
   $$('[data-cat]').forEach((b) => b.addEventListener('click', () => { quizCat = b.dataset.cat; renderQuizStart(); }));
   $('#startQuiz').addEventListener('click', () => {
     const qs = buildQuiz(quizCat, store.get().settings.quizGoal, store.get().customVocab);
-    quiz = { qs, i: 0, right: 0, wrong: [], answered: false, finished: false };
+    quiz = { qs, i: 0, right: 0, wrong: [], answered: false, finished: false, cat: quizCat };
     renderQuizQuestion();
   });
 }
@@ -369,6 +465,8 @@ function renderQuizQuestion() {
 
 function renderQuizEnd() {
   quiz.finished = true;
+  const plan = todayPlan();
+  if (plan && plan.test.length && quiz.cat === 'Ders: ' + plan.test.join(',') && quiz.qs.length) { store.day().morning = true; store.save(); }
   const n = quiz.qs.length;
   const pct = n ? Math.round((quiz.right / n) * 100) : 0;
   view.innerHTML = `
@@ -395,13 +493,13 @@ const drafts = {};
 
 function renderOpenList() {
   const st = store.get().open;
-  const cats = [...new Set(OPEN.map((q) => q.cat))];
+  const cats = [...new Set(ALL_OPEN.map((q) => q.cat))];
   view.innerHTML = `
     <p class="muted small" style="padding:0 4px">Cevabını Almanca yaz (sınav pratiği!). Uygulama anahtar kavramları kontrol eder, sonra örnek cevabı gösterir ve kendini değerlendirirsin.</p>
     ${cats.map((c) => `
       <div class="section-title" lang="de">${esc(c)}</div>
       <div class="list">
-        ${OPEN.filter((q) => q.cat === c).map((q) => {
+        ${ALL_OPEN.filter((q) => q.cat === c).map((q) => {
           const r = st[q.id];
           const badge = !r ? '<span class="badge">yeni</span>' : r.score >= 0.75 ? '<span class="badge good">iyi</span>' : r.score >= 0.4 ? '<span class="badge warn">kısmen</span>' : '<span class="badge bad">tekrar</span>';
           return `<a href="#/soru/${q.id}"><span class="grow small">${esc(q.q)}</span>${badge}</a>`;
@@ -411,7 +509,7 @@ function renderOpenList() {
 }
 
 function renderOpenQuestion([id]) {
-  const q = OPEN.find((x) => x.id === id) || OPEN[0];
+  const q = ALL_OPEN.find((x) => x.id === id) || ALL_OPEN[0];
   view.innerHTML = `
     <div class="card">
       <span class="badge">${esc(q.cat)}</span>
@@ -495,7 +593,8 @@ let session = null;
 function renderCardSession([deckId]) {
   if (!session || session.deck !== deckId) {
     const cards = deckCards(deckId);
-    session = { deck: deckId, queue: store.buildSession(cards), done: 0, flipped: false };
+    // Fehlerkarten immer alle zeigen (kein Tageslimit für neue Karten)
+    session = { deck: deckId, queue: store.buildSession(cards, { noNewLimit: deckId === 'fehler' }), done: 0, flipped: false };
   }
   const deck = DECKS().find((d) => d.id === deckId);
   $('#title').textContent = deck ? deck.name : 'Kartlar';
@@ -685,6 +784,13 @@ function renderSettings() {
       <button class="btn ghost" id="exportBtn">Yedeği indir</button>
       <label class="btn ghost">Yedeği yükle<input type="file" id="importFile" accept="application/json" hidden></label>
     </div>
+    <div class="section-title">Özel veriler</div>
+    <p class="muted small" style="padding:0 4px">Haftalık program, hata listen ve Notion linklerin herkese açık uygulamada yok. <b>fizyolern-ozel.json</b> dosyasını buradan yükle; sadece bu telefonda saklanır.</p>
+    <div class="card small" style="margin-top:0">${getPrivate() ? `✅ Yüklü: KW ${esc(week()?.kw ?? '–')} · ${fehlerList().length} hata kartı` : '⚠️ Henüz yüklenmedi'}</div>
+    <div class="grid2">
+      <label class="btn ghost">Özel verileri yükle<input type="file" id="privFile" accept="application/json,.json" hidden></label>
+      <button class="btn plain" id="privClear" ${getPrivate() ? '' : 'disabled'}>Kaldır</button>
+    </div>
     <div class="section-title">Diğer</div>
     <button class="btn danger block" id="resetBtn">Tüm ilerlemeyi sıfırla</button>
     <p class="muted small" style="margin-top:24px;padding:0 4px">3D kemikler: <b>BodyParts3D</b>, © The Database Center for Life Science (DBCLS), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. 3D kas modelleri <b>Sinew</b> (sinew.pin.games) oyunundan. Kafatası, boyun omurları ve diğer kaslar şematik çizimdir. İçerik ders kitapları (ör. Prometheus, Schünke) ile kontrol edilmelidir.</p>
@@ -711,6 +817,12 @@ function renderSettings() {
       toast('Yedek yüklendi ✓');
     } catch { toast('Geçersiz yedek dosyası'); }
   });
+  $('#privFile').addEventListener('change', async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    try { setPrivate(JSON.parse(await f.text())); toast('Özel veriler yüklendi ✓'); renderSettings(); } catch { toast('Bu dosya özel veri dosyası değil'); }
+  });
+  $('#privClear').addEventListener('click', () => { clearPrivate(); toast('Kaldırıldı'); renderSettings(); });
   $('#resetBtn').addEventListener('click', () => {
     if (confirm('Tüm ilerleme silinsin mi? Bu geri alınamaz.')) { store.reset(); toast('Sıfırlandı'); location.hash = '#/bugun'; }
   });
@@ -720,6 +832,7 @@ $('#settingsBtn').addEventListener('click', () => (location.hash = '#/ayarlar'))
 
 // ───────────────────────── Start ─────────────────────────
 navigate();
+loadLocalDevFile().then((loaded) => { if (loaded && current === 'bugun') navigate(); });
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});

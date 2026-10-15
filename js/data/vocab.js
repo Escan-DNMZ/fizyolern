@@ -1,3 +1,5 @@
+import { GRUNDWORTSCHATZ, GW_CATEGORIES } from './grundwortschatz.js';
+
 // Fachvokabular Physiotherapie: [Deutsch, Türkçe, Beispielsatz]
 const RAW = {
   'Lagebezeichnungen': [
@@ -138,9 +140,11 @@ const RAW = {
   ],
 };
 
-export const VOCAB = Object.entries(RAW).flatMap(([cat, list]) =>
+const BASE = Object.entries(RAW).flatMap(([cat, list]) =>
   // ID = deutscher Begriff, damit der Lernfortschritt beim Umsortieren erhalten bleibt
   list.map(([de, tr, ex]) => ({ id: 'v:' + de, de, tr, ex, cat })),
 );
 
-export const VOCAB_CATEGORIES = Object.keys(RAW);
+// Notion-Grundwortschatz zuerst, danach die allgemeinen Physio-Begriffe
+export const VOCAB = [...GRUNDWORTSCHATZ, ...BASE];
+export const VOCAB_CATEGORIES = [...GW_CATEGORIES, ...Object.keys(RAW)];
