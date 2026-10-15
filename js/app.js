@@ -5,6 +5,7 @@ import { OPEN } from './data/questions.js';
 import { LESSONS, FAECHER, refreshLessons } from './lessons.js';
 import { getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, notionLink, week, todayPlan } from './private.js';
 import { getToken, setToken, clearToken, looksLikeToken, syncFromNotion } from './notion.js';
+import { renderReport } from './report.js';
 import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked } from './quizgen.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -131,6 +132,7 @@ const routes = {
   dersler: { title: 'Ders Notları', tab: 'bugun', render: renderLessonList, back: '#/bugun' },
   not: { title: 'Ders Notu', tab: 'bugun', render: renderLessonNote, back: '#/dersler' },
   ayarlar: { title: 'Ayarlar', tab: null, render: renderSettings, back: '#/bugun' },
+  rapor: { title: 'Durum Raporu', tab: 'bugun', render: () => renderReport(view, toast), back: '#/bugun' },
 };
 
 function navigate() {
@@ -250,6 +252,7 @@ function renderToday() {
       </div>
     </div>
 
+    <a class="card row" href="#/rapor" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">Claude ile çalış</div><h2>Durum raporu</h2><div class="muted small">Bugünkü durumunu Claude'a gönderilecek bir mesaja çevir</div></span><span class="chev">›</span></a>
 
     <div class="section-title">İstatistik</div>
     <div class="grid2">
