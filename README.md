@@ -33,6 +33,24 @@ Uygulamanın **HTTPS** ile yayınlanması gerekir (çevrimdışı çalışma iç
 
 İlerleme sadece telefonda saklanır; Ayarlar → "Yedeği indir" ile yedek alabilirsin.
 
+## Notion bağlantısı (kişisel program, hata listesi, Grundwortschatz)
+Kişisel veriler GitHub'a hiç gitmez: uygulama bunları telefondan **doğrudan Notion'dan** okur.
+
+1. Bilgisayarda https://www.notion.so/profile/integrations → **New integration**
+   - Type: **Internal** · Name: `FizyoLern` · Workspace: kendi çalışma alanın
+   - **Capabilities:** sadece **Read content** açık kalsın (Update/Insert content ve user information kapalı)
+   - **Internal Integration Secret** (`ntn_…`) değerini kopyala — kimseyle paylaşma, sohbete yapıştırma.
+2. Notion'da fizyoterapi **Dashboard** sayfanı aç → sağ üstte **•••** → **Connections** → `FizyoLern`'i ekle.
+   (Sadece bu sayfa ve alt sayfaları paylaşılır: Haftalık Plan, Dersler, Grundwortschatz.)
+3. iPhone'da uygulama → ⚙️ Ayarlar → **Notion bağlantısı** → anahtarı yapıştır → **Bağlan ve güncelle**.
+
+Uygulama açıldığında en fazla 3 saatte bir kendini günceller; "Şimdi güncelle" ile elle de yapılabilir.
+Anahtar sadece o telefonun tarayıcı deposunda durur ve sadece `api.notion.com`'a gönderilir (sayfadaki Content-Security-Policy başka bir sunucuya bağlantıyı engeller).
+Telefon kaybolursa veya şüphelenirsen: Notion → integrations → `FizyoLern` → **Refresh/Delete secret**; eski anahtar anında geçersiz olur.
+
+Okunan yapı: "Haftalık Plan" sayfasındaki `KW …` başlığı + tablo (Gün · Ders 1 · Ders 2 · Tekrar ("Sabah testi: …") · Ödev/Not) ve
+ders başlıkları (heading 3) altındaki `✗ … (tekrar et)` paragraflarını izleyen `✗` / `½` maddeleri (kalın yazılan kısımlar kartta boşluk olur).
+
 ## Notlar
 - 3D kemikler: BodyParts3D, © The Database Center for Life Science (DBCLS), CC BY 4.0. 3D kas modelleri Sinew (sinew.pin.games) oyunundan (`models/`). Kafatası, boyun omurları ve Sinew'de olmayan kaslar şematiktir.
 - İçerik ders kitaplarıyla (Prometheus, Schünke vb.) kontrol edilmelidir.

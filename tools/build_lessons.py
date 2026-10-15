@@ -42,9 +42,14 @@ for l in lessons:
 import re
 PRIV = os.path.join(os.path.dirname(__file__), '..', 'private')
 TEACHERS = json.load(open(os.path.join(PRIV, 'teachers.json'), encoding='utf-8')) if os.path.exists(os.path.join(PRIV, 'teachers.json')) else []
+import hashlib
 links = {}
 for l in lessons:
-    links[l['id']] = l.pop('notionUrl', None)
+    url = l.pop('notionUrl', None)
+    links[l['id']] = url
+    # Nur ein Hash der Seiten-ID ist öffentlich – damit findet die App beim Notion-Sync den passenden Link
+    if url:
+        l['nh'] = hashlib.sha256(url.rstrip('/').split('/')[-1].split('?')[0].replace('-', '').encode()).hexdigest()[:16]
 text = json.dumps(lessons, ensure_ascii=False)
 text = re.sub(r'Bei (Herrn|Frau) [A-ZÄÖÜ][\wäöüß-]+ gilt', 'Im Unterricht gilt', text)
 for t in TEACHERS:

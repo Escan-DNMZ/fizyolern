@@ -272,7 +272,8 @@ export const LESSONS = [
     "tr": "kırık",
     "ex": "Eine distale Radiusfraktur liegt nah am Handgelenk."
    }
-  ]
+  ],
+  "nh": "d98dcf1f7b20ebfb"
  },
  {
   "id": "anatomie-i-1",
@@ -568,7 +569,8 @@ export const LESSONS = [
     "tr": "elle yoklamak, palpe etmek",
     "ex": "Die SIAS kann man gut tasten."
    }
-  ]
+  ],
+  "nh": "21f9b8d93b67dad8"
  },
  {
   "id": "physiologie-1",
@@ -863,7 +865,8 @@ export const LESSONS = [
     "tr": "doku",
     "ex": "Ein Organ besteht aus verschiedenen Geweben."
    }
-  ]
+  ],
+  "nh": "5ace076e7607066e"
  },
  {
   "id": "physiologie-2",
@@ -1158,7 +1161,8 @@ export const LESSONS = [
     "tr": "prokaryot (çekirdeksiz) / ökaryot (çekirdekli)",
     "ex": "Bakterien sind prokaryotisch."
    }
-  ]
+  ],
+  "nh": "0ff4eaff217e68eb"
  },
  {
   "id": "physiologie-3",
@@ -1465,7 +1469,8 @@ export const LESSONS = [
     "tr": "uyarıcı / baskılayıcı",
     "ex": "GABA wirkt hemmend."
    }
-  ]
+  ],
+  "nh": "e923ccc0675ccb3d"
  },
  {
   "id": "zelle-organellen",
@@ -1748,7 +1753,8 @@ export const LESSONS = [
     "tr": "kesecik, vezikül",
     "ex": ""
    }
-  ]
+  ],
+  "nh": "f24647d0a32a6607"
  },
  {
   "id": "pt-grundlagen-1",
@@ -2053,7 +2059,8 @@ export const LESSONS = [
     "tr": "balgam birikmesi",
     "ex": "Atemübungen vermeiden einen Sekretstau."
    }
-  ]
+  ],
+  "nh": "b4541d5234019444"
  },
  {
   "id": "pt-befund-1",
@@ -2360,7 +2367,8 @@ export const LESSONS = [
     "tr": "idrara çıkma / dışkılama",
     "ex": "Eine Veränderung der Miktion ist eine Red Flag."
    }
-  ]
+  ],
+  "nh": "1cff8e95df3151ce"
  },
  {
   "id": "pt-befund-2",
@@ -2651,7 +2659,8 @@ export const LESSONS = [
     "tr": "total kalça protezi",
     "ex": "Eine Coxarthrose endet häufig in einer H-TEP."
    }
-  ]
+  ],
+  "nh": "ffedaa1669191e0e"
  },
  {
   "id": "oc-1",
@@ -2938,7 +2947,8 @@ export const LESSONS = [
     "tr": "kırılmaya yatkın",
     "ex": "Poröse Knochen sind frakturanfällig."
    }
-  ]
+  ],
+  "nh": "553dddb0e802187b"
  },
  {
   "id": "oc-2",
@@ -3218,7 +3228,8 @@ export const LESSONS = [
     "tr": "değerlendirmek, tahmin etmek",
     "ex": "Ich muss die Belastbarkeit des Patienten richtig einschätzen."
    }
-  ]
+  ],
+  "nh": "7ac5b57228b4d828"
  },
  {
   "id": "trainingslehre-1",
@@ -3497,7 +3508,8 @@ export const LESSONS = [
     "tr": "kanıta dayalı",
     "ex": ""
    }
-  ]
+  ],
+  "nh": "bf801e573a108f78"
  },
  {
   "id": "trainingslehre-2",
@@ -3782,7 +3794,8 @@ export const LESSONS = [
     "tr": "kılcal damar yoğunluğu",
     "ex": "Bei Bettruhe nimmt die Kapillardichte ab."
    }
-  ]
+  ],
+  "nh": "cf7a980228063641"
  },
  {
   "id": "trainingslehre-3",
@@ -4086,7 +4099,8 @@ export const LESSONS = [
     "tr": "geçerlik",
     "ex": ""
    }
-  ]
+  ],
+  "nh": "8130d5dbade808df"
  },
  {
   "id": "kmt-1",
@@ -4390,7 +4404,8 @@ export const LESSONS = [
     "tr": "atlamak, dışarıda bırakmak",
     "ex": "Die Warze wird ausgelassen."
    }
-  ]
+  ],
+  "nh": "d55351869e4be130"
  },
  {
   "id": "kmt-2",
@@ -4695,7 +4710,8 @@ export const LESSONS = [
     "tr": "damarsız",
     "ex": "Die Oberhaut ist gefäßlos."
    }
-  ]
+  ],
+  "nh": "b3ddcc68fb3415d2"
  },
  {
   "id": "hygiene-1",
@@ -4999,7 +5015,8 @@ export const LESSONS = [
     "tr": "bulaşıcı",
     "ex": "Man ist oft schon ansteckend, bevor Symptome auftreten."
    }
-  ]
+  ],
+  "nh": "9af3eae7fee34964"
  },
  {
   "id": "biopsychosoziales-modell",
@@ -5196,7 +5213,8 @@ export const LESSONS = [
     "tr": "gövde kasları",
     "ex": ""
    }
-  ]
+  ],
+  "nh": "0330700d23bddb74"
  },
  {
   "id": "pps-grundlagen-psychologie",
@@ -5480,6 +5498,7 @@ export const LESSONS = [
     "tr": "hedef belirleme",
     "ex": "Die Zielformulierung erfolgt gemeinsam mit dem Patienten."
    }
-  ]
+  ],
+  "nh": "24511b90ee76405f"
  }
 ];

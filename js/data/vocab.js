@@ -147,4 +147,6 @@ const BASE = Object.entries(RAW).flatMap(([cat, list]) =>
 
 // Notion-Grundwortschatz zuerst, danach die allgemeinen Physio-Begriffe
 export const VOCAB = [...GRUNDWORTSCHATZ, ...BASE];
+export const BASE_VOCAB = BASE;
+export { GRUNDWORTSCHATZ };
 export const VOCAB_CATEGORIES = [...GW_CATEGORIES, ...Object.keys(RAW)];

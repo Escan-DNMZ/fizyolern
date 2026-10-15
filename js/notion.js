@@ -1,0 +1,222 @@
+// Liest den Lernplan direkt aus dem eigenen Notion – nur lesend.
+// Sicherheit:
+//  • Der Integration-Token wird NUR im Browser dieses Geräts gespeichert (localStorage),
+//    nie im Code, nie auf GitHub. Er wird ausschließlich an api.notion.com gesendet.
+//  • Keine Seiten-IDs im öffentlichen Code: Seiten werden per Suche gefunden – die Integration
+//    sieht nur, was in Notion ausdrücklich mit ihr geteilt wurde.
+//  • Die Content-Security-Policy in index.html erlaubt Verbindungen nur zu 'self' und api.notion.com.
+import { setPrivate, getPrivate } from './private.js';
+
+const API = 'https://api.notion.com/v1';
+const NOTION_VERSION = '2022-06-28';
+const TOKEN_KEY = 'fizyo.notionToken';
+
+export function getToken() {
+  try { return localStorage.getItem(TOKEN_KEY) || ''; } catch { return ''; }
+}
+export function setToken(t) {
+  try { localStorage.setItem(TOKEN_KEY, t.trim()); } catch { /* ignorieren */ }
+}
+export function clearToken() {
+  try { localStorage.removeItem(TOKEN_KEY); } catch { /* ignorieren */ }
+}
+// Notion-Tokens beginnen mit „ntn_“ (neu) oder „secret_“ (alt)
+export const looksLikeToken = (t) => /^(ntn_|secret_)[A-Za-z0-9]{20,}$/.test(t.trim());
+
+async function call(path, { method = 'GET', body } = {}) {
+  const token = getToken();
+  if (!token) throw new Error('Notion anahtarı yok');
+  const res = await fetch(API + path, {
+    method,
+    headers: {
+      Authorization: 'Bearer ' + token,
+      'Notion-Version': NOTION_VERSION,
+      'Content-Type': 'application/json',
+    },
+    body: body ? JSON.stringify(body) : undefined,
+    cache: 'no-store',
+    credentials: 'omit',
+    referrerPolicy: 'no-referrer',
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = res.status === 401 ? 'Anahtar geçersiz (401)' : res.status === 404 ? 'Sayfa bulunamadı – Notion\'da bağlantıyı (Connections) eklediğinden emin ol' : (json.message || 'HTTP ' + res.status);
+    throw new Error(msg);
+  }
+  return json;
+}
+
+const plain = (rt) => (rt || []).map((t) => t.plain_text).join('');
+
+function titleOf(obj) {
+  if (obj.object === 'database') return plain(obj.title);
+  const p = Object.values(obj.properties || {}).find((x) => x.type === 'title');
+  return p ? plain(p.title) : '';
+}
+
+async function findByTitle(query, type) {
+  const r = await call('/search', { method: 'POST', body: { query, filter: { property: 'object', value: type }, page_size: 20 } });
+  return r.results.find((x) => titleOf(x).includes(query)) || null;
+}
+
+async function children(id) {
+  const out = [];
+  let cursor;
+  do {
+    const r = await call(`/blocks/${id}/children?page_size=100${cursor ? '&start_cursor=' + cursor : ''}`);
+    out.push(...r.results);
+    cursor = r.has_more ? r.next_cursor : null;
+  } while (cursor);
+  return out;
+}
+
+async function sha16(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].slice(0, 8).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+const lower = (s) => s.toLocaleLowerCase('tr').normalize('NFD').replace(/[̀-ͯ]/g, '');
+const fmt = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+
+// Fachnamen aus Freitext erkennen („ANA 1“, „All ANA“, „PT-Befund“ …)
+function faecherIn(text, faecher) {
+  const t = lower(text).replace(/[-–]/g, ' ');
+  const alias = { Anatomie: ['anatomie', 'ana '], 'PT Befund': ['pt befund'], 'PT Grundlagen': ['pt grundlagen'] };
+  return faecher.filter((f) => (alias[f] || [lower(f)]).some((a) => (t + ' ').includes(a)));
+}
+
+const WD = { pzt: 1, sal: 2, car: 3, per: 4, cum: 5, cmt: 6, paz: 7 };
+const DASH = /^[\s—–-]*$|^\s*—/;
+
+// ───── Wochenplan + Fehlerliste aus der Seite „Haftalık Plan“ ─────
+export async function parsePlanPage(blocks, faecher, loadChildren) {
+  let week = null;
+  const fehler = [];
+  let fach = null;
+  let inMistakes = false;
+
+  for (const b of blocks) {
+    const type = b.type;
+    const rt = b[type] && b[type].rich_text;
+    const text = plain(rt);
+
+    if (type === 'heading_2' && /KW\s*\d+/.test(text) && !week) {
+      const kw = +text.match(/KW\s*(\d+)/)[1];
+      const m = text.match(/(\d{1,2})\.?\s*[–-]\s*(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+      week = { kw, range: (text.match(/\(([^)]*)\)/) || [, ''])[1], days: {} };
+      if (m) {
+        const mon = new Date(+m[4], +m[3] - 1, +m[1]);
+        const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+        week.from = fmt(mon); week.to = fmt(sun);
+      }
+    }
+    if (type === 'table' && week && !Object.keys(week.days).length) {
+      const rows = await loadChildren(b.id);
+      for (const row of rows.slice(b.table.has_column_header ? 1 : 0)) {
+        const cells = row.table_row.cells.map(plain);
+        const wd = WD[lower(cells[0] || '').slice(0, 3)];
+        if (!wd) continue;
+        const kurse = [cells[1], cells[2]].filter((c) => c && !DASH.test(c));
+        const tekrar = cells[3] || '';
+        const sabah = tekrar.match(/Sabah testi:\s*([^·]+)/i);
+        const rest = tekrar.replace(/Sabah testi:\s*[^·]+·?\s*/i, '').trim();
+        week.days[wd] = {
+          kurse,
+          test: sabah ? faecherIn(sabah[1], faecher) : [],
+          note: [rest, cells[4]].filter((c) => c && !DASH.test(c)).join(' · '),
+        };
+      }
+    }
+    if (type.startsWith('heading')) {
+      inMistakes = false;
+      if (type === 'heading_3') fach = faecherIn(text, faecher)[0] || text.split(/[(·]/)[0].trim();
+    }
+    if (type === 'paragraph' && /^\s*✗/.test(text)) inMistakes = true;
+    if (type === 'bulleted_list_item' && inMistakes && /^\s*(✗|½)/.test(text)) {
+      fehler.push(await mistakeCard(rt, fach));
+    }
+  }
+  return { week, fehler };
+}
+
+// Fehler als Lückentext: fett gedruckte Teile sind die Antwort
+async function mistakeCard(rt, fach) {
+  const seg = rt.map((t) => ({ t: t.plain_text, b: !!(t.annotations && t.annotations.bold) }));
+  seg[0] = { ...seg[0], t: seg[0].t.replace(/^\s*(✗|½)\s*/, '') };
+  const clean = (s) => s.replace(/\(\s*\d+\.\s*Tur[^)]*\)/gi, '').replace(/\s+/g, ' ').trim();
+  const full = clean(seg.map((s) => s.t).join(''));
+  let q;
+  if (seg.some((s) => s.b && s.t.trim().length > 1)) {
+    q = clean(seg.map((s) => (s.b && s.t.trim().length > 1 ? ' ＿＿＿ ' : s.t)).join(''));
+  } else {
+    const parts = full.split(/\s(?:=|→)\s/);
+    q = parts.length > 1 ? parts[0] + ' = ?' : 'Hatırla: ' + full.slice(0, 60) + (full.length > 60 ? '…' : '');
+  }
+  return { id: 'fx:' + (await sha16(full)), fach: fach || '', q, seg };
+}
+
+// ───── Grundwortschatz-Datenbank ─────
+async function loadWords(db) {
+  const words = [];
+  let cursor;
+  do {
+    const r = await call(`/databases/${db.id}/query`, { method: 'POST', body: { page_size: 100, start_cursor: cursor } });
+    for (const p of r.results) {
+      const pr = p.properties;
+      const get = (name) => {
+        const x = pr[name];
+        if (!x) return '';
+        if (x.type === 'title') return plain(x.title);
+        if (x.type === 'rich_text') return plain(x.rich_text);
+        if (x.type === 'select') return x.select ? x.select.name : '';
+        return '';
+      };
+      const de = get('Wort');
+      if (de) words.push({ id: 'gw:' + de, de, tr: get('Türkçe'), ex: get('Beispiel'), cat: 'GW · ' + (get('Kategorie') || 'Diğer') });
+    }
+    cursor = r.has_more ? r.next_cursor : undefined;
+  } while (cursor);
+  return words;
+}
+
+// ───── Notion-Links zu den Ders-Notları (Zuordnung über gehashte Seiten-IDs) ─────
+async function loadLessonLinks(dersler, lessons) {
+  const map = {};
+  const pages = (await children(dersler.id)).filter((b) => b.type === 'child_page');
+  for (const p of pages) {
+    const raw = p.id.replace(/-/g, '');
+    const h = await sha16(raw);
+    const l = lessons.find((x) => x.nh === h);
+    if (l) map[l.id] = 'https://www.notion.so/' + raw;
+  }
+  return map;
+}
+
+export async function syncFromNotion({ faecher, lessons }) {
+  const [planPage, db, dersler] = await Promise.all([
+    findByTitle('Haftalık Plan', 'page'),
+    findByTitle('Grundwortschatz', 'database'),
+    findByTitle('Dersler', 'page'),
+  ]);
+  if (!planPage && !db && !dersler) throw new Error('Hiçbir sayfa görünmüyor – Notion\'da Dashboard sayfasına bu bağlantıyı (Connections) ekle');
+
+  const old = getPrivate() || {};
+  const result = { kind: 'fizyolern-private', version: 2, source: 'notion', syncedAt: new Date().toISOString() };
+  const report = [];
+
+  if (planPage) {
+    const { week, fehler } = await parsePlanPage(await children(planPage.id), faecher, children);
+    result.week = week || old.week;
+    result.fehler = fehler.length ? fehler : old.fehler || [];
+    report.push(week ? `KW ${week.kw}` : 'program bulunamadı', `${fehler.length} hata kartı`);
+  } else report.push('Haftalık Plan görünmüyor');
+
+  if (db) {
+    result.gw = await loadWords(db);
+    report.push(`${result.gw.length} kelime`);
+  } else report.push('Grundwortschatz görünmüyor');
+
+  result.notion = dersler ? await loadLessonLinks(dersler, lessons) : old.notion || {};
+  setPrivate(result);
+  return report.join(' · ');
+}

@@ -1,9 +1,10 @@
 import * as store from './store.js';
 import { MUSCLES, BONES, JOINTS, ALL_STRUCTURES, findStructure } from './data/anatomy.js';
-import { VOCAB, VOCAB_CATEGORIES } from './data/vocab.js';
+import { GRUNDWORTSCHATZ, BASE_VOCAB } from './data/vocab.js';
 import { OPEN } from './data/questions.js';
 import { LESSONS } from './data/lessons.js';
 import { getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, notionLink, week, todayPlan } from './private.js';
+import { getToken, setToken, clearToken, looksLikeToken, syncFromNotion } from './notion.js';
 import { buildQuiz, QUIZ_CATEGORIES, FAECHER, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, prepare, shuffle } from './quizgen.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -21,7 +22,10 @@ function toast(msg) {
 }
 
 const KIND_LABEL = { muscle: 'Kas', bone: 'Kemik', joint: 'Eklem' };
-const allVocab = () => [...VOCAB, ...store.get().customVocab];
+// Grundwortschatz: live aus Notion, falls synchronisiert – sonst die mitgelieferte Kopie
+const gwWords = () => (getPrivate() && getPrivate().gw && getPrivate().gw.length ? getPrivate().gw : GRUNDWORTSCHATZ);
+const allVocab = () => [...gwWords(), ...BASE_VOCAB, ...store.get().customVocab];
+const vocabCategories = () => [...new Set([...gwWords(), ...BASE_VOCAB].map((v) => v.cat))];
 
 // Offene Fragen: zuerst die aus den Notion-Ders-Notları, dann die allgemeinen
 const ALL_OPEN = [
@@ -63,7 +67,10 @@ function deckCards(deck) {
   if (deck === 'fehler') {
     return fehlerList().map((f) => ({
       id: f.id, tag: '✗ ' + f.fach, front: f.q,
-      back: `<div class="detail" style="font-size:15px"><b>${esc(f.a)}</b><br><br><span class="muted">🇹🇷 ${esc(f.tr)}</span></div>`,
+      // Aus Notion: Lückentext-Segmente (fett = Antwort); aus Datei: Frage/Antwort/Türkçe
+      back: f.seg
+        ? `<div class="detail" style="font-size:15px">${f.seg.map((x) => (x.b ? `<b style="color:var(--accent)">${esc(x.t)}</b>` : esc(x.t))).join('')}</div>`
+        : `<div class="detail" style="font-size:15px"><b>${esc(f.a)}</b><br><br><span class="muted">🇹🇷 ${esc(f.tr)}</span></div>`,
     }));
   }
   if (deck.startsWith('ders:')) {
@@ -100,7 +107,7 @@ const DECKS = () => [
   ...(fehlerList().length ? [{ id: 'fehler', name: '✗ Hatalarım', sub: 'Notion testlerinde yanlış yaptıkların (öncelikli)' }] : []),
   ...FAECHER.map((f) => ({ id: 'ders:' + f, name: 'Ders: ' + f, sub: 'Ders notlarındaki terimler' })),
   { id: 'vocab', name: 'Tüm kelimeler', sub: `${allVocab().length} kelime` },
-  ...VOCAB_CATEGORIES.map((c) => ({ id: 'vocab:' + c, name: c, sub: 'Kelimeler' })),
+  ...vocabCategories().map((c) => ({ id: 'vocab:' + c, name: c, sub: 'Kelimeler' })),
   ...(store.get().customVocab.length ? [{ id: 'vocab:Eigene', name: 'Kendi kelimelerim', sub: `${store.get().customVocab.length} kelime` }] : []),
   { id: 'muscles', name: 'Kaslar', sub: 'Ursprung · Ansatz · Innervation · Funktion' },
   { id: 'bones', name: 'Kemikler', sub: 'Almanca · Latince · Türkçe' },
@@ -784,6 +791,16 @@ function renderSettings() {
       <button class="btn ghost" id="exportBtn">Yedeği indir</button>
       <label class="btn ghost">Yedeği yükle<input type="file" id="importFile" accept="application/json" hidden></label>
     </div>
+    <div class="section-title">Notion bağlantısı</div>
+    <div class="card small" style="margin-top:0">
+      ${getToken()
+        ? `🔒 Bağlı · ${getPrivate() && getPrivate().syncedAt ? 'son güncelleme: ' + esc(new Date(getPrivate().syncedAt).toLocaleString('tr-TR')) : 'henüz güncellenmedi'}
+           <div class="grid2" style="margin-top:10px"><button class="btn" id="nSync">Şimdi güncelle</button><button class="btn danger" id="nDisconnect">Bağlantıyı sil</button></div>`
+        : `Haftalık programın, hata listen ve Grundwortschatz doğrudan Notion'dan okunur. Anahtar <b>sadece bu telefonda</b> saklanır ve sadece api.notion.com'a gönderilir.
+           <input type="password" id="nToken" placeholder="ntn_… (Notion Internal Integration Secret)" autocomplete="off" autocapitalize="off" spellcheck="false" style="margin-top:10px">
+           <button class="btn block" id="nConnect" style="margin-top:8px">Bağlan ve güncelle</button>`}
+      <div id="nStatus" class="muted" style="margin-top:8px"></div>
+    </div>
     <div class="section-title">Özel veriler</div>
     <p class="muted small" style="padding:0 4px">Haftalık program, hata listen ve Notion linklerin herkese açık uygulamada yok. <b>fizyolern-ozel.json</b> dosyasını buradan yükle; sadece bu telefonda saklanır.</p>
     <div class="card small" style="margin-top:0">${getPrivate() ? `✅ Yüklü: KW ${esc(week()?.kw ?? '–')} · ${fehlerList().length} hata kartı` : '⚠️ Henüz yüklenmedi'}</div>
@@ -817,6 +834,33 @@ function renderSettings() {
       toast('Yedek yüklendi ✓');
     } catch { toast('Geçersiz yedek dosyası'); }
   });
+  const nStatus = $('#nStatus');
+  const runSync = async () => {
+    nStatus.textContent = "Notion'dan okunuyor…";
+    try {
+      const r = await syncFromNotion({ faecher: FAECHER, lessons: LESSONS });
+      toast("Notion'dan güncellendi ✓");
+      renderSettings();
+      $('#nStatus').textContent = '✅ ' + r;
+    } catch (err) { nStatus.textContent = '⚠️ ' + err.message; }
+  };
+  const nConnect = $('#nConnect');
+  if (nConnect) nConnect.addEventListener('click', () => {
+    const t = $('#nToken').value.trim();
+    if (!looksLikeToken(t)) { nStatus.textContent = '⚠️ Bu bir Notion anahtarına benzemiyor (ntn_… ile başlamalı).'; return; }
+    setToken(t);
+    $('#nToken').value = '';
+    runSync();
+  });
+  const nSync = $('#nSync');
+  if (nSync) nSync.addEventListener('click', runSync);
+  const nDisc = $('#nDisconnect');
+  if (nDisc) nDisc.addEventListener('click', () => {
+    if (!confirm('Notion anahtarı bu telefondan silinsin mi?')) return;
+    clearToken();
+    toast('Anahtar silindi');
+    renderSettings();
+  });
   $('#privFile').addEventListener('change', async (e) => {
     const f = e.target.files[0];
     if (!f) return;
@@ -833,6 +877,16 @@ $('#settingsBtn').addEventListener('click', () => (location.hash = '#/ayarlar'))
 // ───────────────────────── Start ─────────────────────────
 navigate();
 loadLocalDevFile().then((loaded) => { if (loaded && current === 'bugun') navigate(); });
+
+// Beim Start automatisch aus Notion aktualisieren (höchstens alle 3 Stunden, still im Hintergrund)
+if (getToken() && navigator.onLine) {
+  const last = getPrivate() && getPrivate().syncedAt ? Date.parse(getPrivate().syncedAt) : 0;
+  if (Date.now() - last > 3 * 3600 * 1000) {
+    syncFromNotion({ faecher: FAECHER, lessons: LESSONS })
+      .then(() => { toast("Notion'dan güncellendi ✓"); if (current === 'bugun' || current === 'kartlar') navigate(); })
+      .catch(() => { /* offline oder Token ungültig – alte Daten bleiben */ });
+  }
+}
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});
