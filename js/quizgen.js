@@ -2,7 +2,7 @@
 import { MUSCLES, BONES, JOINTS } from './data/anatomy.js';
 import { VOCAB } from './data/vocab.js';
 import { MCQ } from './data/questions.js';
-import { LESSONS } from './data/lessons.js';
+import { LESSONS, FAECHER } from './lessons.js';
 import * as store from './store.js';
 import { week } from './private.js';
 
@@ -70,11 +70,12 @@ export function vocabQuestion(v, pool = VOCAB) {
 }
 
 // Fragen aus den Notion-Ders-Notları
-export const lessonMcq = (l) => l.mcq.map((q, i) => ({ id: `L:${l.id}:${i}`, cat: l.fach, lesson: l.id, q: q.q, o: q.o, a: 0, x: q.x }));
+export const lessonMcq = (l) => l.mcq.map((q, i) => ({ id: q.id || `L:${l.id}:${i}`, cat: l.fach, lesson: l.id, q: q.q, o: q.o, a: 0, x: q.x }));
 export const ALL_LESSON_MCQ = () => LESSONS.flatMap(lessonMcq);
-export const FAECHER = [...new Set(LESSONS.map((l) => l.fach))];
+export { FAECHER };
 
-export const QUIZ_CATEGORIES = ['Gemischt', ...FAECHER.map((f) => 'Ders: ' + f), 'Muskeln', 'Knochen', 'Gelenke', 'Anatomie', 'Neuro', 'Klinik', 'Vokabeln'];
+// Funktion, weil neue Fächer aus Notion dazukommen können
+export const quizCategories = () => ['Gemischt', ...FAECHER.map((f) => 'Ders: ' + f), 'Muskeln', 'Knochen', 'Gelenke', 'Anatomie', 'Neuro', 'Klinik', 'Vokabeln'];
 
 // ───── Adaptive Auswahl ─────
 // Schwierigkeitsstufen: Muskeln zuerst nur Nerv/Ansatz, dann Ursprung/Funktion,

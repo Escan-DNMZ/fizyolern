@@ -179,6 +179,55 @@ async function loadWords(db) {
   return words;
 }
 
+// ───── Datenbank „FizyoLern Sorular“: neue Lektionsinhalte ohne GitHub-Update ─────
+// Eine Zeile = ein Eintrag (Typ Kern / MCQ / Offen / Wort). Die Seiten-ID wird nur gehasht gespeichert (stabile Fragen-ids).
+const TYPEN = ['Kern', 'MCQ', 'Offen', 'Wort'];
+export async function rowsFromPages(pages) {
+  const rows = [];
+  for (const p of pages) {
+    const pr = p.properties || {};
+    const get = (name) => {
+      const x = pr[name];
+      if (!x) return '';
+      if (x.type === 'title') return plain(x.title).trim();
+      if (x.type === 'rich_text') return plain(x.rich_text).trim();
+      if (x.type === 'select') return x.select ? x.select.name : '';
+      if (x.type === 'checkbox') return x.checkbox;
+      return '';
+    };
+    if (get('Gizle') === true || p.archived || p.in_trash) continue;
+    const typ = TYPEN.find((t) => lower(t) === lower(get('Typ') || ''));
+    if (!typ) continue;
+    rows.push({
+      h: await sha16(p.id.replace(/-/g, '')),
+      fach: get('Fach'),
+      lektion: get('Lektion'),
+      typ,
+      frage: get('Frage'),
+      antwort: get('Antwort'),
+      ablenker: [get('Ablenker 1'), get('Ablenker 2'), get('Ablenker 3')],
+      erkl: get('Erklärung TR'),
+      // Komma oder Zeilenumbruch trennt Begriffe, „|“ trennt gleichwertige Alternativen
+      kw: get('Schlüsselbegriffe').split(/[,;\n]/).map((k) => k.trim()).filter(Boolean),
+    });
+  }
+  return rows;
+}
+
+async function loadLessonRows(db) {
+  const pages = [];
+  let cursor;
+  do {
+    const r = await call(`/databases/${db.id}/query`, {
+      method: 'POST',
+      body: { page_size: 100, start_cursor: cursor, sorts: [{ timestamp: 'created_time', direction: 'ascending' }] },
+    });
+    pages.push(...r.results);
+    cursor = r.has_more ? r.next_cursor : undefined;
+  } while (cursor);
+  return rowsFromPages(pages);
+}
+
 // ───── Notion-Links zu den Ders-Notları (Zuordnung über gehashte Seiten-IDs) ─────
 async function loadLessonLinks(dersler, lessons) {
   const map = {};
@@ -193,12 +242,13 @@ async function loadLessonLinks(dersler, lessons) {
 }
 
 export async function syncFromNotion({ faecher, lessons }) {
-  const [planPage, db, dersler] = await Promise.all([
+  const [planPage, db, dersler, sorular] = await Promise.all([
     findByTitle('Haftalık Plan', 'page'),
     findByTitle('Grundwortschatz', 'database'),
     findByTitle('Dersler', 'page'),
+    findByTitle('FizyoLern Sorular', 'database'),
   ]);
-  if (!planPage && !db && !dersler) throw new Error('Hiçbir sayfa görünmüyor – Notion\'da Dashboard sayfasına bu bağlantıyı (Connections) ekle');
+  if (!planPage && !db && !dersler && !sorular) throw new Error('Hiçbir sayfa görünmüyor – Notion\'da Dashboard sayfasına bu bağlantıyı (Connections) ekle');
 
   const old = getPrivate() || {};
   const result = { kind: 'fizyolern-private', version: 2, source: 'notion', syncedAt: new Date().toISOString() };
@@ -215,6 +265,11 @@ export async function syncFromNotion({ faecher, lessons }) {
     result.gw = await loadWords(db);
     report.push(`${result.gw.length} kelime`);
   } else report.push('Grundwortschatz görünmüyor');
+
+  if (sorular) {
+    result.lessonRows = await loadLessonRows(sorular);
+    report.push(`${result.lessonRows.length} ders sorusu`);
+  } else result.lessonRows = old.lessonRows || [];
 
   result.notion = dersler ? await loadLessonLinks(dersler, lessons) : old.notion || {};
   setPrivate(result);

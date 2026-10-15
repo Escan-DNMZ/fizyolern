@@ -2,10 +2,10 @@ import * as store from './store.js';
 import { MUSCLES, BONES, JOINTS, ALL_STRUCTURES, findStructure } from './data/anatomy.js';
 import { GRUNDWORTSCHATZ, BASE_VOCAB } from './data/vocab.js';
 import { OPEN } from './data/questions.js';
-import { LESSONS } from './data/lessons.js';
+import { LESSONS, FAECHER, refreshLessons } from './lessons.js';
 import { getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, notionLink, week, todayPlan } from './private.js';
 import { getToken, setToken, clearToken, looksLikeToken, syncFromNotion } from './notion.js';
-import { buildQuiz, QUIZ_CATEGORIES, FAECHER, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked } from './quizgen.js';
+import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked } from './quizgen.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -28,8 +28,8 @@ const allVocab = () => [...gwWords(), ...BASE_VOCAB, ...store.get().customVocab]
 const vocabCategories = () => [...new Set([...gwWords(), ...BASE_VOCAB].map((v) => v.cat))];
 
 // Offene Fragen: zuerst die aus den Notion-Ders-Notları, dann die allgemeinen
-const ALL_OPEN = [
-  ...LESSONS.flatMap((l) => l.open.map((q, i) => ({ id: `LO:${l.id}:${i}`, cat: l.fach, lesson: l.id, q: q.q, a: q.a, kw: q.kw }))),
+const allOpen = () => [
+  ...LESSONS.flatMap((l) => l.open.map((q, i) => ({ id: q.id || `LO:${l.id}:${i}`, cat: l.fach, lesson: l.id, q: q.q, a: q.a, kw: q.kw }))),
   ...OPEN,
 ];
 const lessonVocab = (filter) => LESSONS.filter(filter).flatMap((l) => l.vocab.map((v) => ({ ...v, id: 'lv:' + v.de, cat: l.fach })));
@@ -250,6 +250,7 @@ function renderToday() {
       </div>
     </div>
 
+
     <div class="section-title">İstatistik</div>
     <div class="grid2">
       <div class="card" style="margin:0"><div class="muted small">Tekrar bekleyen kart</div><h2>${due}</h2></div>
@@ -262,7 +263,8 @@ function renderToday() {
 
 function nextOpenQuestion() {
   const done = store.get().open;
-  return ALL_OPEN.find((q) => !done[q.id]) || [...ALL_OPEN].sort((a, b) => (done[a.id].score - done[b.id].score) || done[a.id].last.localeCompare(done[b.id].last))[0];
+  const all = allOpen();
+  return all.find((q) => !done[q.id]) || [...all].sort((a, b) => (done[a.id].score - done[b.id].score) || done[a.id].last.localeCompare(done[b.id].last))[0];
 }
 
 // ───────────────────────── Lektion (Muskel/Knochen/Gelenk) ─────────────────────────
@@ -374,7 +376,7 @@ function renderLesson([id]) {
 // ───────────────────────── Ders-Notları (aus Notion) ─────────────────────────
 function lessonProgress(l) {
   const st = store.get();
-  const qs = l.mcq.map((_, i) => st.quiz[`L:${l.id}:${i}`]).filter(Boolean);
+  const qs = lessonMcq(l).map((q) => st.quiz[q.id]).filter(Boolean);
   const right = qs.filter((q) => q.r > 0 && q.r >= q.w).length;
   return { seen: qs.length, right, total: l.mcq.length };
 }
@@ -398,13 +400,13 @@ function renderLessonNote([id]) {
   const l = LESSONS.find((x) => x.id === id);
   if (!l) { view.innerHTML = '<p class="empty">Bulunamadı.</p>'; return; }
   $('#title').textContent = l.fach;
-  const opens = ALL_OPEN.filter((q) => q.lesson === l.id);
+  const opens = allOpen().filter((q) => q.lesson === l.id);
   view.innerHTML = `
     <div class="card">
       <div class="eyebrow" lang="de">${esc(l.fach)}</div>
       <h2 lang="de">${esc(l.title)}</h2>
       <div class="grid2" style="margin-top:12px">
-        <a class="btn" href="#/test?kat=${encodeURIComponent('Lektion: ' + l.id)}">Test (${l.mcq.length} soru)</a>
+        ${l.mcq.length ? `<a class="btn" href="#/test?kat=${encodeURIComponent('Lektion: ' + l.id)}">Test (${l.mcq.length} soru)</a>` : ''}
         ${notionLink(l.id) ? `<a class="btn ghost" href="${esc(notionLink(l.id))}" target="_blank" rel="noopener">Notion'da aç</a>` : ''}
       </div>
     </div>
@@ -439,7 +441,7 @@ function renderQuizStart(_, params = new URLSearchParams()) {
     <div class="card">
       <h2>Kategori seç</h2>
       <div class="chips" style="margin-top:10px">
-        ${[...QUIZ_CATEGORIES, ...(QUIZ_CATEGORIES.includes(quizCat) ? [] : [quizCat])].map((c) => `<button class="chip ${c === quizCat ? 'on' : ''}" data-cat="${esc(c)}">${c === 'Gemischt' ? 'Karışık' : esc(c)}</button>`).join('')}
+        ${[...quizCategories(), ...(quizCategories().includes(quizCat) ? [] : [quizCat])].map((c) => `<button class="chip ${c === quizCat ? 'on' : ''}" data-cat="${esc(c)}">${c === 'Gemischt' ? 'Karışık' : esc(c)}</button>`).join('')}
       </div>
       <button class="btn block" id="startQuiz" style="margin-top:16px">${store.get().settings.quizGoal} soruluk testi başlat</button>
     </div>
@@ -508,13 +510,14 @@ const drafts = {};
 
 function renderOpenList() {
   const st = store.get().open;
-  const cats = [...new Set(ALL_OPEN.map((q) => q.cat))];
+  const all = allOpen();
+  const cats = [...new Set(all.map((q) => q.cat))];
   view.innerHTML = `
     <p class="muted small" style="padding:0 4px">Cevabını Almanca yaz (sınav pratiği!). Uygulama anahtar kavramları kontrol eder, sonra örnek cevabı gösterir ve kendini değerlendirirsin.</p>
     ${cats.map((c) => `
       <div class="section-title" lang="de">${esc(c)}</div>
       <div class="list">
-        ${ALL_OPEN.filter((q) => q.cat === c).map((q) => {
+        ${all.filter((q) => q.cat === c).map((q) => {
           const r = st[q.id];
           const badge = !r ? '<span class="badge">yeni</span>' : r.score >= 0.75 ? '<span class="badge good">iyi</span>' : r.score >= 0.4 ? '<span class="badge warn">kısmen</span>' : '<span class="badge bad">tekrar</span>';
           return `<a href="#/soru/${q.id}"><span class="grow small">${esc(q.q)}</span>${badge}</a>`;
@@ -524,7 +527,8 @@ function renderOpenList() {
 }
 
 function renderOpenQuestion([id]) {
-  const q = ALL_OPEN.find((x) => x.id === id) || ALL_OPEN[0];
+  const all = allOpen();
+  const q = all.find((x) => x.id === id) || all[0];
   view.innerHTML = `
     <div class="card">
       <span class="badge">${esc(q.cat)}</span>
@@ -804,7 +808,7 @@ function renderSettings() {
       ${getToken()
         ? `🔒 Bağlı · ${getPrivate() && getPrivate().syncedAt ? 'son güncelleme: ' + esc(new Date(getPrivate().syncedAt).toLocaleString('tr-TR')) : 'henüz güncellenmedi'}
            <div class="grid2" style="margin-top:10px"><button class="btn" id="nSync">Şimdi güncelle</button><button class="btn danger" id="nDisconnect">Bağlantıyı sil</button></div>`
-        : `Haftalık programın, hata listen ve Grundwortschatz doğrudan Notion'dan okunur. Anahtar <b>sadece bu telefonda</b> saklanır ve sadece api.notion.com'a gönderilir.
+        : `Haftalık programın, hata listen, Grundwortschatz ve yeni ders soruları (FizyoLern Sorular) doğrudan Notion'dan okunur. Anahtar <b>sadece bu telefonda</b> saklanır ve sadece api.notion.com'a gönderilir.
            <input type="password" id="nToken" placeholder="ntn_… (Notion Internal Integration Secret)" autocomplete="off" autocapitalize="off" spellcheck="false" style="margin-top:10px">
            <button class="btn block" id="nConnect" style="margin-top:8px">Bağlan ve güncelle</button>`}
       <div id="nStatus" class="muted" style="margin-top:8px"></div>
@@ -847,6 +851,7 @@ function renderSettings() {
     nStatus.textContent = "Notion'dan okunuyor…";
     try {
       const r = await syncFromNotion({ faecher: FAECHER, lessons: LESSONS });
+      refreshLessons();
       toast("Notion'dan güncellendi ✓");
       renderSettings();
       $('#nStatus').textContent = '✅ ' + r;
@@ -872,9 +877,9 @@ function renderSettings() {
   $('#privFile').addEventListener('change', async (e) => {
     const f = e.target.files[0];
     if (!f) return;
-    try { setPrivate(JSON.parse(await f.text())); toast('Özel veriler yüklendi ✓'); renderSettings(); } catch { toast('Bu dosya özel veri dosyası değil'); }
+    try { setPrivate(JSON.parse(await f.text())); refreshLessons(); toast('Özel veriler yüklendi ✓'); renderSettings(); } catch { toast('Bu dosya özel veri dosyası değil'); }
   });
-  $('#privClear').addEventListener('click', () => { clearPrivate(); toast('Kaldırıldı'); renderSettings(); });
+  $('#privClear').addEventListener('click', () => { clearPrivate(); refreshLessons(); toast('Kaldırıldı'); renderSettings(); });
   $('#resetBtn').addEventListener('click', () => {
     if (confirm('Tüm ilerleme silinsin mi? Bu geri alınamaz.')) { store.reset(); toast('Sıfırlandı'); location.hash = '#/bugun'; }
   });
@@ -884,14 +889,14 @@ $('#settingsBtn').addEventListener('click', () => (location.hash = '#/ayarlar'))
 
 // ───────────────────────── Start ─────────────────────────
 navigate();
-loadLocalDevFile().then((loaded) => { if (loaded && current === 'bugun') navigate(); });
+loadLocalDevFile().then((loaded) => { if (loaded) { refreshLessons(); if (current === 'bugun') navigate(); } });
 
 // Beim Start automatisch aus Notion aktualisieren (höchstens alle 3 Stunden, still im Hintergrund)
 if (getToken() && navigator.onLine) {
   const last = getPrivate() && getPrivate().syncedAt ? Date.parse(getPrivate().syncedAt) : 0;
   if (Date.now() - last > 3 * 3600 * 1000) {
     syncFromNotion({ faecher: FAECHER, lessons: LESSONS })
-      .then(() => { toast("Notion'dan güncellendi ✓"); if (current === 'bugun' || current === 'kartlar') navigate(); })
+      .then(() => { refreshLessons(); toast("Notion'dan güncellendi ✓"); if (['bugun', 'kartlar', 'dersler'].includes(current)) navigate(); })
       .catch(() => { /* offline oder Token ungültig – alte Daten bleiben */ });
   }
 }
