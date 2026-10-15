@@ -825,7 +825,7 @@ function renderSettings() {
     </div>
     <div class="section-title">Diğer</div>
     <button class="btn danger block" id="resetBtn">Tüm ilerlemeyi sıfırla</button>
-    <p class="muted small" style="margin-top:24px;padding:0 4px">3D kemikler: <b>BodyParts3D</b>, © The Database Center for Life Science (DBCLS), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. 3D kas modelleri <b>Sinew</b> (sinew.pin.games) oyunundan. Kafatası, boyun omurları ve diğer kaslar şematik çizimdir. İçerik ders kitapları (ör. Prometheus, Schünke) ile kontrol edilmelidir.</p>
+    <p class="muted small" style="margin-top:24px;padding:0 4px">3D kemik ve kas modelleri: <b>BodyParts3D</b>, © The Database Center for Life Science (DBCLS), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> – Sinew (sinew.pin.games) oyunuyla aynı kaynak. BodyParts3D'de olmayan 4 kas (M. latissimus dorsi, M. rectus abdominis, M. transversus abdominis, M. quadratus lumborum) gerçek iskeletteki ölçüm noktalarına göre uygulama tarafından çizilir. İçerik ders kitapları (ör. Prometheus, Schünke) ile kontrol edilmelidir.</p>
   `;
   ['cardsGoal', 'quizGoal', 'newPerDay'].forEach((k) => $('#' + k).addEventListener('change', (e) => {
     const v = parseInt(e.target.value, 10);

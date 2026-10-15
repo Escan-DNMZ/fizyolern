@@ -52,6 +52,6 @@ Okunan yapı: "Haftalık Plan" sayfasındaki `KW …` başlığı + tablo (Gün 
 ders başlıkları (heading 3) altındaki `✗ … (tekrar et)` paragraflarını izleyen `✗` / `½` maddeleri (kalın yazılan kısımlar kartta boşluk olur).
 
 ## Notlar
-- 3D kemikler: BodyParts3D, © The Database Center for Life Science (DBCLS), CC BY 4.0. 3D kas modelleri Sinew (sinew.pin.games) oyunundan (`models/`). Kafatası, boyun omurları ve Sinew'de olmayan kaslar şematiktir.
+- 3D kemik ve kas modelleri: BodyParts3D, © The Database Center for Life Science (DBCLS), CC BY 4.0 (`models/`, `tools/build_bp3d.py` + `tools/compress_models.sh` ile üretilir). BodyParts3D'de olmayan 4 kas (latissimus dorsi, rectus abdominis, transversus abdominis, quadratus lumborum) gerçek iskelet noktalarından çizilir (`js/anatomy3d.js` → `buildSheetMuscles`).
 - İçerik ders kitaplarıyla (Prometheus, Schünke vb.) kontrol edilmelidir.
 - Three.js (MIT lisansı) `vendor/` klasöründe yerel olarak bulunur.

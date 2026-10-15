@@ -157,46 +157,48 @@ function primitive(p, sx) {
   }
 }
 
-// Muskel-Meshes aus Sinew -> Struktur-IDs (erste ID = Gruppe, weitere werden mitdargestellt)
-const MUSCLE_MESHES = {
-  bicepsFemLong: ['biceps_femoris'],
-  bicepsFemShort: ['biceps_femoris'],
-  bicepsLong: ['biceps_brachii'],
-  bicepsShort: ['biceps_brachii'],
-  brachialis: ['brachialis'],
-  brachioradialis: ['brachioradialis'],
-  deltoid: ['deltoideus'],
-  extensorDig: ['extensor_digitorum'],
-  fdp: ['flexor_digitorum_profundus'],
-  fds: ['flexor_digitorum_superficialis'],
-  gastrocnemius: ['gastrocnemius'],
-  gluteus: ['gluteus_maximus'],
-  iliopsoas: ['iliopsoas'],
-  rectusFemoris: ['rectus_femoris'],
-  semis: ['semitendinosus', 'semimembranosus'],
-  soleus: ['soleus'],
-  supraspinatus: ['supraspinatus'],
-  tibialisAnt: ['tibialis_anterior'],
-  tricepsLat: ['triceps_brachii'],
-  tricepsLong: ['triceps_brachii'],
-  tricepsMed: ['triceps_brachii'],
-  vasti: ['vastus_lateralis', 'vastus_medialis', 'vastus_intermedius'],
-};
-
-// Englische BodyParts3D-Knochennamen -> Struktur-IDs
-function boneIdsFor(name) {
-  const n = name.toLowerCase();
-  const rules = [
-    [/thoracic vertebra/, 'bws'], [/lumbar vertebra/, 'lws'], [/^sacrum/, 'sacrum'], [/^sternum/, 'sternum'],
-    [/\brib\b/, 'costae'], [/clavicle/, 'clavicula'], [/scapula/, 'scapula'], [/humerus/, 'humerus'],
-    [/scaphoid|lunate|triquetral|pisiform|trapezium|trapezoid|capitate|hamate/, 'carpus'],
-    [/metacarpal|finger|thumb/, 'manus'], [/radius/, 'radius'], [/ulna/, 'ulna'],
-    [/hip bone/, 'os_coxae'], [/femur/, 'femur'], [/patella/, 'patella'], [/tibia/, 'tibia'], [/fibula/, 'fibula'],
-    [/talus/, 'talus'], [/calcaneus/, 'calcaneus'], [/navicular|cuboid|cuneiform|metatarsal|toe/, 'pes'],
-  ];
-  const hit = rules.find(([re]) => re.test(n));
-  return hit ? [hit[1]] : null;
+// Muskeln, die es in BodyParts3D nicht gibt: werden als dünne Muskelplatten zwischen
+// Messpunkten am echten Skelett aufgebaut (siehe buildSheetMuscles).
+// Dünne Platte (Muskel als Schicht) aus Querschnitt-Reihen: rows[i][j] = Punkt
+function slab(rows, thick) {
+  const R = rows.length, C = rows[0].length;
+  const pos = [], idx = [];
+  const front = rows.flat();
+  // Flächennormalen grob über Nachbarn bestimmen, Rückseite um „thick“ nach innen versetzen
+  const nAt = (i, j) => {
+    const a = rows[Math.min(i + 1, R - 1)][j].clone().sub(rows[Math.max(i - 1, 0)][j]);
+    const b = rows[i][Math.min(j + 1, C - 1)].clone().sub(rows[i][Math.max(j - 1, 0)]);
+    return new THREE.Vector3().crossVectors(a, b).normalize();
+  };
+  const back = [];
+  for (let i = 0; i < R; i++) for (let j = 0; j < C; j++) back.push(rows[i][j].clone().addScaledVector(nAt(i, j), -thick));
+  [...front, ...back].forEach((v) => pos.push(v.x, v.y, v.z));
+  const F = 0, B = R * C, at = (i, j) => i * C + j;
+  for (let i = 0; i < R - 1; i++) {
+    for (let j = 0; j < C - 1; j++) {
+      const a = at(i, j), b = at(i + 1, j), c = at(i + 1, j + 1), d = at(i, j + 1);
+      idx.push(F + a, F + b, F + c, F + a, F + c, F + d);
+      idx.push(B + a, B + c, B + b, B + a, B + d, B + c);
+    }
+  }
+  const edge = (list) => {
+    for (let k = 0; k < list.length - 1; k++) {
+      const p = list[k], q = list[k + 1];
+      idx.push(F + p, B + p, B + q, F + p, B + q, F + q);
+    }
+  };
+  edge([...Array(C).keys()].map((j) => at(0, j)));
+  edge([...Array(C).keys()].map((j) => at(R - 1, j)).reverse());
+  edge([...Array(R).keys()].map((i) => at(i, 0)).reverse());
+  edge([...Array(R).keys()].map((i) => at(i, C - 1)));
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
 }
+
+const bez = (a, c, b, t) => a.clone().multiplyScalar((1 - t) ** 2).addScaledVector(c, 2 * (1 - t) * t).addScaledVector(b, t * t);
 
 export class Anatomy3D {
   constructor(container, { onSelect } = {}) {
@@ -242,12 +244,13 @@ export class Anatomy3D {
 
     this.build();
     this.bindPicking();
+    if (location.hostname === 'localhost') window.__anat = this; // nur zum Debuggen auf dem eigenen Rechner
     this.ready = this.loadRealModels().catch((e) => console.warn('Echte 3D-Modelle nicht geladen, schematisches Modell bleibt:', e));
 
     new ResizeObserver(() => this.resize()).observe(container);
   }
 
-  // Ersetzt schematische Teile durch die echten Modelle (BodyParts3D-Knochen, Sinew-Muskeln)
+  // Ersetzt schematische Teile durch die echten Modelle (BodyParts3D, DBCLS, CC BY 4.0)
   async loadRealModels() {
     const [{ GLTFLoader }, { DRACOLoader }] = await Promise.all([
       import('../vendor/GLTFLoader.js'),
@@ -260,16 +263,20 @@ export class Anatomy3D {
       loader.loadAsync(base + 'bones.glb'),
       loader.loadAsync(base + 'muscles.glb'),
     ]);
-    this.useReal(bones.scene, (n) => boneIdsFor(n));
-    this.useReal(muscles.scene, (n) => MUSCLE_MESHES[n]);
+    // Mesh-Namen: „<struktur-id>|<BodyParts3D-Name>“ (tools/build_bp3d.py)
+    const idsFor = (n) => [n.split('|')[0]];
+    this.useReal(bones.scene, idsFor);
+    this.useReal(muscles.scene, idsFor);
+    this.buildSheetMuscles();
+    this.placeJoints();
     draco.dispose();
     this.applyVisibility();
     if (this.selected) this.select(this.selected, { silent: true });
   }
 
   useReal(scene, idsFor) {
-    // BodyParts3D: Millimeter, z = oben, vorne = -y, nur rechte Körperhälfte (x < 0).
-    // → Meter, y = oben, vorne = +z; leicht verschoben, damit es zu den schematischen Teilen passt.
+    // BodyParts3D: Millimeter, z = oben, vorne = -y; rechte Körperhälfte bei x < 0.
+    // → Meter, y = oben, vorne = +z; leicht verschoben, damit Gelenkmarker und Muskelplatten passen.
     const T = new THREE.Matrix4().makeTranslation(0, 0.07, -0.08)
       .multiply(new THREE.Matrix4().makeRotationX(-Math.PI / 2))
       .multiply(new THREE.Matrix4().makeScale(0.001, 0.001, 0.001));
@@ -298,12 +305,172 @@ export class Anatomy3D {
       const geo = src.geometry.clone().applyMatrix4(T.clone().multiply(src.matrixWorld));
       if (!geo.attributes.normal) geo.computeVertexNormals();
       geo.computeBoundingBox();
-      const mirror = geo.boundingBox.max.x < 0.005; // nur paarige Strukturen spiegeln
-      for (const sx of mirror ? [1, -1] : [1]) {
-        const m = new THREE.Mesh(geo, group.userData.mats[0]);
+      // Beide Körperseiten sind eigene Modelle – nicht spiegeln
+      const m = new THREE.Mesh(geo, group.userData.mats[0]);
+      m.userData = { id: primary, kind: group.userData.kind, real: true, part: (src.name.split('|')[1] || '').replace(/_/g, ' ') }; // GLTFLoader macht aus Leerzeichen „_“
+      group.add(m);
+      this.meshes.push(m);
+    }
+  }
+
+  // Punkte eines echten Knochenteils (Weltkoordinaten), optional gefiltert
+  partVerts(part, filter = () => true) {
+    const out = [];
+    const v = new THREE.Vector3();
+    for (const m of this.meshes) {
+      if (m.userData.part !== part) continue;
+      const a = m.geometry.attributes.position;
+      for (let i = 0; i < a.count; i++) {
+        v.fromBufferAttribute(a, i).applyMatrix4(m.matrixWorld);
+        if (filter(v)) out.push(v.clone());
+      }
+    }
+    return out;
+  }
+
+  extreme(part, key, sign = 1) {
+    const vs = this.partVerts(part);
+    if (!vs.length) return null;
+    return vs.reduce((best, v) => (v[key] * sign > best[key] * sign ? v : best));
+  }
+
+  // Gelenkmarker auf die echten Knochen setzen (Mittelpunkt der jeweiligen Gelenkflächen)
+  placeJoints() {
+    const centroid = (vs) => (vs.length ? vs.reduce((a, v) => a.add(v), new THREE.Vector3()).multiplyScalar(1 / vs.length) : null);
+    const region = (part, axis, side, depth) => {
+      const vs = this.partVerts(part);
+      if (!vs.length) return [];
+      const ext = vs.reduce((m, v) => (side > 0 ? Math.max(m, v[axis]) : Math.min(m, v[axis])), side > 0 ? -1e9 : 1e9);
+      return vs.filter((v) => (side > 0 ? v[axis] > ext - depth : v[axis] < ext + depth));
+    };
+    const mid = (a, b) => (a && b ? a.clone().add(b).multiplyScalar(0.5) : a || b);
+    const L = (n) => 'Left ' + n;
+
+    const pos = {
+      art_humeri: (() => { const c = centroid(region(L('humerus'), 'y', 1, 0.03)); return c && c.add(new THREE.Vector3(-0.008, -0.004, 0)); })(),
+      art_acromioclavicularis: centroid(region(L('clavicle'), 'x', 1, 0.008)),
+      art_sternoclavicularis: centroid(region(L('clavicle'), 'x', -1, 0.008)),
+      art_cubiti: mid(centroid(region(L('humerus'), 'y', -1, 0.02)), centroid(region(L('ulna'), 'y', 1, 0.02))),
+      art_radiocarpalis: (() => { const c = centroid(region(L('radius'), 'y', -1, 0.012)); return c && c.add(new THREE.Vector3(0, -0.006, 0)); })(),
+      art_coxae: centroid(region(L('femur'), 'y', 1, 0.035).filter((v, _, all) => v.x < Math.min(...all.map((w) => w.x)) + 0.045)),
+      art_sacroiliaca: centroid(region('Sacrum', 'x', 1, 0.012)),
+      art_genus: mid(centroid(region(L('femur'), 'y', -1, 0.02)), centroid(region(L('tibia'), 'y', 1, 0.02))),
+      art_talocruralis: centroid(region(L('talus'), 'y', 1, 0.01)),
+      art_subtalaris: centroid(region(L('talus'), 'y', -1, 0.01)),
+      art_atlantooccipitalis: (() => { const c = centroid(region('Atlas', 'y', 1, 0.008)); return c && c.setX(0); })(),
+      art_temporomandibularis: centroid(region('Mandible', 'y', 1, 0.015).filter((v) => v.x > 0)),
+    };
+    for (const [id, p] of Object.entries(pos)) {
+      const g = this.byId.get(id);
+      if (!g || !p) continue;
+      g.children.forEach((m, k) => m.position.set(k === 0 ? p.x : -p.x, p.y, p.z));
+    }
+  }
+
+  // Die vier Muskeln ohne BodyParts3D-Modell als Platten zwischen echten Knochenpunkten aufbauen
+  buildSheetMuscles() {
+    this.scene.updateMatrixWorld(true);
+    const L = (n) => 'Left ' + n; // linke Körperhälfte liegt bei x > 0
+    const hip = this.partVerts(L('hip bone'));
+    const rib12 = this.partVerts(L('twelfth rib'));
+    const hum = this.partVerts(L('humerus'));
+    if (!hip.length || !rib12.length || !hum.length) return; // Modelle unvollständig → Schema bleibt
+
+    const maxBy = (vs, f) => vs.reduce((b, v) => (f(v) > f(b) ? v : b));
+    const minBy = (vs, f) => vs.reduce((b, v) => (f(v) < f(b) ? v : b));
+    const lerp = THREE.MathUtils.lerp;
+    const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+
+    const pubis = maxBy(hip.filter((v) => v.x < 0.03), (v) => v.y);                 // Oberrand der Symphyse
+    const crestTop = maxBy(hip, (v) => v.y);                                           // höchster Punkt des Beckenkamms
+    const crestBack = minBy(hip.filter((v) => v.y > crestTop.y - 0.04), (v) => v.z);   // hinterer Beckenkamm
+    const xiph = this.extreme('Xiphoid process', 'y', -1) || V3(0, 1.17, 0.12);
+    const cc5 = this.extreme(L('fifth costal cartilage'), 'z', 1) || xiph.clone().add(V3(0.06, 0.03, 0));
+    const cc7 = this.extreme(L('seventh costal cartilage'), 'y', -1) || xiph.clone().add(V3(0.08, -0.03, 0));
+    const rib12Tip = maxBy(rib12, (v) => v.x);
+    const rib12Med = minBy(rib12, (v) => v.x);
+    const spine = (n) => this.extreme(n, 'z', -1); // Dornfortsatzspitze (am weitesten hinten)
+    const T7 = spine('Seventh thoracic vertebra'), L1 = spine('First lumbar vertebra');
+    const L3 = spine('Third lumbar vertebra'), L5 = spine('Fifth lumbar vertebra');
+    const humTop = maxBy(hum, (v) => v.y);
+    // Crista tuberculi minoris: vorne-medial, 4–9 cm unter dem Humeruskopf
+    const humInsert = maxBy(hum.filter((v) => v.y > humTop.y - 0.09 && v.y < humTop.y - 0.04), (v) => v.z - v.x * 0.5);
+    const L3body = this.partVerts('Third lumbar vertebra');
+    const L3mid = L3body.length ? L3body.reduce((a, v) => a + v.z, 0) / L3body.length : -0.02;
+    const costalZ = Math.max(cc5.z, cc7.z);
+
+    const sheets = {};
+
+    // M. rectus abdominis: Crista pubica/Symphyse → Rippenknorpel 5–7 und Proc. xiphoideus, Bauchwand leicht gewölbt
+    {
+      const rows = [];
+      const yTop = (cc5.y + cc7.y) / 2;
+      for (let i = 0; i <= 12; i++) {
+        const t = i / 12;
+        const y = lerp(pubis.y + 0.005, yTop, t);
+        const zLine = lerp(pubis.z + 0.012, costalZ + 0.006, t) + Math.sin(Math.PI * t) * 0.03;
+        const w = lerp(0.03, Math.max(0.06, cc7.x - 0.01), t);
+        const row = [];
+        for (let j = 0; j <= 4; j++) {
+          const u = j / 4;
+          row.push(V3(0.008 + w * u, y, zLine - u * u * 0.02));
+        }
+        rows.push(row);
+      }
+      sheets.rectus_abdominis = slab(rows, 0.008);
+    }
+
+    // M. transversus abdominis: tiefe Schicht um die Taille, von der Fascia thoracolumbalis bis zur Linea alba
+    {
+      const rows = [];
+      const yLow = crestTop.y - 0.01, yHigh = cc7.y - 0.01;
+      for (let i = 0; i <= 6; i++) {
+        const t = i / 6;
+        const y = lerp(yLow, yHigh, t);
+        const front = lerp(pubis.z, costalZ - 0.01, t) + Math.sin(Math.PI * t) * 0.018;
+        const zc = (front + L3mid) / 2 - 0.005, rz = (front - L3mid) / 2 + 0.004;
+        const rx = 0.115 + Math.sin(Math.PI * t) * 0.01;
+        const row = [];
+        for (let j = 0; j <= 10; j++) {
+          const a = (j / 10) * Math.PI * 0.95; // von hinten (0) über die Flanke nach vorne
+          row.push(V3(0.06 + Math.sin(a) * (rx - 0.06) - (j / 10) ** 3 * 0.045, y, zc - Math.cos(a) * rz));
+        }
+        rows.push(row);
+      }
+      sheets.transversus_abdominis = slab(rows, 0.005);
+    }
+
+    // M. latissimus dorsi: Fächer von den Dornfortsätzen T7–L5 und dem hinteren Beckenkamm zur Crista tuberculi minoris
+    if (T7 && L1 && L3 && L5) {
+      const origins = [T7, L1, L3, L5, crestBack].map((v) => v.clone().add(V3(0.004, 0, -0.006)));
+      const rows = [];
+      for (let i = 0; i <= 10; i++) {
+        const s = i / 10;
+        rows.push(origins.map((o, k) => bez(o, V3(0.15, lerp(o.y, humInsert.y, 0.45), -0.085 + k * 0.004), humInsert, s)));
+      }
+      sheets.latissimus_dorsi = slab(rows, 0.006);
+    }
+
+    // M. quadratus lumborum: Beckenkamm → 12. Rippe und Querfortsätze L1–L4
+    {
+      const zq = L3mid - 0.012, yMid = (crestTop.y + rib12Med.y) / 2;
+      const rows = [
+        [V3(0.035, crestTop.y - 0.015, zq), V3(0.065, crestTop.y - 0.01, zq), V3(0.095, crestTop.y - 0.005, zq - 0.005)],
+        [V3(0.032, yMid, zq), V3(0.055, yMid, zq), V3(0.08, yMid + 0.01, zq - 0.004)],
+        [V3(0.03, rib12Med.y, zq), V3(0.045, rib12Med.y + 0.005, zq), V3(Math.min(rib12Tip.x, 0.07), rib12Med.y - 0.005, zq - 0.004)],
+      ];
+      sheets.quadratus_lumborum = slab(rows, 0.012);
+    }
+
+    for (const [id, geo] of Object.entries(sheets)) {
+      const g = this.byId.get(id);
+      if (!g) continue;
+      for (const m of [...g.children]) { g.remove(m); this.meshes.splice(this.meshes.indexOf(m), 1); }
+      for (const sx of [1, -1]) { // Platten für links bauen und für rechts spiegeln
+        const m = new THREE.Mesh(geo, g.userData.mats[0]);
         m.scale.x = sx;
-        m.userData = { id: primary, kind: group.userData.kind, real: true };
-        group.add(m);
+        m.userData = { id, kind: 'muscle', real: false };
+        g.add(m);
         this.meshes.push(m);
       }
     }
