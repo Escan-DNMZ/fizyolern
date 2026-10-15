@@ -34,6 +34,6 @@ Uygulamanın **HTTPS** ile yayınlanması gerekir (çevrimdışı çalışma iç
 İlerleme sadece telefonda saklanır; Ayarlar → "Yedeği indir" ile yedek alabilirsin.
 
 ## Notlar
-- 3D model şematiktir (kasların konumu ve başlangıç–bitiş noktaları için). Gerçekçi bir atlas değildir.
+- 3D kemikler: BodyParts3D, © The Database Center for Life Science (DBCLS), CC BY 4.0. 3D kas modelleri Sinew (sinew.pin.games) oyunundan (`models/`). Kafatası, boyun omurları ve Sinew'de olmayan kaslar şematiktir.
 - İçerik ders kitaplarıyla (Prometheus, Schünke vb.) kontrol edilmelidir.
 - Three.js (MIT lisansı) `vendor/` klasöründe yerel olarak bulunur.

@@ -1,6 +1,6 @@
 // Service Worker: alle App-Dateien offline verfügbar machen.
 // Bei jeder Änderung an den Dateien VERSION erhöhen, damit Handys die neue Version laden.
-const VERSION = 'fizyolern-v2';
+const VERSION = 'fizyolern-v3';
 const FILES = [
   './',
   './index.html',
@@ -15,6 +15,13 @@ const FILES = [
   './js/data/questions.js',
   './vendor/three.module.min.js',
   './vendor/OrbitControls.js',
+  './vendor/GLTFLoader.js',
+  './vendor/DRACOLoader.js',
+  './vendor/BufferGeometryUtils.js',
+  './vendor/draco/draco_decoder.wasm',
+  './vendor/draco/draco_wasm_wrapper.js',
+  './models/bones.glb',
+  './models/muscles.glb',
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png',

@@ -5,6 +5,15 @@ import { BONES, MUSCLES, JOINTS } from './data/anatomy.js';
 
 const V = (p, sx = 1) => new THREE.Vector3(p[0] * sx, p[1], p[2]);
 
+// Passt schematische Muskel- und Gelenkpunkte an das echte BodyParts3D-Skelett an:
+// dort stehen die Beine enger zusammen und das Knie liegt etwas tiefer.
+function warp([x, y, z]) {
+  if (y >= 0.9 || x <= 0.03) return [x, y, z];
+  if (y <= 0.49) return [x - 0.03, 0.06 + ((y - 0.075) * (0.445 - 0.06)) / (0.49 - 0.075), z];
+  const t = (0.9 - y) / (0.9 - 0.49);
+  return [x - 0.03 * t, 0.88 - t * (0.88 - 0.445), z];
+}
+
 const COLORS = {
   bone: 0xe8dcc2,
   muscle: 0xb8383b,
@@ -137,8 +146,8 @@ function primitive(p, sx) {
     }
     default: {
       // Muskelteil
-      const a = V(p.a, sx);
-      const b = V(p.b, sx);
+      const a = V(warp(p.a), sx);
+      const b = V(warp(p.b), sx);
       const m = new THREE.Mesh(SPINDLE);
       const len = orient(m, a, b, p.n ? V(p.n, sx) : null);
       m.scale.set(p.r, len, p.r * (p.f || 1));
@@ -146,6 +155,47 @@ function primitive(p, sx) {
       return [m];
     }
   }
+}
+
+// Muskel-Meshes aus Sinew -> Struktur-IDs (erste ID = Gruppe, weitere werden mitdargestellt)
+const MUSCLE_MESHES = {
+  bicepsFemLong: ['biceps_femoris'],
+  bicepsFemShort: ['biceps_femoris'],
+  bicepsLong: ['biceps_brachii'],
+  bicepsShort: ['biceps_brachii'],
+  brachialis: ['brachialis'],
+  brachioradialis: ['brachioradialis'],
+  deltoid: ['deltoideus'],
+  extensorDig: ['extensor_digitorum'],
+  fdp: ['flexor_digitorum_profundus'],
+  fds: ['flexor_digitorum_superficialis'],
+  gastrocnemius: ['gastrocnemius'],
+  gluteus: ['gluteus_maximus'],
+  iliopsoas: ['iliopsoas'],
+  rectusFemoris: ['rectus_femoris'],
+  semis: ['semitendinosus', 'semimembranosus'],
+  soleus: ['soleus'],
+  supraspinatus: ['supraspinatus'],
+  tibialisAnt: ['tibialis_anterior'],
+  tricepsLat: ['triceps_brachii'],
+  tricepsLong: ['triceps_brachii'],
+  tricepsMed: ['triceps_brachii'],
+  vasti: ['vastus_lateralis', 'vastus_medialis', 'vastus_intermedius'],
+};
+
+// Englische BodyParts3D-Knochennamen -> Struktur-IDs
+function boneIdsFor(name) {
+  const n = name.toLowerCase();
+  const rules = [
+    [/thoracic vertebra/, 'bws'], [/lumbar vertebra/, 'lws'], [/^sacrum/, 'sacrum'], [/^sternum/, 'sternum'],
+    [/\brib\b/, 'costae'], [/clavicle/, 'clavicula'], [/scapula/, 'scapula'], [/humerus/, 'humerus'],
+    [/scaphoid|lunate|triquetral|pisiform|trapezium|trapezoid|capitate|hamate/, 'carpus'],
+    [/metacarpal|finger|thumb/, 'manus'], [/radius/, 'radius'], [/ulna/, 'ulna'],
+    [/hip bone/, 'os_coxae'], [/femur/, 'femur'], [/patella/, 'patella'], [/tibia/, 'tibia'], [/fibula/, 'fibula'],
+    [/talus/, 'talus'], [/calcaneus/, 'calcaneus'], [/navicular|cuboid|cuneiform|metatarsal|toe/, 'pes'],
+  ];
+  const hit = rules.find(([re]) => re.test(n));
+  return hit ? [hit[1]] : null;
 }
 
 export class Anatomy3D {
@@ -188,11 +238,75 @@ export class Anatomy3D {
     this.controls.update();
 
     this.goal = null; // Kamerafahrt-Ziel
+    this.alias = {}; // Struktur-ID -> ID der Gruppe, deren echtes Mesh sie mitdarstellt
 
     this.build();
     this.bindPicking();
+    this.ready = this.loadRealModels().catch((e) => console.warn('Echte 3D-Modelle nicht geladen, schematisches Modell bleibt:', e));
 
     new ResizeObserver(() => this.resize()).observe(container);
+  }
+
+  // Ersetzt schematische Teile durch die echten Modelle (BodyParts3D-Knochen, Sinew-Muskeln)
+  async loadRealModels() {
+    const [{ GLTFLoader }, { DRACOLoader }] = await Promise.all([
+      import('../vendor/GLTFLoader.js'),
+      import('../vendor/DRACOLoader.js'),
+    ]);
+    const draco = new DRACOLoader().setDecoderPath(new URL('../vendor/draco/', import.meta.url).href);
+    const loader = new GLTFLoader().setDRACOLoader(draco);
+    const base = new URL('../models/', import.meta.url).href;
+    const [bones, muscles] = await Promise.all([
+      loader.loadAsync(base + 'bones.glb'),
+      loader.loadAsync(base + 'muscles.glb'),
+    ]);
+    this.useReal(bones.scene, (n) => boneIdsFor(n));
+    this.useReal(muscles.scene, (n) => MUSCLE_MESHES[n]);
+    draco.dispose();
+    this.applyVisibility();
+    if (this.selected) this.select(this.selected, { silent: true });
+  }
+
+  useReal(scene, idsFor) {
+    // BodyParts3D: Millimeter, z = oben, vorne = -y, nur rechte Körperhälfte (x < 0).
+    // → Meter, y = oben, vorne = +z; leicht verschoben, damit es zu den schematischen Teilen passt.
+    const T = new THREE.Matrix4().makeTranslation(0, 0.07, -0.08)
+      .multiply(new THREE.Matrix4().makeRotationX(-Math.PI / 2))
+      .multiply(new THREE.Matrix4().makeScale(0.001, 0.001, 0.001));
+    scene.updateMatrixWorld(true);
+    const list = [];
+    scene.traverse((o) => { if (o.isMesh) list.push(o); });
+    const cleared = new Set();
+    const clear = (id) => {
+      if (cleared.has(id)) return;
+      cleared.add(id);
+      const g = this.byId.get(id);
+      if (!g) return;
+      for (const m of [...g.children]) {
+        g.remove(m);
+        this.meshes.splice(this.meshes.indexOf(m), 1);
+      }
+    };
+    for (const src of list) {
+      const ids = idsFor(src.name);
+      if (!ids) continue;
+      const [primary, ...others] = ids;
+      const group = this.byId.get(primary);
+      if (!group) continue;
+      clear(primary);
+      others.forEach((id) => { clear(id); this.alias[id] = primary; });
+      const geo = src.geometry.clone().applyMatrix4(T.clone().multiply(src.matrixWorld));
+      if (!geo.attributes.normal) geo.computeVertexNormals();
+      geo.computeBoundingBox();
+      const mirror = geo.boundingBox.max.x < 0.005; // nur paarige Strukturen spiegeln
+      for (const sx of mirror ? [1, -1] : [1]) {
+        const m = new THREE.Mesh(geo, group.userData.mats[0]);
+        m.scale.x = sx;
+        m.userData = { id: primary, kind: group.userData.kind, real: true };
+        group.add(m);
+        this.meshes.push(m);
+      }
+    }
   }
 
   build() {
@@ -204,7 +318,7 @@ export class Anatomy3D {
       const mat = new THREE.MeshStandardMaterial({ color: baseColor, roughness: kind === 'bone' ? 0.65 : 0.5, metalness: 0.0 });
       const tendonMat = new THREE.MeshStandardMaterial({ color: COLORS.tendon, roughness: 0.4 });
       if (kind === 'joint') { mat.transparent = true; mat.opacity = 0.6; }
-      const parts = kind === 'joint' ? [{ t: 'sph', c: s.c, r: s.r }] : s.g;
+      const parts = kind === 'joint' ? [{ t: 'sph', c: warp(s.c), r: s.r }] : s.g;
       for (const sx of sides) {
         for (const p of parts) {
           for (const m of primitive(p, sx)) {
@@ -227,23 +341,24 @@ export class Anatomy3D {
   }
 
   applyVisibility() {
+    const sel = this.alias[this.selected] || this.selected;
     for (const [id, g] of this.byId) {
       const kind = g.userData.kind;
       let vis = this.layers[kind];
       if (kind === 'muscle' && this.muscleOpacity <= 0.02) vis = false;
-      if (this.isolated && this.selected) vis = id === this.selected || (kind === 'bone' && this.layers.bone);
-      if (this.isolated && this.selected && id === this.selected) vis = true;
+      if (this.isolated && sel) vis = id === sel || (kind === 'bone' && this.layers.bone);
+      if (this.isolated && sel && id === sel) vis = true;
       g.visible = vis;
       const [mat, tendonMat] = g.userData.mats;
       if (kind === 'muscle') {
-        const op = id === this.selected ? 1 : this.muscleOpacity;
+        const op = id === sel ? 1 : this.muscleOpacity;
         for (const m of [mat, tendonMat]) {
           m.transparent = op < 1;
           m.opacity = op;
           m.depthWrite = op >= 1;
         }
       }
-      if (kind === 'bone' && this.isolated && this.selected && id !== this.selected) {
+      if (kind === 'bone' && this.isolated && sel && id !== sel) {
         mat.transparent = true; mat.opacity = 0.35; mat.depthWrite = false;
       } else if (kind === 'bone') {
         mat.transparent = false; mat.opacity = 1; mat.depthWrite = true;
@@ -257,11 +372,11 @@ export class Anatomy3D {
 
   select(id, { focus = true, silent = false } = {}) {
     if (this.selected) {
-      const prev = this.byId.get(this.selected);
+      const prev = this.byId.get(this.alias[this.selected] || this.selected);
       if (prev) prev.userData.mats.forEach((m) => m.emissive.setHex(0x000000));
     }
     this.selected = id;
-    const g = id && this.byId.get(id);
+    const g = id && this.byId.get(this.alias[id] || id);
     if (g) {
       // Ebene einblenden, falls ausgeblendet
       if (!this.layers[g.userData.kind]) this.layers[g.userData.kind] = true;

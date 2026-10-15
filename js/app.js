@@ -687,7 +687,7 @@ function renderSettings() {
     </div>
     <div class="section-title">Diğer</div>
     <button class="btn danger block" id="resetBtn">Tüm ilerlemeyi sıfırla</button>
-    <p class="muted small" style="margin-top:24px;padding:0 4px">3D model şematik bir modeldir (gerçek ölçekli bir anatomi atlası değildir); kasların başlangıç–bitiş noktalarını ve konumlarını öğrenmek için tasarlandı. İçerik ders kitapları (ör. Prometheus, Schünke) ile kontrol edilmelidir.</p>
+    <p class="muted small" style="margin-top:24px;padding:0 4px">3D kemikler: <b>BodyParts3D</b>, © The Database Center for Life Science (DBCLS), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. 3D kas modelleri <b>Sinew</b> (sinew.pin.games) oyunundan. Kafatası, boyun omurları ve diğer kaslar şematik çizimdir. İçerik ders kitapları (ör. Prometheus, Schünke) ile kontrol edilmelidir.</p>
   `;
   ['cardsGoal', 'quizGoal', 'newPerDay'].forEach((k) => $('#' + k).addEventListener('change', (e) => {
     const v = parseInt(e.target.value, 10);
