@@ -1,0 +1,49 @@
+// Service Worker: alle App-Dateien offline verfügbar machen.
+// Bei jeder Änderung an den Dateien VERSION erhöhen, damit Handys die neue Version laden.
+const VERSION = 'fizyolern-v2';
+const FILES = [
+  './',
+  './index.html',
+  './manifest.webmanifest',
+  './css/style.css',
+  './js/app.js',
+  './js/store.js',
+  './js/quizgen.js',
+  './js/anatomy3d.js',
+  './js/data/anatomy.js',
+  './js/data/vocab.js',
+  './js/data/questions.js',
+  './vendor/three.module.min.js',
+  './vendor/OrbitControls.js',
+  './icons/icon-180.png',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+];
+
+self.addEventListener('install', (e) => {
+  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
+});
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim()),
+  );
+});
+
+// Netzwerk zuerst (damit Updates ankommen), bei Offline aus dem Cache
+self.addEventListener('fetch', (e) => {
+  if (e.request.method !== 'GET') return;
+  e.respondWith(
+    fetch(e.request)
+      .then((res) => {
+        if (res.ok && new URL(e.request.url).origin === location.origin) {
+          const copy = res.clone();
+          caches.open(VERSION).then((c) => c.put(e.request, copy));
+        }
+        return res;
+      })
+      .catch(() => caches.match(e.request, { ignoreSearch: true }).then((r) => r || caches.match('./index.html'))),
+  );
+});

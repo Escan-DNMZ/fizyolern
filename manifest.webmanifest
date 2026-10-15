@@ -1,0 +1,17 @@
+{
+  "name": "FizyoLern – Physio lernen",
+  "short_name": "FizyoLern",
+  "description": "Günlük fizyoterapi çalışması: testler, açık uçlu sorular, kelime kartları ve 3D anatomi.",
+  "lang": "tr",
+  "start_url": "./#/bugun",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f2f2f7",
+  "theme_color": "#0f766e",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
