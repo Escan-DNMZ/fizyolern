@@ -67,8 +67,9 @@ function deckCards(deck) {
       back: `<div class="big">${esc(rev ? v.de : v.tr)}</div>${v.ex ? `<div class="sub">„${esc(v.ex)}“</div>` : ''}`,
     }));
   }
-  if (deck === 'fehler') {
-    return fehlerList().map((f) => ({
+  if (deck === 'fehler' || deck.startsWith('fehler:')) {
+    const only = deck.startsWith('fehler:') ? deck.slice(7).split(',').filter(Boolean) : null;
+    return fehlerList().filter((f) => !only || only.includes(f.fach)).map((f) => ({
       id: f.id, tag: '✗ ' + f.fach, front: f.q,
       // Aus Notion: Lückentext-Segmente (fett = Antwort); aus Datei: Frage/Antwort/Türkçe
       back: f.seg
@@ -136,6 +137,8 @@ const routes = {
   ayarlar: { title: 'Ayarlar', tab: null, render: renderSettings, back: '#/bugun' },
   rapor: { title: 'Durum Raporu', tab: 'bugun', render: () => renderReport(view, toast), back: '#/bugun' },
   kelime: { title: 'Günün Kelimeleri', tab: 'bugun', render: renderWordSession, back: '#/bugun' },
+  donus: { title: 'Dönüş Yolu', tab: 'bugun', render: renderDonus, back: '#/bugun' },
+  oku: { title: 'Ders Notları – Okuma', tab: 'bugun', render: renderReading, back: '#/donus' },
 };
 
 function navigate() {
@@ -256,6 +259,14 @@ function renderToday() {
         <a class="btn ghost" href="#/3d?id=${b.id}">3D'de göster</a>
       </div>
     </div>
+
+    ${(() => {
+      const now = new Date();
+      if (now.getHours() * 60 + now.getMinutes() < 14 * 60 + 30) return '';
+      const { steps, total } = donusInfo();
+      const left = steps.filter((x) => x.state === 'open').length;
+      return `<a class="card row" href="#/donus" style="text-decoration:none;color:inherit;border:2px solid var(--accent)"><span class="grow"><div class="eyebrow">🚆 Dönüş yolu</div><h2>${left ? `${left} adım · ≈ ${total} dk` : 'Bugünün tekrarı tamam ✓'}</h2><div class="muted small">Hatalar → kelimeler → bugünün notları + mini test</div></span><span class="chev">›</span></a>`;
+    })()}
 
     <a class="card row" href="#/rapor" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">Claude ile çalış</div><h2>Durum raporu</h2><div class="muted small">Bugünkü durumunu Claude'a gönderilecek bir mesaja çevir</div></span><span class="chev">›</span></a>
 
@@ -508,6 +519,87 @@ function renderWordEnd(words) {
   wordSess = null;
 }
 
+// ───────────────────────── Dönüş yolu (Rückweg) ─────────────────────────
+// Fächer von heute: Morgentest + erkannte Kursnamen
+function todayFaecher(plan = todayPlan()) {
+  if (!plan) return [];
+  const text = (plan.kurse || []).join(' ').replace(/PT-Befund/g, 'PT Befund');
+  const hit = FAECHER.filter((f) => text.includes(f) || (f === 'Anatomie' && /\bANA\b/.test(text)));
+  return [...new Set([...(plan.test || []), ...hit])];
+}
+
+// Höchstens 2 Lektionen pro Rückweg: Fächer des Morgentests zuerst, je Fach die am längsten nicht gelesene
+function readingLessons(fs = todayFaecher()) {
+  const read = store.get().learned;
+  const out = [];
+  for (const f of fs) {
+    const l = LESSONS.filter((x) => x.fach === f).sort((a, b) => (read['les:' + a.id] || '').localeCompare(read['les:' + b.id] || ''))[0];
+    if (l && !out.includes(l)) out.push(l);
+    if (out.length === 2) break;
+  }
+  return out;
+}
+
+function donusInfo() {
+  const d = store.day();
+  const fs = todayFaecher();
+  const st = d.donus || {};
+  const wrong = (d.wrong || []).length;
+  const fehlerCards = deckCards('fehler:' + fs.join(',')).filter((c) => store.isNew(c.id) || store.isDue(c.id)).length;
+  const lessons = readingLessons(fs);
+  const kern = lessons.reduce((n, l) => n + l.kern.length, 0);
+  const steps = [
+    { key: 'hatalar', icon: '❌', title: 'Bugünün hataları', sub: wrong ? `${wrong} yanlış soru (sabah testi)` : 'Bugün yanlış soru yok', min: Math.ceil(wrong * 1.5), href: '#/test?kat=' + encodeURIComponent('Hatalar: bugün'), empty: !wrong },
+    { key: 'fehler', icon: '✗', title: 'Notion ✗ kartları', sub: fs.length ? `${fehlerCards} kart · ${fs.join(' + ')}` : 'Bugün ders yok', min: fehlerCards, href: '#/oturum/' + encodeURIComponent('fehler:' + fs.join(',')), empty: !fehlerCards },
+    { key: 'kelime', icon: '🔤', title: 'Dönüş kelimeleri', sub: `${WORDS_PER_DAY} kelime, başka soru tipiyle`, min: 8, href: '#/kelime/donus', done: !!d.wordsReturn },
+    { key: 'notlar', icon: '📖', title: 'Bugünün ders notları', sub: lessons.length ? `${lessons.length} ders · ${kern} cümle + 5 soruluk mini test` : 'Bugünün dersi için not yok', min: lessons.length ? Math.ceil(kern * 0.75) + 6 : 0, href: '#/oku', empty: !lessons.length },
+  ];
+  for (const s of steps) s.state = s.done ? 'done' : st[s.key] || (s.empty ? 'empty' : 'open');
+  return { steps, total: steps.filter((s) => s.state === 'open').reduce((n, s) => n + s.min, 0), fs };
+}
+
+function markDonus(key, value = 'done') {
+  const d = store.day();
+  d.donus = { ...(d.donus || {}), [key]: value };
+  store.save();
+}
+
+function renderDonus() {
+  const { steps, total, fs } = donusInfo();
+  view.innerHTML = `
+    <div class="card">
+      <div class="eyebrow">🚆 Dönüş yolu</div>
+      <h2>Bugünün tekrarı · ≈ ${total} dk</h2>
+      <div class="muted small">${fs.length ? 'Bugünkü dersler: ' + esc(fs.join(' + ')) : 'Bugün için program yok'} · her adım tek dokunuşla atlanabilir</div>
+    </div>
+    <div class="list">
+      ${steps.map((s, n) => `<div style="display:block">
+        <div class="row"><span class="check ${s.state === 'done' || s.state === 'skip' ? 'done' : ''}">${s.state === 'done' ? '✓' : s.state === 'skip' ? '–' : n + 1}</span>
+          <span class="grow"><b>${s.icon} ${esc(s.title)}</b><div class="muted small">${esc(s.sub)}${s.min && s.state === 'open' ? ` · ≈ ${s.min} dk` : ''}</div></span></div>
+        ${s.state === 'open' ? `<div class="grid2" style="margin-top:8px"><a class="btn" href="${s.href}">Başla</a><button class="btn plain" data-skip="${s.key}">Atla</button></div>` : ''}
+      </div>`).join('')}
+    </div>
+    <a class="btn ghost block" href="#/rapor">Durum raporunu Claude'a gönder</a>`;
+  $$('[data-skip]').forEach((b) => b.addEventListener('click', () => { markDonus(b.dataset.skip, 'skip'); renderDonus(); }));
+}
+
+// Lesemodus: Kernaussagen der heutigen Fächer, große Schrift, danach Mini-Test
+function renderReading() {
+  const fs = todayFaecher();
+  const lessons = readingLessons(fs);
+  if (!lessons.length) { view.innerHTML = '<p class="empty">Bugünün dersleri için not yok.</p><a class="btn block" href="#/donus">Geri</a>'; return; }
+  view.innerHTML = `
+    <p class="muted small" style="padding:0 4px">Kaydırarak oku · Almanca cümle, altında Türkçesi</p>
+    ${lessons.map((l) => `
+      <div class="section-title" lang="de">${esc(l.fach)} · ${esc(l.title)}</div>
+      ${l.kern.map((k) => `<div class="card read-card"><div lang="de">${esc(k.de)}</div><div class="muted">🇹🇷 ${esc(k.tr)}</div></div>`).join('')}`).join('')}
+    <button class="btn block" id="readDone" style="margin-top:12px">Okudum ✓ → Mini test (5 soru)</button>
+    <button class="btn plain block" id="readSkip" style="margin-top:8px">Testi atla</button>`;
+  const markRead = () => { lessons.forEach((l) => { store.get().learned['les:' + l.id] = store.today(); }); markDonus('notlar'); };
+  $('#readDone').addEventListener('click', () => { markRead(); location.hash = '#/test?kat=' + encodeURIComponent('Lektion: ' + lessons.map((l) => l.id).join(',')) + '&donus=1'; });
+  $('#readSkip').addEventListener('click', () => { markRead(); location.hash = '#/donus'; });
+}
+
 // ───────────────────────── Quiz ─────────────────────────
 let quiz = null;
 
@@ -520,7 +612,9 @@ function renderQuizStart(_, params = new URLSearchParams()) {
     // Direktstart, z. B. Morgentest aus dem Tagesplan oder Test zu einer Lektion
     quizCat = kat;
     history.replaceState(null, '', '#/test');
-    quiz = { qs: buildQuiz(kat, store.get().settings.quizGoal, store.get().customVocab), i: 0, right: 0, wrong: [], finished: false, cat: kat };
+    const donus = params.get('donus') === '1' || kat.startsWith('Dönüş: ');
+    const n = donus ? 5 : kat.startsWith('Hatalar: ') ? 30 : store.get().settings.quizGoal;
+    quiz = { qs: buildQuiz(kat, n, store.get().customVocab), i: 0, right: 0, wrong: [], finished: false, cat: kat, donus };
     if (!quiz.qs.length) { quiz = null; toast('Bu kategori için soru yok'); } else return renderQuizQuestion();
   }
   if (quiz && !quiz.finished) return renderQuizQuestion();
@@ -560,7 +654,7 @@ function renderQuizQuestion() {
     const ok = i === q.ans;
     $$('.opt').forEach((b, j) => { b.disabled = true; if (j === q.ans) b.classList.add('correct'); });
     if (!ok) { btn.classList.add('wrong'); quiz.wrong.push(q); } else quiz.right++;
-    if (navigator.vibrate) navigator.vibrate(ok ? 15 : [30, 40, 30]);
+    if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(ok ? 15 : [30, 40, 30]);
     store.recordQuiz(q.id, ok);
     $('#after').innerHTML = `<div class="explain">${ok ? '✅ Doğru! ' : '❌ Yanlış. '}${esc(q.x)}</div><button class="btn block" id="next">${quiz.i + 1 < quiz.qs.length ? 'Sonraki soru' : 'Sonucu gör'}</button>`;
     $('#next').addEventListener('click', () => { quiz.i++; renderQuizQuestion(); });
@@ -573,6 +667,8 @@ function renderQuizEnd() {
   quiz.finished = true;
   const plan = todayPlan();
   if (plan && plan.test.length && quiz.cat === 'Ders: ' + plan.test.join(',') && quiz.qs.length) { store.day().morning = true; store.save(); }
+  if (quiz.cat === 'Hatalar: bugün') markDonus('hatalar');
+  if (quiz.donus) markDonus('test');
   const n = quiz.qs.length;
   const pct = n ? Math.round((quiz.right / n) * 100) : 0;
   view.innerHTML = `
@@ -702,12 +798,13 @@ function renderCardSession([deckId]) {
   if (!session || session.deck !== deckId) {
     const cards = deckCards(deckId);
     // Fehlerkarten immer alle zeigen (kein Tageslimit für neue Karten)
-    session = { deck: deckId, queue: store.buildSession(cards, { noNewLimit: deckId === 'fehler' }), done: 0, flipped: false };
+    session = { deck: deckId, queue: store.buildSession(cards, { noNewLimit: deckId.startsWith('fehler') }), done: 0, flipped: false };
   }
   const deck = DECKS().find((d) => d.id === deckId);
   $('#title').textContent = deck ? deck.name : 'Kartlar';
   const card = session.queue[0];
   if (!card) {
+    if (deckId.startsWith('fehler:')) markDonus('fehler');
     view.innerHTML = `
       <div class="empty"><div style="font-size:48px">🎉</div><h2>Bu deste için bugünlük bitti!</h2>
       <p>${session.done} kart tekrar edildi.</p></div>

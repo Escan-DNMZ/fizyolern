@@ -117,7 +117,15 @@ export function recordQuiz(qid, correct) {
   const d = day();
   d.quiz++;
   if (correct) d.quizRight++;
+  else d.wrong = [...new Set([...(d.wrong || []), qid])]; // für „Dönüş yolu“ und Samstag
   save();
+}
+
+// Falsch beantwortete Fragen der letzten n Tage (ohne Duplikate)
+export function wrongSince(n = 7) {
+  const ids = new Set();
+  for (let k = 0; k < n; k++) ((state.days[today(-k)] || {}).wrong || []).forEach((id) => ids.add(id));
+  return [...ids];
 }
 
 export function recordOpen(qid, score) {

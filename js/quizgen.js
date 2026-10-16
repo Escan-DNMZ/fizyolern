@@ -282,7 +282,24 @@ function levelFilter(q) {
   return true;
 }
 
+// Alle Fragen mit fester ID (für Wiederholung falsch beantworteter Fragen)
+export function questionsByIds(ids) {
+  const want = new Set(ids);
+  const all = [
+    ...ALL_LESSON_MCQ(), ...MCQ, ...MUSCLES.flatMap(muscleQuestions), ...BONES.flatMap(boneQuestions),
+    ...JOINTS.flatMap(jointQuestions), ...ALL_JOINT_DETAIL(),
+  ];
+  const seen = new Set();
+  return all.filter((q) => want.has(q.id) && !seen.has(q.id) && seen.add(q.id));
+}
+
 export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = []) {
+  if (category.startsWith('Hatalar: ')) {
+    // Heute (Rückweg) bzw. diese Woche (Samstag) falsch beantwortete Fragen
+    const ids = category === 'Hatalar: hafta' ? store.wrongSince(7) : (store.day().wrong || []);
+    return shuffle(questionsByIds(ids)).slice(0, n).map(prepare);
+  }
+  if (category.startsWith('Dönüş: ')) category = 'Ders: ' + category.slice(7);
   const vocabPool = [...VOCAB, ...extraVocab];
   const prio = weekTestFaecher();
   const wq = (q) => weight(q.id, prio);
