@@ -8,6 +8,7 @@ import { getToken, setToken, clearToken, looksLikeToken, syncFromNotion } from '
 import { renderReport } from './report.js';
 import { todaysWords, markKnown, recordWord, questionFor, checkTyped, TYPE_LABEL, WORDS_PER_DAY } from './words.js';
 import { MUSCLE3D, LAYER_NAMES, partText } from './data/muscle3d.js';
+import { masteredLessons } from './quizgen.js';
 import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, jointDetailQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked } from './quizgen.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -282,6 +283,9 @@ function renderToday() {
 
 function nextOpenQuestion() {
   const done = store.get().open;
+  const mastered = new Set(masteredLessons().map((l) => l.id));
+  const upgrade = allOpen().find((q) => mastered.has(q.lesson) && !done[q.id]);
+  if (upgrade) return upgrade;
   const all = allOpen();
   return all.find((q) => !done[q.id]) || [...all].sort((a, b) => (done[a.id].score - done[b.id].score) || done[a.id].last.localeCompare(done[b.id].last))[0];
 }
@@ -671,12 +675,18 @@ function renderQuizEnd() {
   if (quiz.donus) markDonus('test');
   const n = quiz.qs.length;
   const pct = n ? Math.round((quiz.right / n) * 100) : 0;
+  const quizLessons = new Set(quiz.qs.map((q) => q.lesson).filter(Boolean));
+  const doneOpen = store.get().open;
+  const upgrade = masteredLessons().filter((l) => quizLessons.has(l.id))
+    .map((l) => ({ l, q: allOpen().find((o) => o.lesson === l.id && !doneOpen[o.id]) || allOpen().find((o) => o.lesson === l.id) }))
+    .filter((x) => x.q);
   view.innerHTML = `
     <div class="card" style="text-align:center">
       <div class="score">${quiz.right}/${n}</div>
       <div class="muted">${pct >= 80 ? 'Harika! 💪' : pct >= 50 ? 'İyi gidiyor, devam!' : 'Tekrar zamanı – yanlışlara bak 👇'}</div>
     </div>
     ${quiz.wrong.length ? `<div class="section-title">Yanlışların</div>${quiz.wrong.map((q) => `<div class="card small"><b>${esc(q.q)}</b><div class="explain">✔︎ ${esc(q.opts[q.ans])}<br><span class="muted">${esc(q.x)}</span></div></div>`).join('')}` : ''}
+    ${upgrade.map(({ l, q }) => `<a class="card row" href="#/soru/${encodeURIComponent(q.id)}" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">⬆️ Seviye atla</div><b lang="de">${esc(l.title)}</b><div class="muted small">Bu dersin soruları 2× üst üste doğru → şimdi açık uçlu soru</div></span><span class="chev">›</span></a>`).join('')}
     <div class="grid2">
       ${quiz.wrong.length ? '<button class="btn ghost" id="retryWrong">Yanlışları tekrarla</button>' : ''}
       <button class="btn" id="again">Yeni test</button>

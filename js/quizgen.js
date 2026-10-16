@@ -32,18 +32,33 @@ function mk(id, cat, q, correct, pool, x, key = (v) => v) {
   return { id, cat, q, o: [correct, ...uniq], a: 0, x, gen: true };
 }
 
-export function muscleQuestions(m) {
+// Muskel-Fragen: Ablenker zuerst aus derselben Körperregion (sonst sind sie zu leicht auszuschließen),
+// in der Erklärung steht, zu welchem Muskel jede falsche Antwort gehört
+const short = (s, n = 55) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
+function mkMuscle(id, q, m, field, xBase, key = (v) => v) {
   const others = MUSCLES.filter((o) => o.id !== m.id);
-  const qs = [
-    mk(`g:inn:${m.id}`, 'Muskeln', `Welcher Nerv innerviert den ${m.la}?`, m.inn, others.map((o) => o.inn),
-      `${m.la} → ${m.inn}`, nerve),
-    mk(`g:ans:${m.id}`, 'Muskeln', `Wo setzt der ${m.la} an?`, m.i, others.map((o) => o.i), `${m.tr}: ${m.i}`),
-    mk(`g:urs:${m.id}`, 'Muskeln', `Wo entspringt der ${m.la}?`, m.o, others.map((o) => o.o), `${m.tr}: ${m.o}`),
-    mk(`g:fkt:${m.id}`, 'Muskeln', `Welche Funktion hat der ${m.la}?`, m.f, others.map((o) => o.f), m.ftr),
-    mk(`g:rev:${m.id}`, 'Muskeln', `Welcher Muskel: Ursprung „${m.o}“, Ansatz „${m.i}“?`, m.la, others.map((o) => o.la),
-      `${m.la} (${m.de}) – ${m.tr}`),
-  ];
-  return qs.filter(Boolean);
+  const ordered = [...shuffle(others.filter((o) => o.region === m.region)), ...shuffle(others.filter((o) => o.region !== m.region))];
+  const picks = [];
+  for (const o of ordered) {
+    if (key(o[field]) === key(m[field]) || picks.some((p) => key(p[field]) === key(o[field]))) continue;
+    picks.push(o);
+    if (picks.length === 3) break;
+  }
+  if (picks.length < 3) return null;
+  const why = field === 'la'
+    ? picks.map((p) => `${p.la} → ${short(p.i, 40)}`).join(' · ')
+    : picks.map((p) => `${short(p[field], 40)} → ${p.la}`).join(' · ');
+  return { id, cat: 'Muskeln', q, o: [m[field], ...picks.map((p) => p[field])], a: 0, x: `${xBase} Diğer şıklar: ${why}`, gen: true };
+}
+
+export function muscleQuestions(m) {
+  return [
+    mkMuscle(`g:inn:${m.id}`, `Welcher Nerv innerviert den ${m.la}?`, m, 'inn', `${m.la} → ${m.inn}.`, nerve),
+    mkMuscle(`g:ans:${m.id}`, `Wo setzt der ${m.la} an?`, m, 'i', `${m.tr}: ${m.i}.`),
+    mkMuscle(`g:urs:${m.id}`, `Wo entspringt der ${m.la}?`, m, 'o', `${m.tr}: ${m.o}.`),
+    mkMuscle(`g:fkt:${m.id}`, `Welche Funktion hat der ${m.la}?`, m, 'f', m.ftr),
+    mkMuscle(`g:rev:${m.id}`, `Welcher Muskel: Ursprung „${m.o}“, Ansatz „${m.i}“?`, m, 'la', `${m.la} (${m.de}) – ${m.tr}. Aynı bölgedeki kaslarla karıştırma:`),
+  ].filter(Boolean);
 }
 
 export function boneQuestions(b) {
@@ -250,6 +265,13 @@ const daysSince = (iso) => (Date.now() - new Date(iso + 'T12:00:00')) / 864e5;
 
 // Gewicht einer Frage: falsch beantwortete und lange nicht gesehene öfter,
 // 3+ mal in Folge richtige seltener – aber nie 0
+// Wichtigkeit der Fächer für diesen Ausbildungsabschnitt
+const FACH_WEIGHT = { Anatomie: 1.6, Physiologie: 1.6, 'PT Befund': 1.2, 'PT Grundlagen': 1.1, PPS: 0.6, Hygiene: 0.6 };
+const fachWeight = (qid) => {
+  const f = lessonFach(qid) || (/^g:(inn|ans|urs|fkt|rev|bla|btr|jtyp|jnn|jx)/.test(qid) ? 'Anatomie' : null);
+  return FACH_WEIGHT[f] || 1;
+};
+
 export function weight(qid, prio = new Set()) {
   const s = store.get().quiz[qid];
   let w;
@@ -262,7 +284,11 @@ export function weight(qid, prio = new Set()) {
     if (st >= 3) w *= st >= 6 ? 0.1 : 0.25;
   }
   if (prio.size && prio.has(lessonFach(qid))) w *= 2.5;
-  return Math.max(w, 0.05);
+  // Gestern richtig beantwortet → heute kaum wieder (falsche kommen weiter über die Wiederholung)
+  if (s && s.last === store.today(-1) && (s.st || 0) >= 1) w *= 0.1;
+  if (s && s.last === store.today() && (s.st || 0) >= 1) w *= 0.05;
+  w *= fachWeight(qid);
+  return Math.max(w, 0.02);
 }
 
 // Gewichtete Stichprobe ohne Zurücklegen (Efraimidis–Spirakis)
@@ -323,6 +349,8 @@ export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = []) {
       ...ALL_LESSON_MCQ().filter((q) => keys.includes(q.cat) || keys.includes(q.lesson)),
       // z. B. Hüft-ROM/Muskelgruppen gehören zum Morgentest „PT Befund“
       ...ALL_JOINT_DETAIL().filter((q) => keys.includes(q.fach)),
+      // An Anatomie-Tagen auch die generierten Muskel-, Knochen- und Gelenkfragen (Ablenker aus derselben Region)
+      ...(keys.includes('Anatomie') ? [...pools.Muskeln(), ...pools.Knochen(), ...JOINTS.flatMap(jointQuestions).filter(levelFilter)] : []),
     ];
   } else if (category === 'Gemischt') {
     // Ausgewogene Mischung: Unterrichtsfragen aus Notion + handgeschriebene + generierte
@@ -338,6 +366,15 @@ export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = []) {
     qs = pools[category]();
   }
   return shuffle(wpickQ(qs, n)).map(prepare);
+}
+
+// Lektionen, deren Fragen „sitzen“ (jede beantwortete Frage ≥ 2× in Folge richtig, mind. 3 beantwortet)
+export function masteredLessons() {
+  const st = store.get().quiz;
+  return LESSONS.filter((l) => {
+    const qs = lessonMcq(l).map((q) => st[q.id]).filter(Boolean);
+    return qs.length >= 3 && qs.every((s) => (s.st || 0) >= 2) && (l.open || []).length;
+  });
 }
 
 // Antwortoptionen mischen und richtigen Index merken
