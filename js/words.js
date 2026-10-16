@@ -126,17 +126,29 @@ function levenshtein(a, b) {
 }
 
 // Getippte Antwort prüfen: Artikel muss bei Nomen stimmen, ein Tippfehler wird toleriert
-export function checkTyped(word, input) {
-  const ans = normAns(input);
-  if (!ans) return { ok: false, close: false };
+// Ein einzelner Teil der Antwort gegen alle Varianten des Eintrags
+function matchPart(word, part) {
+  const ans = normAns(part).replace(/^sich\s+/, '');
+  if (!ans) return null;
   for (const v of variants(word.de)) {
-    const target = normAns(v);
+    const target = normAns(v).replace(/^sich\s+/, '');
     if (ans === target) return { ok: true, exact: true };
     const hasArt = /^(der|die|das)\s/i.test(v);
     if (hasArt && normAns(stripArt(v)) === ans) return { ok: false, close: true, hint: 'Artikel fehlt' };
     if (levenshtein(ans, target) <= 1 && target.length > 4) return { ok: true, exact: false };
   }
   return { ok: false, close: false };
+}
+
+// Getippte Antwort prüfen: eine Variante („kräftigen“) oder mehrere zusammen („kräftigen / die Kräftigung“)
+// sind richtig; Artikel muss bei Nomen stimmen, ein Tippfehler pro Teil wird toleriert
+export function checkTyped(word, input) {
+  const parts = input.split(/\s*(?:\/|,|;|\bund\b)\s*/i).map((p) => p.trim()).filter(Boolean);
+  if (!parts.length) return { ok: false, close: false };
+  const results = parts.map((p) => matchPart(word, p)).filter(Boolean);
+  if (results.every((r) => r.ok)) return { ok: true, exact: results.every((r) => r.exact) };
+  const missingArt = results.find((r) => r.hint);
+  return missingArt ? { ok: false, close: true, hint: missingArt.hint } : { ok: false, close: false };
 }
 
 function lueckentext(word) {
