@@ -2,6 +2,7 @@
 import { MUSCLES, BONES, JOINTS } from './data/anatomy.js';
 import { VOCAB } from './data/vocab.js';
 import { MCQ } from './data/questions.js';
+import { UEBUNGEN } from './data/uebungen.js';
 import { LESSONS, FAECHER } from './lessons.js';
 import * as store from './store.js';
 import { week } from './private.js';
@@ -82,6 +83,42 @@ export function vocabQuestion(v, pool = VOCAB) {
   return Math.random() < 0.5
     ? mk(`g:vde:${v.id}`, 'Vokabeln', `Was bedeutet „${v.de}“?`, v.tr, others.map((o) => o.tr), v.ex || `${v.de} = ${v.tr}`)
     : mk(`g:vtr:${v.id}`, 'Vokabeln', `Wie sagt man auf Deutsch: „${v.tr}“?`, v.de, others.map((o) => o.de), v.ex || `${v.tr} = ${v.de}`);
+}
+
+// ───── Studio-Übungen ↔ Muskel ↔ Bewegung ─────
+const slug = (s) => s.toLowerCase().replace(/[^a-z0-9äöüß]+/g, '-');
+export function exerciseQuestions() {
+  const byEx = {};
+  for (const [mid, list] of Object.entries(UEBUNGEN)) {
+    for (const u of list) (byEx[u.n] = byEx[u.n] || { ...u, muscles: [] }).muscles.push(mid);
+  }
+  const mName = (id) => (MUSCLES.find((m) => m.id === id) || {}).la || id;
+  const moves = (id) => (UEBUNGEN[id] || []).map((u) => u.b);
+  const qs = [];
+  for (const ex of Object.values(byEx)) {
+    // Übung → Muskel: Ablenker nur Muskeln, die bei dieser Bewegung nicht mitarbeiten
+    const exMoves = new Set(ex.muscles.flatMap(moves).filter((b) => b === ex.b));
+    const right = pick(ex.muscles, 1)[0];
+    // gleiche Körperregion, aber anderes Gelenk (z. B. Hip Thrust → Kniestrecker/Wade statt Bizeps); nie ein Mitspieler im selben Gelenk
+    const joint = (b) => b.slice(0, 4);
+    const region = (id) => (MUSCLES.find((m) => m.id === id) || {}).region;
+    const regs = new Set(ex.muscles.map(region));
+    const cand = Object.keys(UEBUNGEN).filter((id) => !ex.muscles.includes(id) && !moves(id).some((b) => exMoves.has(b) || joint(b) === joint(ex.b)));
+    const wrong = [...pick(cand.filter((id) => regs.has(region(id)) || (regs.has('Hüfte') && region(id) === 'Bein') || (regs.has('Bein') && region(id) === 'Hüfte')), 3), ...pick(cand, 6)]
+      .filter((id, i, arr) => arr.indexOf(id) === i).slice(0, 3);
+    if (wrong.length === 3) {
+      qs.push({ id: `g:ub:${slug(ex.n)}`, cat: 'Muskeln', gen: true, q: `Beim „${ex.n}“ arbeitet hauptsächlich …?`, o: [mName(right), ...wrong.map(mName)], a: 0,
+        x: `${ex.n} (${ex.tr}) = ${ex.b} → ${ex.muscles.map(mName).join(', ')}. Diğer şıklar: ${wrong.map((id) => `${mName(id)} → ${moves(id)[0]}`).join(' · ')}.` });
+    }
+    // Bewegung → Übung
+    const others = Object.values(byEx).filter((o) => o.b.split(' ')[0] !== ex.b.split(' ')[0]);
+    const wrongEx = pick(others, 3);
+    if (wrongEx.length === 3) {
+      qs.push({ id: `g:ubb:${slug(ex.n)}`, cat: 'Muskeln', gen: true, q: `Welche Übung trainiert vor allem die ${ex.b}?`, o: [ex.n, ...wrongEx.map((o) => o.n)], a: 0,
+        x: `${ex.n} (${ex.tr}) → ${ex.b} (${ex.muscles.map(mName).join(', ')}). Diğer şıklar: ${wrongEx.map((o) => `${o.n} → ${o.b}`).join(' · ')}.` });
+    }
+  }
+  return qs;
 }
 
 // ───── Gelenk-Details: Neutral-Null (Folie), ADL, Achsen, Muskelgruppen ─────
@@ -199,7 +236,7 @@ export const quizCategories = () => ['Gemischt', ...FAECHER.map((f) => 'Ders: ' 
 // Schwierigkeitsstufen: Muskeln zuerst nur Nerv/Ansatz, dann Ursprung/Funktion,
 // ab >80 % Trefferquote auch die umgekehrten Fragen und die ROM-Werte der Gelenke
 const MUSCLE_LEVEL = { inn: 1, ans: 1, urs: 2, fkt: 2, rev: 3 };
-const GEN_TOPIC = { inn: 'Muskeln', ans: 'Muskeln', urs: 'Muskeln', fkt: 'Muskeln', rev: 'Muskeln', bla: 'Knochen', btr: 'Knochen', jtyp: 'Gelenke', jnn: 'Gelenke', jx: 'Gelenke', vde: 'Vokabeln', vtr: 'Vokabeln' };
+const GEN_TOPIC = { inn: 'Muskeln', ans: 'Muskeln', urs: 'Muskeln', fkt: 'Muskeln', rev: 'Muskeln', bla: 'Knochen', btr: 'Knochen', jtyp: 'Gelenke', jnn: 'Gelenke', jx: 'Gelenke', ub: 'Muskeln', ubb: 'Muskeln', vde: 'Vokabeln', vtr: 'Vokabeln' };
 const MIN_ANSWERS = 15; // erst ab so vielen Antworten wird eine Stufe freigeschaltet
 
 // Frage-id -> Fach; neu aufgebaut, sobald sich die Lektionen ändern
@@ -313,7 +350,7 @@ export function questionsByIds(ids) {
   const want = new Set(ids);
   const all = [
     ...ALL_LESSON_MCQ(), ...MCQ, ...MUSCLES.flatMap(muscleQuestions), ...BONES.flatMap(boneQuestions),
-    ...JOINTS.flatMap(jointQuestions), ...ALL_JOINT_DETAIL(),
+    ...JOINTS.flatMap(jointQuestions), ...ALL_JOINT_DETAIL(), ...exerciseQuestions(),
   ];
   const seen = new Set();
   return all.filter((q) => want.has(q.id) && !seen.has(q.id) && seen.add(q.id));
@@ -333,7 +370,7 @@ export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = []) {
   // Vokabeln: Gewicht aus beiden Richtungen zusammen
   const wv = (v) => Math.max(weight(`g:vde:${v.id}`), weight(`g:vtr:${v.id}`));
   const pools = {
-    Muskeln: () => MUSCLES.flatMap(muscleQuestions).filter(levelFilter),
+    Muskeln: () => [...MUSCLES.flatMap(muscleQuestions).filter(levelFilter), ...exerciseQuestions()],
     Knochen: () => BONES.flatMap(boneQuestions),
     Gelenke: () => [...JOINTS.flatMap(jointQuestions).filter(levelFilter), ...ALL_JOINT_DETAIL(), ...MCQ.filter((q) => q.cat === 'Gelenke')],
     Anatomie: () => MCQ.filter((q) => q.cat === 'Anatomie'),

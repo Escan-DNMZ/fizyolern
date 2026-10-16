@@ -8,6 +8,7 @@ import { getToken, setToken, clearToken, looksLikeToken, syncFromNotion } from '
 import { renderReport } from './report.js';
 import { todaysWords, weekWords, markKnown, recordWord, questionFor, checkTyped, TYPE_LABEL, WORDS_PER_DAY } from './words.js';
 import { MUSCLE3D, LAYER_NAMES, partText } from './data/muscle3d.js';
+import { UEBUNGEN } from './data/uebungen.js';
 import { masteredLessons } from './quizgen.js';
 import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, jointDetailQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked } from './quizgen.js';
 
@@ -90,7 +91,7 @@ function deckCards(deck) {
   if (deck === 'muscles') {
     return MUSCLES.map((m) => ({
       id: 'm:' + m.id, tag: 'Kas', front: m.la, frontSub: m.de,
-      back: `<div class="detail"><b>${esc(m.la)}</b> · ${esc(m.tr)}<br><br><b>Ursprung:</b> ${esc(m.o)}<br><b>Ansatz:</b> ${esc(m.i)}<br><b>Innervation:</b> ${esc(m.inn)}<br><b>Funktion:</b> ${esc(m.f)}</div>`,
+      back: `<div class="detail"><b>${esc(m.la)}</b> · ${esc(m.tr)}<br><br><b>Ursprung:</b> ${esc(m.o)}<br><b>Ansatz:</b> ${esc(m.i)}<br><b>Innervation:</b> ${esc(m.inn)}<br><b>Funktion:</b> ${esc(m.f)}${UEBUNGEN[m.id] ? `<br><br>💪 <b>Übung:</b> ${UEBUNGEN[m.id].map((u) => `${esc(u.n)} <span class="muted">(${esc(u.tr)})</span>`).join(', ')}` : ''}</div>`,
     }));
   }
   if (deck === 'bones') {
@@ -341,6 +342,7 @@ function renderLesson([id]) {
         <dt>Ansatz (Insertio)</dt><dd>${esc(s.i)}</dd>
         <dt>Innervation</dt><dd>${esc(s.inn)}</dd>
         <dt>Funktion</dt><dd>${esc(s.f)}</dd>
+        ${UEBUNGEN[s.id] ? `<dt>💪 Übung im Studio</dt><dd>${UEBUNGEN[s.id].map((u) => `<b>${esc(u.n)}</b> – ${esc(u.b)} <span class="muted">(🇹🇷 ${esc(u.tr)})</span>`).join('<br>')}</dd>` : ''}
       </dl>
       <div class="tr-box small">🇹🇷 ${esc(s.ftr)}</div>`;
   } else if (s.kind === 'bone') {
