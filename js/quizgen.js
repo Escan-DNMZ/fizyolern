@@ -69,6 +69,109 @@ export function vocabQuestion(v, pool = VOCAB) {
     : mk(`g:vtr:${v.id}`, 'Vokabeln', `Wie sagt man auf Deutsch: „${v.tr}“?`, v.de, others.map((o) => o.de), v.ex || `${v.tr} = ${v.de}`);
 }
 
+// ───── Gelenk-Details: Neutral-Null (Folie), ADL, Achsen, Muskelgruppen ─────
+// Funktioniert für jedes Gelenk mit den Feldern rom / adl / muskelGruppen (zurzeit nur die Hüfte)
+const GROUP_TR = { Flexion: 'fleksiyon', Extension: 'ekstansiyon', Abduktion: 'abdüksiyon', Adduktion: 'addüksiyon', Außenrotation: 'dış rotasyon', Innenrotation: 'iç rotasyon' };
+const near = (v, steps = [5, 10, 15, 20, -5, -10, -15, -20]) => shuffle(steps).map((d) => v + d).filter((x) => x > 0 && x !== v).slice(0, 3);
+const joinG = (list) => list.join(', ');
+
+export function jointDetailQuestions(j) {
+  const qs = [];
+  const id = (k) => `g:jx:${j.id}:${k}`;
+  const base = { cat: 'Gelenke', fach: j.fach || 'Gelenke', gen: true };
+  const name = j.de.replace(/gelenk$/, 'gelenk');
+  // Neutral-Null: einzelne Zahl und vollständige Schreibweise
+  for (const [n, r] of (j.rom || []).entries()) {
+    const [b1, b2] = r.bew.split(' / ');
+    const q1 = near(r.a);
+    qs.push({ ...base, id: id('rom-a' + n), q: `Wie viel Grad ${b1} hat das ${name} (Neutral-Null, ${j.romQuelle || 'Folie'})?`, o: [`${r.a}°`, ...q1.map((x) => `${x}°`)], a: 0,
+      x: `Folyo: ${r.bew} ${r.a}° – 0° – ${r.b}°. ${q1.map((x) => x + '°').join(', ')} ders kitabı aralığına yakın ama sınavda folyodaki değer sorulur.` });
+    const q2 = near(r.b, [5, 10, -5, 15]);
+    qs.push({ ...base, id: id('rom-b' + n), q: `Wie viel Grad ${b2} hat das ${name} (Neutral-Null)?`, o: [`${r.b}°`, ...q2.map((x) => `${x}°`)], a: 0,
+      x: `${b2} = ${r.b}° (${r.bew}: ${r.a}° – 0° – ${r.b}°). Diğer sayılar yakın ama folyodaki değer değil.` });
+    const wrong = [[r.a, 0, r.b + 10], [r.a - 10, 0, r.b], [r.b, 0, r.a]].map(([x, y, z]) => `${x}° – ${y}° – ${z}°`);
+    qs.push({ ...base, id: id('rom-nn' + n), q: `Welche Neutral-Null-Werte gelten für ${r.bew} im ${name}?`, o: [`${r.a}° – 0° – ${r.b}°`, ...wrong], a: 0,
+      x: `Doğru yazım: önce ${b1}, ortada 0°, sonra ${b2}. Ters sıra (${r.b}° – 0° – ${r.a}°) yanlış.` });
+    // Achse der Bewegung
+    const axes = ['Transversalachse', 'Sagittalachse', 'Longitudinalachse', 'Diagonalachse'];
+    qs.push({ ...base, id: id('achse' + n), q: `Um welche Achse findet ${r.bew} im ${name} statt?`, o: [r.achse, ...axes.filter((a) => a !== r.achse).slice(0, 3)], a: 0,
+      x: `${r.bew} → ${r.achse} (${r.ebene}). Flexion/Extension = transversal, Abd/Add = sagittal, Rotation = longitudinal.` });
+  }
+  // ADL-Werte (gleiche Kategorie als Ablenker: die anderen Alltagsaktivitäten)
+  const adl = j.adl || [];
+  for (const [n, a] of adl.entries()) {
+    const others = [...new Set(adl.filter((x) => x.flex !== a.flex).map((x) => x.flex))];
+    const pad = near(a.flex, [10, -10, 20, 25]).filter((x) => !others.includes(x));
+    const opts = [...others, ...pad].slice(0, 3);
+    if (opts.length < 3) continue;
+    qs.push({ ...base, id: id('adl' + n), q: `Wie viel Hüftflexion braucht man für „${a.akt}“ (${j.adlQuelle || 'ADL'})?`, o: [`${a.flex}°`, ...opts.map((x) => `${x}°`)], a: 0,
+      x: `${a.akt}: ${a.w}. Diğer değerler başka günlük aktivitelere ait (${adl.filter((x) => x !== a).map((x) => `${x.akt} ${x.flex}°`).join(', ')}).` });
+  }
+  // Muskelgruppen nach Bewegungsrichtung
+  const G = j.muskelGruppen || {};
+  const groups = Object.keys(G);
+  const all = (g) => [...G[g].haupt, ...G[g].weitere];
+  const allMuscles = [...new Set(groups.flatMap(all))];
+  // Sichere Ablenker: zuerst aus der Gegenspieler-Gruppe, nie ein Muskel mit demselben Stammnamen wie ein Gruppenmitglied
+  const ANTAG = { Flexion: 'Extension', Extension: 'Flexion', Abduktion: 'Adduktion', Adduktion: 'Abduktion', Außenrotation: 'Innenrotation', Innenrotation: 'Außenrotation' };
+  const stem = (m) => (m.replace(/^Mm?\.\s*/, '').replace(/^glutaei/i, 'gluteus').split(/\s+/)[0] || '').toLowerCase().slice(0, 5);
+  // Muskeln mit umstrittener/zusätzlicher Wirkung in dieser Richtung – nie als „falsche“ Antwort verwenden
+  const AMBIG = {
+    Flexion: ['M. pectineus', 'M. adductor longus', 'M. adductor brevis', 'M. gracilis'],
+    Extension: ['M. adductor magnus'],
+    Abduktion: ['M. gluteus maximus', 'M. sartorius', 'M. piriformis'],
+    Adduktion: ['M. gluteus maximus', 'Mm. ischiocrurales', 'M. iliopsoas', 'M. quadratus femoris'],
+    Außenrotation: ['M. adductor longus', 'M. adductor magnus', 'M. pectineus', 'M. sartorius', 'M. iliopsoas'],
+    Innenrotation: ['M. pectineus', 'M. piriformis'],
+  };
+  // Reihenfolge: Hauptmuskeln des Gegenspielers, dann seine weiteren, dann Hauptmuskeln anderer Gruppen
+  const safeOutside = (g, onlyAntagonist = false) => {
+    const members = all(g);
+    const stems = new Set(members.map(stem));
+    const ag = ANTAG[g] && G[ANTAG[g]];
+    const antag = ag ? (ag.haupt.length ? ag.haupt : ag.weitere) : [];
+    const rest = onlyAntagonist ? [] : [...(ag ? ag.weitere : []), ...groups.filter((x) => x !== g && x !== ANTAG[g]).flatMap((x) => G[x].haupt)];
+    return [...new Set([...antag, ...rest])].filter((m) => !members.includes(m) && !stems.has(stem(m)) && !(AMBIG[g] || []).includes(m) && m !== 'Mm. adductores');
+  };
+  for (const g of groups) {
+    const members = all(g);
+    const outside = safeOutside(g);
+    const antagOnly = safeOutside(g, true);
+    // Hauptmuskel – Ablenker: die weiteren Muskeln derselben Gruppe (typische Verwechslung)
+    if (G[g].haupt.length === 1 && G[g].weitere.length >= 3) {
+      qs.push({ ...base, id: id('haupt-' + g), q: `Welcher Muskel ist der Hauptmuskel der ${g} im ${name}?`, o: [G[g].haupt[0], ...pick(G[g].weitere, 3)], a: 0,
+        x: `Folyo (${j.gruppenQuelle || 'Folie'}): ${g} için ana kas ${G[g].haupt[0]}. ${joinG(G[g].weitere)} de ${GROUP_TR[g] || g} yapar ama yardımcı kaslardır.` });
+    } else if (G[g].haupt.length) {
+      const h = pick(G[g].haupt, 1)[0];
+      const opts = outside.slice(0, 3);
+      if (opts.length === 3) qs.push({ ...base, id: id('haupt-' + g + '-' + G[g].haupt.indexOf(h)), q: `Welcher Muskel gehört zu den Hauptmuskeln der ${g} im ${name}?`, o: [h, ...opts], a: 0,
+        x: `${g} ana kasları: ${joinG(G[g].haupt)}. ${joinG(opts)} ise ${ANTAG[g] ? 'genelde karşı hareketi (' + ANTAG[g] + ') yapar' : 'bu hareketin ana kası değildir'}.` });
+    }
+    // „Welcher gehört NICHT dazu?“ – richtige Antwort aus der Gegenspieler-Gruppe
+    if (members.length >= 3 && antagOnly.length) {
+      const wrong = pick(antagOnly, 1)[0];
+      qs.push({ ...base, id: id('nicht-' + g), q: `Welcher Muskel gehört NICHT zur Gruppe „${g}“ im ${name}?`, o: [wrong, ...pick(members, 3)], a: 0,
+        x: `${wrong} bu gruba ait değil${ANTAG[g] ? ' (daha çok ' + ANTAG[g] + ')' : ''}. ${g} grubu (folyo): ${joinG(members)}.` });
+    }
+  }
+  // Allrounder: Muskel in ≥ 3 Gruppen → „Welche Bewegung macht er NICHT?“
+  for (const m of allMuscles) {
+    const does = groups.filter((g) => all(g).includes(m));
+    const not = groups.filter((g) => !does.includes(g));
+    if (does.length >= 3 && not.length) {
+      qs.push({ ...base, id: id('nicht-bew-' + m.replace(/\W+/g, '')), q: `Welche Bewegung macht der ${m} im ${name} NICHT?`, o: [pick(not, 1)[0], ...pick(does, 3)], a: 0,
+        x: `${m} = ${does.join(' + ')} (folyo). Diğer hareketleri yapmaz.` });
+    }
+  }
+  // Kapselmuster
+  if (j.kapsel) {
+    qs.push({ ...base, id: id('kapsel'), q: `Wie lautet das Kapselmuster des ${name}s?`, o: [j.kapsel, 'IR > Extension > Abduktion', 'AR > Abduktion > IR', 'Flexion > Abduktion > IR'], a: 0,
+      x: `${j.kapsel}${j.kapselNote ? ' – ' + j.kapselNote : ''}. „AR > Abd > IR“ omzun paternidir; ders kitaplarında kalça için „IR > Ext > Abd“ da geçer, Notion notunu esas al.` });
+  }
+  return qs;
+}
+export const ALL_JOINT_DETAIL = () => JOINTS.flatMap(jointDetailQuestions);
+
 // Fragen aus den Notion-Ders-Notları
 export const lessonMcq = (l) => l.mcq.map((q, i) => ({ id: q.id || `L:${l.id}:${i}`, cat: l.fach, lesson: l.id, q: q.q, o: q.o, a: 0, x: q.x }));
 export const ALL_LESSON_MCQ = () => LESSONS.flatMap(lessonMcq);
@@ -81,7 +184,7 @@ export const quizCategories = () => ['Gemischt', ...FAECHER.map((f) => 'Ders: ' 
 // Schwierigkeitsstufen: Muskeln zuerst nur Nerv/Ansatz, dann Ursprung/Funktion,
 // ab >80 % Trefferquote auch die umgekehrten Fragen und die ROM-Werte der Gelenke
 const MUSCLE_LEVEL = { inn: 1, ans: 1, urs: 2, fkt: 2, rev: 3 };
-const GEN_TOPIC = { inn: 'Muskeln', ans: 'Muskeln', urs: 'Muskeln', fkt: 'Muskeln', rev: 'Muskeln', bla: 'Knochen', btr: 'Knochen', jtyp: 'Gelenke', jnn: 'Gelenke', vde: 'Vokabeln', vtr: 'Vokabeln' };
+const GEN_TOPIC = { inn: 'Muskeln', ans: 'Muskeln', urs: 'Muskeln', fkt: 'Muskeln', rev: 'Muskeln', bla: 'Knochen', btr: 'Knochen', jtyp: 'Gelenke', jnn: 'Gelenke', jx: 'Gelenke', vde: 'Vokabeln', vtr: 'Vokabeln' };
 const MIN_ANSWERS = 15; // erst ab so vielen Antworten wird eine Stufe freigeschaltet
 
 // Frage-id -> Fach; neu aufgebaut, sobald sich die Lektionen ändern
@@ -189,7 +292,7 @@ export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = []) {
   const pools = {
     Muskeln: () => MUSCLES.flatMap(muscleQuestions).filter(levelFilter),
     Knochen: () => BONES.flatMap(boneQuestions),
-    Gelenke: () => [...JOINTS.flatMap(jointQuestions).filter(levelFilter), ...MCQ.filter((q) => q.cat === 'Gelenke')],
+    Gelenke: () => [...JOINTS.flatMap(jointQuestions).filter(levelFilter), ...ALL_JOINT_DETAIL(), ...MCQ.filter((q) => q.cat === 'Gelenke')],
     Anatomie: () => MCQ.filter((q) => q.cat === 'Anatomie'),
     Neuro: () => MCQ.filter((q) => q.cat === 'Neuro'),
     Klinik: () => MCQ.filter((q) => q.cat === 'Klinik'),
@@ -199,7 +302,11 @@ export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = []) {
   if (category.startsWith('Ders: ') || category.startsWith('Lektion: ')) {
     // Ein Fach („Ders: Hygiene“) oder eine einzelne Lektion („Lektion: hygiene-1“)
     const keys = category.split(': ')[1].split(',');
-    qs = ALL_LESSON_MCQ().filter((q) => keys.includes(q.cat) || keys.includes(q.lesson));
+    qs = [
+      ...ALL_LESSON_MCQ().filter((q) => keys.includes(q.cat) || keys.includes(q.lesson)),
+      // z. B. Hüft-ROM/Muskelgruppen gehören zum Morgentest „PT Befund“
+      ...ALL_JOINT_DETAIL().filter((q) => keys.includes(q.fach)),
+    ];
   } else if (category === 'Gemischt') {
     // Ausgewogene Mischung: Unterrichtsfragen aus Notion + handgeschriebene + generierte
     const lessonQs = ALL_LESSON_MCQ();
@@ -207,7 +314,7 @@ export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = []) {
       ...wpickQ(lessonQs, lessonQs.length ? Math.ceil(n * 0.4) : 0),
       ...wpickQ(MCQ, Math.ceil(n * (lessonQs.length ? 0.2 : 0.4))),
       ...wpickQ(pools.Muskeln(), Math.ceil(n * 0.3)),
-      ...wpickQ([...pools.Knochen(), ...JOINTS.flatMap(jointQuestions).filter(levelFilter)], Math.ceil(n * 0.15)),
+      ...wpickQ([...pools.Knochen(), ...JOINTS.flatMap(jointQuestions).filter(levelFilter), ...ALL_JOINT_DETAIL()], Math.ceil(n * 0.15)),
       ...wpickQ(pools.Vokabeln(), Math.ceil(n * 0.15)),
     ];
   } else {

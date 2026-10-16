@@ -763,9 +763,37 @@ export const JOINTS = [
   {
     id: 'art_coxae', de: 'Hüftgelenk', la: 'Articulatio coxae', tr: 'Kalça eklemi', region: 'Hüfte',
     typ: 'Nussgelenk (Sonderform des Kugelgelenks) – 3 Freiheitsgrade',
-    nn: 'Extension/Flexion 10–15 / 0 / 130–140; Abduktion/Adduktion 30–45 / 0 / 20–30; Außen-/Innenrotation 40–50 / 0 / 30–45',
+    // Werte nach der Folie aus PT-Befund (Prüfungsmaßstab); Lehrbuch-Spannen separat
+    nn: 'Flexion/Extension 130° – 0° – 10° · Abduktion/Adduktion 45° – 0° – 30° · Außen-/Innenrotation 50° – 0° – 30° (Folie PT-Befund)',
+    lehrbuch: 'Extension/Flexion 10–15 / 0 / 130–140; Abduktion/Adduktion 30–45 / 0 / 20–30; Außen-/Innenrotation 40–50 / 0 / 30–45',
+    rom: [
+      { bew: 'Flexion / Extension', a: 130, b: 10, achse: 'Transversalachse', ebene: 'Sagittalebene' },
+      { bew: 'Abduktion / Adduktion', a: 45, b: 30, achse: 'Sagittalachse', ebene: 'Frontalebene' },
+      { bew: 'Außenrotation / Innenrotation', a: 50, b: 30, achse: 'Longitudinalachse', ebene: 'Transversalebene' },
+    ],
+    romQuelle: 'Folie PT-Befund',
+    adl: [
+      { akt: 'Gehen', w: '30° Flexion, 10° Extension, 5° Abduktion, 5° Adduktion, 5° AR, 5° IR', flex: 30 },
+      { akt: 'Treppensteigen', w: '65° Flexion, 5° Extension', flex: 65 },
+      { akt: 'Sitzen', w: '90° Flexion', flex: 90 },
+      { akt: 'Schnürsenkel binden', w: '50° Flexion', flex: 50 },
+    ],
+    adlQuelle: 'Folie 102 (Soames 2003)',
+    kapsel: 'IR > Flexion > Abduktion',
+    kapselNote: 'Ek bilgi (folyoda yok)',
+    // Folie 99 – haupt = fett gedruckt (Hauptmuskeln)
+    muskelGruppen: {
+      Flexion: { haupt: ['M. iliopsoas'], weitere: ['M. rectus femoris', 'M. tensor fasciae latae', 'M. sartorius', 'Mm. adductores'] },
+      Extension: { haupt: ['M. gluteus maximus', 'Mm. ischiocrurales'], weitere: ['Mm. glutaei medius et minimus (hinterer Anteil)'] },
+      Abduktion: { haupt: ['Mm. glutaei medius et minimus', 'M. tensor fasciae latae'], weitere: [] },
+      Adduktion: { haupt: ['M. adductor longus', 'M. adductor magnus', 'M. adductor brevis', 'M. gracilis', 'M. pectineus'], weitere: [] },
+      Außenrotation: { haupt: [], weitere: ['M. quadratus femoris', 'M. piriformis', 'Mm. gemelli superior et inferior', 'Mm. obturatorii externus et internus', 'M. gluteus maximus'] },
+      Innenrotation: { haupt: ['M. gluteus minimus (vorderer Anteil)', 'M. tensor fasciae latae'], weitere: ['M. gluteus medius', 'M. adductor magnus', 'M. adductor longus', 'M. gracilis'] },
+    },
+    gruppenQuelle: 'Folie 99',
+    fach: 'PT Befund',
     baender: 'Lig. iliofemorale (stärkstes Band des Körpers), Lig. ischiofemorale, Lig. pubofemorale, Lig. capitis femoris',
-    k: 'Coxarthrose (Kapselmuster: IR > Ext > Abd); Hüft-TEP – Luxationsrisiko beachten.',
+    k: 'Coxarthrose (Kapselmuster: IR > Flexion > Abduktion – Ek bilgi); Hüft-TEP – Luxationsrisiko beachten.',
     c: [0.085, 0.9, 0.02], r: 0.032,
   },
   {

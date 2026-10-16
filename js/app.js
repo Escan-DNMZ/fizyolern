@@ -7,7 +7,7 @@ import { getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, not
 import { getToken, setToken, clearToken, looksLikeToken, syncFromNotion } from './notion.js';
 import { renderReport } from './report.js';
 import { MUSCLE3D, LAYER_NAMES, partText } from './data/muscle3d.js';
-import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked } from './quizgen.js';
+import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, jointDetailQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked } from './quizgen.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -322,7 +322,11 @@ function renderLesson([id]) {
     facts = `
       <dl class="facts" lang="de">
         <dt>Gelenktyp</dt><dd>${esc(s.typ)}</dd>
-        <dt>Bewegungsausmaß (Neutral-Null-Methode)</dt><dd>${esc(s.nn)}</dd>
+        <dt>Bewegungsausmaß (Neutral-Null-Methode)</dt><dd>${s.rom ? s.rom.map((r) => `${esc(r.bew)}: <b>${r.a}° – 0° – ${r.b}°</b> <span class="muted">(${esc(r.achse)})</span>`).join('<br>') + `<div class="muted small">Quelle: ${esc(s.romQuelle || '')}</div>` : esc(s.nn)}</dd>
+        ${s.lehrbuch ? `<dt>Lehrbuch (zum Vergleich)</dt><dd class="muted">${esc(s.lehrbuch)}</dd>` : ''}
+        ${s.adl ? `<dt>ADL – ${esc(s.adlQuelle || '')}</dt><dd>${s.adl.map((a) => `${esc(a.akt)}: ${esc(a.w)}`).join('<br>')}</dd>` : ''}
+        ${s.muskelGruppen ? `<dt>Muskeln nach Bewegungsrichtung – ${esc(s.gruppenQuelle || '')} (fett = Hauptmuskel)</dt><dd>${Object.entries(s.muskelGruppen).map(([g, m]) => `<b>${esc(g)}:</b> ${[...m.haupt.map((x) => `<b>${esc(x)}</b>`), ...m.weitere.map(esc)].join(', ')}`).join('<br>')}</dd>` : ''}
+        ${s.kapsel ? `<dt>Kapselmuster</dt><dd>${esc(s.kapsel)}${s.kapselNote ? ` <span class="badge warn">${esc(s.kapselNote)}</span>` : ''}</dd>` : ''}
         <dt>Bänder & Strukturen</dt><dd>${esc(s.baender)}</dd>
       </dl>`;
   }
@@ -331,7 +335,7 @@ function renderLesson([id]) {
     ? MUSCLES.filter((m) => terms.some((t) => norm(m.o + ' ' + m.i).includes(norm(t))))
     : [];
 
-  const gen = s.kind === 'muscle' ? muscleQuestions(s) : s.kind === 'bone' ? boneQuestions(s) : jointQuestions(s);
+  const gen = s.kind === 'muscle' ? muscleQuestions(s) : s.kind === 'bone' ? boneQuestions(s) : [...jointQuestions(s), ...jointDetailQuestions(s)];
   const mini = shuffle(gen).slice(0, 3).map(prepare);
 
   view.innerHTML = `
