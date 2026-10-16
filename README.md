@@ -45,6 +45,8 @@ Kişisel veriler GitHub'a hiç gitmez: uygulama bunları telefondan **doğrudan 
 3. iPhone'da uygulama → ⚙️ Ayarlar → **Notion bağlantısı** → anahtarı yapıştır → **Bağlan ve güncelle**.
 
 Uygulama açıldığında en fazla 3 saatte bir kendini günceller; "Şimdi güncelle" ile elle de yapılabilir.
+
+**Birden çok hafta:** "Haftalık Plan" sayfasındaki tüm `## … KW NN (DD.–DD.MM.YYYY …)` başlıkları ve tabloları okunur; uygulama **bugünün tarihini içeren** haftayı kendisi seçer (yoksa en yakın gelecek hafta). Bu yüzden Pazar günü haftayı en üste taşıyan otomatik "hafta değişimi" görevi artık gerekli değil — gelecek haftaları "📅 Gelecek haftalar" altına önceden eklemek yeterli.
 Anahtar sadece o telefonun tarayıcı deposunda durur ve sadece `api.notion.com`'a gönderilir (sayfadaki Content-Security-Policy başka bir sunucuya bağlantıyı engeller).
 Telefon kaybolursa veya şüphelenirsen: Notion → integrations → `FizyoLern` → **Refresh/Delete secret**; eski anahtar anında geçersiz olur.
 

@@ -90,7 +90,9 @@ const DASH = /^[\s—–-]*$|^\s*—/;
 
 // ───── Wochenplan + Fehlerliste aus der Seite „Haftalık Plan“ ─────
 export async function parsePlanPage(blocks, faecher, loadChildren) {
-  let week = null;
+  // Alle Wochen der Seite lesen („## … KW 42 (…)“, „## KW 43 (…)“ unter „Gelecek haftalar“ usw.)
+  const weeks = [];
+  let week = null; // Woche, zu der die nächste Tabelle gehört
   const fehler = [];
   let fach = null;
   let inMistakes = false;
@@ -100,7 +102,7 @@ export async function parsePlanPage(blocks, faecher, loadChildren) {
     const rt = b[type] && b[type].rich_text;
     const text = plain(rt);
 
-    if (type === 'heading_2' && /KW\s*\d+/.test(text) && !week) {
+    if (type === 'heading_2' && /KW\s*\d+/.test(text)) {
       const kw = +text.match(/KW\s*(\d+)/)[1];
       const m = text.match(/(\d{1,2})\.?\s*[–-]\s*(\d{1,2})\.(\d{1,2})\.(\d{4})/);
       week = { kw, range: (text.match(/\(([^)]*)\)/) || [, ''])[1], days: {} };
@@ -109,6 +111,7 @@ export async function parsePlanPage(blocks, faecher, loadChildren) {
         const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
         week.from = fmt(mon); week.to = fmt(sun);
       }
+      weeks.push(week);
     }
     if (type === 'table' && week && !Object.keys(week.days).length) {
       const rows = await loadChildren(b.id);
@@ -136,7 +139,17 @@ export async function parsePlanPage(blocks, faecher, loadChildren) {
       fehler.push(await mistakeCard(rt, fach));
     }
   }
-  return { week, fehler };
+  return { week: pickWeek(weeks), weeks: weeks.filter((w) => w.from && Object.keys(w.days).length), fehler };
+}
+
+// Woche, die das Datum enthält; sonst die nächste zukünftige; sonst die letzte
+export function pickWeek(weeks, date = new Date()) {
+  const iso = fmt(date);
+  const valid = (weeks || []).filter((w) => w.from && w.to && Object.keys(w.days || {}).length);
+  return valid.find((w) => w.from <= iso && iso <= w.to)
+    || valid.filter((w) => w.from > iso).sort((a, b) => a.from.localeCompare(b.from))[0]
+    || valid.sort((a, b) => b.from.localeCompare(a.from))[0]
+    || null;
 }
 
 // Fehler als Lückentext: fett gedruckte Teile sind die Antwort
@@ -255,10 +268,11 @@ export async function syncFromNotion({ faecher, lessons }) {
   const report = [];
 
   if (planPage) {
-    const { week, fehler } = await parsePlanPage(await children(planPage.id), faecher, children);
+    const { week, weeks, fehler } = await parsePlanPage(await children(planPage.id), faecher, children);
     result.week = week || old.week;
+    result.weeks = weeks.length ? weeks : old.weeks || [];
     result.fehler = fehler.length ? fehler : old.fehler || [];
-    report.push(week ? `KW ${week.kw}` : 'program bulunamadı', `${fehler.length} hata kartı`);
+    report.push(week ? `KW ${weeks.map((w) => w.kw).join('/')} (bugün: KW ${week.kw})` : 'program bulunamadı', `${fehler.length} hata kartı`);
   } else report.push('Haftalık Plan görünmüyor');
 
   if (db) {

@@ -38,13 +38,33 @@ export async function loadLocalDevFile() {
 
 export const fehlerList = () => (data && data.fehler) || [];
 export const notionLink = (lessonId) => data && data.notion && data.notion[lessonId];
-export const week = () => data && data.week;
+const isoDate = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+
+// Alle bekannten Wochen (neue Notion-Synchronisierung: data.weeks; ältere Daten: nur data.week)
+const allWeeks = () => (data ? (data.weeks && data.weeks.length ? data.weeks : data.week ? [data.week] : []) : []);
+
+// Woche für ein Datum: die Woche, die das Datum enthält; sonst die nächste zukünftige; sonst die letzte
+export function weekFor(date = new Date()) {
+  const iso = isoDate(date);
+  const ws = allWeeks().filter((w) => w.from && w.to);
+  return ws.find((w) => w.from <= iso && iso <= w.to)
+    || ws.filter((w) => w.from > iso).sort((a, b) => a.from.localeCompare(b.from))[0]
+    || ws.slice().sort((a, b) => b.from.localeCompare(a.from))[0]
+    || (data && data.week) || null;
+}
+export const week = () => weekFor(new Date());
 
 export function todayPlan(date = new Date()) {
-  const w = week();
+  const iso = isoDate(date);
+  const w = allWeeks().find((x) => x.from <= iso && iso <= x.to);
   if (!w) return null;
-  const iso = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
-  if (iso < w.from || iso > w.to) return null;
   const wd = ((date.getDay() + 6) % 7) + 1;
   return w.days[wd] || null;
+}
+
+// Plan für morgen (für die Zeile „Yarın: …“), auch über die Wochengrenze hinweg
+export function tomorrowPlan(date = new Date()) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + 1);
+  return todayPlan(d);
 }
