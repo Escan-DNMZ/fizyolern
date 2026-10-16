@@ -6,6 +6,7 @@ import { LESSONS, FAECHER, refreshLessons } from './lessons.js';
 import { getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, notionLink, week, todayPlan } from './private.js';
 import { getToken, setToken, clearToken, looksLikeToken, syncFromNotion } from './notion.js';
 import { renderReport } from './report.js';
+import { MUSCLE3D, LAYER_NAMES, partText } from './data/muscle3d.js';
 import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked } from './quizgen.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -707,7 +708,8 @@ async function render3D(_, params) {
     if (!threeLoading) {
       $('#hint3d').textContent = '3D model yükleniyor…';
       threeLoading = import('./anatomy3d.js').then(({ Anatomy3D }) => {
-        viewer = new Anatomy3D($('#canvas3d'), { onSelect: showSheet });
+        viewer = new Anatomy3D($('#canvas3d'), { onSelect: (sid, o) => (o && o.focus ? startFocus(sid) : showSheet(sid)) });
+        viewer.onPart = (k) => renderFocusSheet(k);
         $('#hint3d').textContent = 'Döndürmek için sürükle · yakınlaştırmak için iki parmak · seçmek için dokun';
         setup3DControls();
       }).catch((e) => {
@@ -721,7 +723,71 @@ async function render3D(_, params) {
   if (current !== '3d') return;
   viewer.start();
   const id = params.get('id');
-  if (id) viewer.select(id);
+  if (!id) return;
+  // Muskeln (z. B. „Günün kası“ oder aus einer Lektion) direkt im Fokusmodus zeigen
+  const s = findStructure(id);
+  if (s && s.kind === 'muscle') {
+    $('#hint3d').textContent = 'Kas modeli hazırlanıyor…';
+    await viewer.ready;
+    if (current === '3d') startFocus(id);
+  } else viewer.select(id);
+}
+
+// ───── Fokusmodus: ein Muskel mit Teilen, Ursprung/Ansatz und tieferen Muskeln ─────
+let focusState = null;
+
+function startFocus(id) {
+  const s = findStructure(id);
+  const info = viewer.enterFocus(id);
+  if (!s || !info) { showSheet(id); return; }
+  focusState = { id, s, info };
+  document.body.classList.add('focus3d');
+  $('#hint3d').hidden = true;
+  renderFocusSheet(null);
+}
+
+function exitFocus() {
+  const id = focusState && focusState.id;
+  focusState = null;
+  viewer.exitFocus();
+  document.body.classList.remove('focus3d');
+  if (id) viewer.select(id); else showSheet(null);
+}
+
+function renderFocusSheet(k) {
+  if (!focusState) return;
+  const { s, info } = focusState;
+  const sheet = $('#sheet3d');
+  sheet.hidden = false;
+  sheet.classList.remove('collapsed');
+  const part = k !== null && k !== undefined ? info.parts[k] : null;
+  const o = part ? partText(s.o, part.la) : s.o;
+  const i = part ? partText(s.i, part.la) : s.i;
+  sheet.innerHTML = `
+    <button class="close" aria-label="Tüm vücut">✕</button>
+    <span class="badge muscle">Kas</span> <span class="badge">${LAYER_NAMES[info.layer] || ''} katman</span>
+    <h2 style="margin:6px 0 0;font-size:18px">${esc(s.la)}</h2>
+    <div class="muted small">${esc(s.de)} · 🇹🇷 ${esc(s.tr)}</div>
+    ${info.parts.length > 1 ? `<div class="chips" style="margin-top:10px">${info.parts.map((p, n) => `<button class="chip part-chip ${n === k ? 'on' : ''}" data-part="${n}"><span class="dot" style="background:${p.color}"></span>${esc(p.la)}</button>`).join('')}</div>` : ''}
+    ${part ? `<div class="small" style="margin-top:8px"><b lang="de">${esc(part.la)}</b> · ${esc(part.de)} · 🇹🇷 ${esc(part.tr)}</div>` : ''}
+    <dl class="facts small" lang="de">
+      <dt>🟢 Ursprung</dt><dd>${esc(o)}</dd>
+      <dt>🔵 Ansatz</dt><dd>${esc(i)}</dd>
+      ${part ? '' : `<dt>Innervation</dt><dd>${esc(s.inn)}</dd><dt>Funktion</dt><dd>${esc(s.f)}</dd>`}
+    </dl>
+    <p class="muted small" style="margin:8px 0 0">🟢 U = Ursprung · 🔵 A = Ansatz · soluk kırmızı = altındaki derin kaslar (dokununca onlara geçer)${info.parts.length > 1 ? ' · parçaya dokunarak seç' : ''}</p>
+    <div class="grid2" style="margin-top:8px">
+      <button class="btn plain" id="exitFocus">Tüm vücut</button>
+      <a class="btn" href="#/ders/${s.id}">Dersi aç</a>
+    </div>`;
+  $('.close', sheet).addEventListener('click', exitFocus);
+  $('#exitFocus').addEventListener('click', exitFocus);
+  $$('.part-chip', sheet).forEach((b) => b.addEventListener('click', () => {
+    const n = +b.dataset.part;
+    const next = n === k ? null : n;
+    viewer.focusPart(next);
+    renderFocusSheet(next);
+  }));
 }
 
 function setup3DControls() {
@@ -736,6 +802,11 @@ function setup3DControls() {
     viewer.setIsolated(on);
   });
   $('#opacity3d').addEventListener('input', (e) => viewer.setMuscleOpacity(+e.target.value));
+  $$('[data-depth]').forEach((b) => b.addEventListener('click', () => {
+    $$('[data-depth]').forEach((x) => x.classList.toggle('on', x === b));
+    viewer.setDepth(+b.dataset.depth);
+  }));
+  $('#focusExitBtn').addEventListener('click', exitFocus);
   $$('[data-view]').forEach((b) => b.addEventListener('click', () => viewer.view(b.dataset.view)));
   $('#resetView').addEventListener('click', () => viewer.resetView());
 
@@ -751,7 +822,9 @@ function setup3DControls() {
       ? found.map((s) => `<button data-id="${s.id}"><span class="badge ${s.kind}">${KIND_LABEL[s.kind]}</span><span class="grow">${esc(s.la)}<div class="muted small">${esc(s.de)} · ${esc(s.tr)}</div></span></button>`).join('')
       : '<div class="muted small">Sonuç yok</div>';
     $$('button', results).forEach((b) => b.addEventListener('click', () => {
-      viewer.select(b.dataset.id);
+      if (focusState) exitFocus();
+      const hit = findStructure(b.dataset.id);
+      if (hit && hit.kind === 'muscle') startFocus(b.dataset.id); else viewer.select(b.dataset.id);
       input.value = '';
       results.hidden = true;
       input.blur();
@@ -785,6 +858,7 @@ function showSheet(id) {
     </div>`;
   $('.close', sheet).addEventListener('click', () => viewer.select(null));
   $('#moreBtn').addEventListener('click', (e) => {
+    if (s.kind === 'muscle') { startFocus(s.id); return; } // Kas: parçalar + Ursprung/Ansatz + derin kaslar
     const collapsed = sheet.classList.toggle('collapsed');
     e.currentTarget.textContent = collapsed ? 'Detaylar' : 'Daha az';
   });

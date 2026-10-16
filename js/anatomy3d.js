@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from '../vendor/OrbitControls.js';
 import { BONES, MUSCLES, JOINTS } from './data/anatomy.js';
+import { MUSCLE3D, partNames } from './data/muscle3d.js';
 
 const V = (p, sx = 1) => new THREE.Vector3(p[0] * sx, p[1], p[2]);
 
@@ -240,6 +241,13 @@ export class Anatomy3D {
     this.controls.update();
 
     this.goal = null; // Kamerafahrt-Ziel
+    this.depth = 1; // 1 = alle Muskeln, 2 = ab mittlerer Schicht, 3 = nur tiefe Muskeln
+    this.focus = null; // aktiver Fokusmodus
+    this.labels = [];
+    this.onPart = () => {};
+    this.labelLayer = document.createElement('div');
+    this.labelLayer.className = 'labels3d';
+    container.appendChild(this.labelLayer);
     this.alias = {}; // Struktur-ID -> ID der Gruppe, deren echtes Mesh sie mitdarstellt
 
     this.build();
@@ -511,7 +519,9 @@ export class Anatomy3D {
     const sel = this.alias[this.selected] || this.selected;
     for (const [id, g] of this.byId) {
       const kind = g.userData.kind;
+      if (this.focus) { g.visible = false; continue; } // im Fokusmodus zeigt nur focus.root etwas
       let vis = this.layers[kind];
+      if (kind === 'muscle' && ((MUSCLE3D[id] || {}).layer || 1) < this.depth && id !== sel) vis = false;
       if (kind === 'muscle' && this.muscleOpacity <= 0.02) vis = false;
       if (this.isolated && sel) vis = id === sel || (kind === 'bone' && this.layers.bone);
       if (this.isolated && sel && id === sel) vis = true;
@@ -569,6 +579,236 @@ export class Anatomy3D {
     this.goal = { target: c, pos: c.clone().add(dir.multiplyScalar(dist)) };
   }
 
+  // ───── Schichten (oberflächlich → tief) ─────
+  setDepth(n) { this.depth = n; this.applyVisibility(); }
+
+  // ───── Fokusmodus: ein Muskel mit seinen Teilen, Ursprung/Ansatz und den tieferen Muskeln ─────
+  enterFocus(id) {
+    const muscle = MUSCLES.find((m) => m.id === id);
+    const group = this.byId.get(id);
+    if (!muscle || !group || !group.children.length) return null;
+    this.exitFocus();
+    this.scene.updateMatrixWorld(true);
+
+    const isLeft = (m) => {
+      const p = m.userData.part || '';
+      if (/\bright\b/i.test(p)) return false;
+      if (/\bleft\b/i.test(p)) return true;
+      if (!m.userData.real) return m.scale.x > 0; // gespiegelte Platten: nur die linke
+      return true; // Mittellinie (z. B. Zwerchfell)
+    };
+    const boxOf = (meshes) => meshes.reduce((b, m) => b.union(new THREE.Box3().setFromObject(m)), new THREE.Box3());
+    const clone = (m, mat, data) => {
+      const c = new THREE.Mesh(m.geometry, mat);
+      c.matrixAutoUpdate = false;
+      c.matrix.copy(m.matrixWorld);
+      c.userData = data || {};
+      return c;
+    };
+
+    const own = group.children.filter(isLeft);
+    const selBox = boxOf(own);
+    const info = MUSCLE3D[id] || { layer: 1, o: [], i: [] };
+    const root = new THREE.Group();
+    const mats = [];
+    const mat = (opts) => { const m = new THREE.MeshStandardMaterial(opts); mats.push(m); return m; };
+
+    // Teile des Muskels, jeder Teil eine eigene Farbe
+    const PALETTE = [0xe4572e, 0xf3a712, 0xa259ff, 0xff6fb5, 0x8d6e63, 0xf97316]; // kein Grün/Blau (= U/A-Marker)
+    const parts = [];
+    for (const m of own) {
+      const names = partNames(m.userData.part, muscle);
+      let p = parts.find((x) => x.la === names.la);
+      if (!p) {
+        p = { ...names, meshes: [], mat: mat({ color: PALETTE[parts.length % PALETTE.length], roughness: 0.5 }) };
+        parts.push(p);
+      }
+      const c = clone(m, p.mat, { focusPart: parts.indexOf(p) });
+      p.meshes.push(c);
+      root.add(c);
+    }
+
+    // Knochen: Ursprungs-/Ansatzknochen kräftig, Nachbarknochen blass
+    const matches = (part, list) => list.some((s) => part.toLowerCase().includes(s.toLowerCase()));
+    const bones = this.meshes.filter((m) => m.userData.kind === 'bone' && m.userData.real && isLeft(m));
+    const attachMat = mat({ color: COLORS.bone, roughness: 0.65 });
+    const ghostMat = mat({ color: COLORS.bone, roughness: 0.65, transparent: true, opacity: 0.22, depthWrite: false });
+    const near = selBox.clone().expandByScalar(0.15);
+    const attachBones = { o: [], i: [] };
+    for (const b of bones) {
+      const part = b.userData.part || '';
+      const isO = matches(part, info.o), isI = matches(part, info.i);
+      if (isO) attachBones.o.push(b);
+      if (isI) attachBones.i.push(b);
+      if (isO || isI) root.add(clone(b, attachMat));
+      else if (near.intersectsBox(new THREE.Box3().setFromObject(b))) root.add(clone(b, ghostMat));
+    }
+
+    // Tiefere Muskeln in derselben Region halbtransparent
+    const deepMat = mat({ color: 0xd98b8b, roughness: 0.5, transparent: true, opacity: 0.45, depthWrite: false });
+    const touch = selBox.clone().expandByScalar(0.02);
+    const deeper = [];
+    for (const [mid, g] of this.byId) {
+      if (mid === id || g.userData.kind !== 'muscle') continue;
+      const layer = (MUSCLE3D[mid] || {}).layer || 1;
+      if (layer <= info.layer) continue;
+      const ms = g.children.filter(isLeft).filter((m) => touch.containsPoint(new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3()))); // Mitte liegt unter dem Muskel
+      if (!ms.length) continue;
+      deeper.push(mid);
+      ms.forEach((m) => root.add(clone(m, deepMat, { deepId: mid })));
+    }
+
+    // Ursprung (U) und Ansatz (A): Stellen, an denen der Muskel den Knochen berührt
+    const markers = this.attachmentPoints(own, attachBones);
+    const labels = [];
+    for (const mk of markers) {
+      const s = new THREE.Mesh(new THREE.SphereGeometry(0.007, 16, 12), new THREE.MeshBasicMaterial({ color: mk.role === 'o' ? 0x16a34a : 0x2563eb, depthTest: false }));
+      s.renderOrder = 10;
+      s.position.copy(mk.pos);
+      root.add(s);
+      const bone = BONES.find((b) => b.id === mk.boneId);
+      labels.push(this.addLabel(`${mk.role === 'o' ? 'U' : 'A'} · ${bone ? bone.de : ''}`, mk.pos, mk.role === 'o' ? 'lbl-o' : 'lbl-i'));
+    }
+    if (parts.length > 1) {
+      parts.forEach((p, k) => {
+        const c = boxOf(p.meshes).getCenter(new THREE.Vector3());
+        labels.push(this.addLabel(p.la, c, 'lbl-part', k));
+      });
+    }
+
+    this.scene.add(root);
+    this.focus = { id, root, parts, mats, labels, deeper, layer: info.layer, activePart: null };
+    this.applyVisibility();
+    const c = selBox.getCenter(new THREE.Vector3());
+    const dir = new THREE.Vector3(0.45, 0.12, c.z < -0.02 ? -1 : 1).normalize();
+    this.applyViewOffset();
+    this.focusBox(selBox, 2.2, dir);
+    return { parts: parts.map((p) => ({ la: p.la, de: p.de, tr: p.tr, color: '#' + p.mat.color.getHexString() })), deeper, layer: info.layer, markers: markers.length };
+  }
+
+  applyViewOffset() {
+    const w = this.container.clientWidth, h = this.container.clientHeight;
+    if (this.focus && w && h) this.camera.setViewOffset(w, h, 0, h * 0.22, w, h);
+    else this.camera.clearViewOffset();
+    this.camera.updateProjectionMatrix();
+  }
+
+  exitFocus() {
+    const f = this.focus;
+    if (!f) return;
+    this.scene.remove(f.root);
+    f.root.traverse((o) => { if (o.isMesh && o.geometry.type === 'SphereGeometry') { o.geometry.dispose(); o.material.dispose(); } });
+    f.mats.forEach((m) => m.dispose());
+    f.labels.forEach((l) => l.el.remove());
+    this.labels = this.labels.filter((l) => !f.labels.includes(l));
+    this.focus = null;
+    this.applyViewOffset();
+    this.applyVisibility();
+  }
+
+  // Einen Teil hervorheben (null = alle gleich)
+  focusPart(k) {
+    const f = this.focus;
+    if (!f) return;
+    f.activePart = k;
+    f.parts.forEach((p, i) => {
+      const dim = k !== null && k !== undefined && i !== k;
+      p.mat.transparent = dim;
+      p.mat.opacity = dim ? 0.25 : 1;
+      p.mat.depthWrite = !dim;
+      p.mat.emissive.setHex(i === k ? 0x553300 : 0x000000);
+    });
+    f.labels.forEach((l) => l.el.classList.toggle('lbl-active', l.part === k));
+  }
+
+  // Muskel-Eckpunkte, die näher als 6 mm an einem Ursprungs-/Ansatzknochen liegen → je Knochen ein Marker
+  attachmentPoints(own, attachBones) {
+    const CELL = 0.01;
+    const key = (x, y, z) => `${Math.floor(x / CELL)},${Math.floor(y / CELL)},${Math.floor(z / CELL)}`;
+    const grids = {};
+    for (const role of ['o', 'i']) {
+      const grid = new Map();
+      const v = new THREE.Vector3();
+      for (const b of attachBones[role]) {
+        const a = b.geometry.attributes.position;
+        for (let n = 0; n < a.count; n++) {
+          v.fromBufferAttribute(a, n).applyMatrix4(b.matrixWorld);
+          const k = key(v.x, v.y, v.z);
+          if (!grid.has(k)) grid.set(k, []);
+          grid.get(k).push([v.x, v.y, v.z, b.userData.id]);
+        }
+      }
+      grids[role] = grid;
+    }
+    const nearest = (grid, p) => {
+      let best = null, bd = Infinity;
+      const cx = Math.floor(p.x / CELL), cy = Math.floor(p.y / CELL), cz = Math.floor(p.z / CELL);
+      for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (let dz = -1; dz <= 1; dz++) {
+        const cell = grid.get(`${cx + dx},${cy + dy},${cz + dz}`);
+        if (!cell) continue;
+        for (const q of cell) {
+          const d = (q[0] - p.x) ** 2 + (q[1] - p.y) ** 2 + (q[2] - p.z) ** 2;
+          if (d < bd) { bd = d; best = q; }
+        }
+      }
+      return best ? { d: Math.sqrt(bd), boneId: best[3] } : null;
+    };
+    const hits = {};
+    const fallback = { o: null, i: null };
+    const v = new THREE.Vector3();
+    for (const m of own) {
+      const a = m.geometry.attributes.position;
+      for (let n = 0; n < a.count; n++) {
+        v.fromBufferAttribute(a, n).applyMatrix4(m.matrixWorld);
+        const no = nearest(grids.o, v), ni = nearest(grids.i, v);
+        let role = null, hit = null;
+        if (no && (!ni || no.d <= ni.d)) { role = 'o'; hit = no; } else if (ni) { role = 'i'; hit = ni; }
+        if (!hit) continue;
+        if (!fallback[role] || hit.d < fallback[role].d) fallback[role] = { d: hit.d, boneId: hit.boneId, pos: v.clone() };
+        if (hit.d > 0.006) continue;
+        const k = role + '|' + hit.boneId;
+        if (!hits[k]) hits[k] = { role, boneId: hit.boneId, sum: new THREE.Vector3(), n: 0 };
+        hits[k].sum.add(v); hits[k].n++;
+      }
+    }
+    const out = Object.values(hits).filter((h) => h.n >= 3).map((h) => ({ role: h.role, boneId: h.boneId, pos: h.sum.multiplyScalar(1 / h.n) }));
+    for (const role of ['o', 'i']) {
+      if (!out.some((h) => h.role === role) && fallback[role] && fallback[role].d < 0.03) out.push({ role, boneId: fallback[role].boneId, pos: fallback[role].pos });
+    }
+    return out;
+  }
+
+  addLabel(text, pos, cls, part = null) {
+    const el = document.createElement('div');
+    el.className = 'lbl3d ' + cls;
+    el.textContent = text;
+    this.labelLayer.appendChild(el);
+    const l = { el, pos: pos.clone(), part };
+    this.labels.push(l);
+    return l;
+  }
+
+  updateLabels() {
+    if (!this.labels.length) return;
+    const w = this.container.clientWidth, h = this.container.clientHeight;
+    const v = new THREE.Vector3();
+    for (const l of this.labels) {
+      v.copy(l.pos).project(this.camera);
+      const hidden = v.z > 1 || v.x < -1.1 || v.x > 1.1 || v.y < -1.1 || v.y > 1.1
+        || (l.part !== null && !(this.focus && this.focus.activePart === l.part));
+      l.el.style.display = hidden ? 'none' : '';
+      if (!hidden) l.el.style.transform = `translate(${((v.x + 1) / 2) * w}px, ${((1 - v.y) / 2) * h}px) translate(-50%, -130%)`;
+    }
+  }
+
+  focusBox(box, factor = 2.6, viewDir = null) {
+    const c = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3()).length();
+    const dist = THREE.MathUtils.clamp(size * factor, 0.35, 2.6);
+    const dir = viewDir ? viewDir.clone() : new THREE.Vector3().subVectors(this.camera.position, this.controls.target).normalize();
+    this.goal = { target: c, pos: c.clone().add(dir.multiplyScalar(dist)) };
+  }
+
   resetView() {
     this.goal = { target: new THREE.Vector3(0, 0.98, 0), pos: new THREE.Vector3(0, 0.98, 3.5) };
   }
@@ -595,6 +835,15 @@ export class Anatomy3D {
       const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
       const ray = new THREE.Raycaster();
       ray.setFromCamera(ndc, this.camera);
+      if (this.focus) {
+        const pick = [];
+        this.focus.root.traverse((o) => { if (o.isMesh && (o.userData.focusPart !== undefined || o.userData.deepId)) pick.push(o); });
+        const h = ray.intersectObjects(pick, false)[0];
+        if (!h) { this.focusPart(null); this.onPart(null); return; }
+        if (h.object.userData.focusPart !== undefined) { this.focusPart(h.object.userData.focusPart); this.onPart(h.object.userData.focusPart); }
+        else this.onSelect(h.object.userData.deepId, { focus: true });
+        return;
+      }
       const visible = this.meshes.filter((m) => m.parent.visible && !(m.material.transparent && m.material.opacity < 0.5 && m.userData.id !== this.selected));
       const hit = ray.intersectObjects(visible, false)[0];
       if (hit) this.select(hit.object.userData.id, { focus: false });
@@ -609,7 +858,7 @@ export class Anatomy3D {
     if (!w || !h) return;
     this.renderer.setSize(w, h);
     this.camera.aspect = w / h;
-    this.camera.updateProjectionMatrix();
+    this.applyViewOffset();
   }
 
   start() {
@@ -635,6 +884,7 @@ export class Anatomy3D {
       }
       this.controls.update();
       this.renderer.render(this.scene, this.camera);
+      this.updateLabels();
       requestAnimationFrame(loop);
     };
     loop();

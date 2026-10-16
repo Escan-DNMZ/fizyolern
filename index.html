@@ -48,9 +48,16 @@
           <button class="chip" data-layer="joint">Eklem</button>
           <button class="chip" id="isolateBtn">İzole</button>
         </div>
+        <div class="chips depth-chips">
+          <span class="depth-label">Katman</span>
+          <button class="chip on" data-depth="1">Yüzey</button>
+          <button class="chip" data-depth="2">Orta</button>
+          <button class="chip" data-depth="3">Derin</button>
+        </div>
         <label class="slider">Kas opaklığı
           <input id="opacity3d" type="range" min="0" max="1" step="0.05" value="1">
         </label>
+        <button class="chip focus-exit" id="focusExitBtn">← Tüm vücut</button>
       </div>
       <div class="hud-side">
         <button class="mini" data-view="front">Ön</button>

@@ -229,3 +229,19 @@ input[type=text], input[type=search], input[type=number] {
 .empty { text-align: center; color: var(--muted); padding: 40px 0; }
 .toast { position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + var(--safe-b) + 16px); transform: translateX(-50%);
   background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; z-index: 50; }
+
+/* ───── 3D: Schichten, Fokusmodus, Beschriftungen ───── */
+.depth-chips { align-items: center; }
+.depth-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-right: 2px; }
+.focus-exit { display: none; align-self: flex-start; }
+body.focus3d .focus-exit { display: inline-block; }
+body.focus3d .hud-top .chips, body.focus3d .hud-top .slider, body.focus3d .search-wrap { display: none; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.part-chip.on { background: var(--card); color: var(--text); border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
+.labels3d { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.lbl3d { position: absolute; left: 0; top: 0; white-space: nowrap; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+  background: rgba(0, 0, 0, .65); color: #fff; }
+.lbl3d.lbl-o { background: #16a34a; }
+.lbl3d.lbl-i { background: #2563eb; }
+.lbl3d.lbl-part { background: rgba(255, 255, 255, .85); color: #111; }
+.lbl3d.lbl-active { outline: 2px solid var(--accent); }
