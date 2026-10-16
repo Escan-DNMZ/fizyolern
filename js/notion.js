@@ -182,10 +182,11 @@ async function loadWords(db) {
         if (x.type === 'title') return plain(x.title);
         if (x.type === 'rich_text') return plain(x.rich_text);
         if (x.type === 'select') return x.select ? x.select.name : '';
+        if (x.type === 'date') return x.date ? x.date.start.slice(0, 10) : '';
         return '';
       };
       const de = get('Wort');
-      if (de) words.push({ id: 'gw:' + de, de, tr: get('Türkçe'), ex: get('Beispiel'), cat: 'GW · ' + (get('Kategorie') || 'Diğer') });
+      if (de) words.push({ id: 'gw:' + de, de, tr: get('Türkçe'), ex: get('Beispiel'), cat: 'GW · ' + (get('Kategorie') || 'Diğer'), stufe: get('Stufe'), next: get('Nächste Wiederholung') });
     }
     cursor = r.has_more ? r.next_cursor : undefined;
   } while (cursor);

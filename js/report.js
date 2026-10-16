@@ -5,6 +5,7 @@ import { LESSONS } from './lessons.js';
 import { MCQ } from './data/questions.js';
 import { MUSCLES, BONES, JOINTS } from './data/anatomy.js';
 import { fehlerList, todayPlan, week } from './private.js';
+import { todaysWords } from './words.js';
 
 const pct = (r, w) => (r + w ? Math.round((r / (r + w)) * 100) : null);
 
@@ -81,6 +82,12 @@ export function buildReport() {
   lines.push(`📊 Bu hafta test: ${weekQuiz.n} soru, ${weekQuiz.n ? Math.round((weekQuiz.r / weekQuiz.n) * 100) + '% doğru' : '–'}`);
   lines.push(`🗂️ Kartlar: ${Object.values(s.srs).filter((c) => c.int >= 1).length} öğrenildi · bugün ${d.cards || 0} tekrar`);
   lines.push(`✅ Bugün: ${d.quiz || 0} test sorusu (${d.quizRight || 0} doğru), ${d.open || 0} açık uçlu soru${d.morning ? ', sabah testi yapıldı' : ''}${d.lesson ? ', günün kası tamam' : ''}`);
+  const tw = todaysWords();
+  if (tw.length) {
+    const wr = d.wordRes || {};
+    const fmt = (x) => (x ? `${x.r}/${x.n}` : 'yapılmadı');
+    lines.push(`🔤 Kelimeler: sabah ${fmt(d.wordsMorning)}, dönüş ${fmt(d.wordsReturn)} · ${tw.map((x) => `${x.de}${wr[x.id] === false ? ' ✗' : wr[x.id] ? ' ✓' : ''}`).join(', ')}`);
+  }
   if (w) lines.push(`📅 Program: KW ${w.kw}${plan && plan.kurse.length ? ' · bugün: ' + plan.kurse.join(' / ') : ''}${plan && plan.test.length ? ' · sabah testi: ' + plan.test.join(' + ') : ''}`);
 
   const fachRows = Object.entries(byFach).map(([f, v]) => [f, pct(v.r, v.w), v.r + v.w]).filter((x) => x[2] >= 2).sort((a, b) => a[1] - b[1]);

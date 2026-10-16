@@ -1,6 +1,6 @@
 // Service Worker: alle App-Dateien offline verfügbar machen.
 // Bei jeder Änderung an den Dateien VERSION erhöhen, damit Handys die neue Version laden.
-const VERSION = 'fizyolern-v13';
+const VERSION = 'fizyolern-v14';
 const FILES = [
   './',
   './index.html',
@@ -20,6 +20,7 @@ const FILES = [
   './js/private.js',
   './js/notion.js',
   './js/report.js',
+  './js/words.js',
   './vendor/three.module.min.js',
   './vendor/OrbitControls.js',
   './vendor/GLTFLoader.js',
@@ -50,7 +51,8 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    fetch(e.request)
+    // no-cache: immer beim Server nachfragen (ETag), damit nach einem Update keine alten und neuen Dateien gemischt werden
+    fetch(e.request, new URL(e.request.url).origin === location.origin ? { cache: 'no-cache' } : {})
       .then((res) => {
         if (res.ok && new URL(e.request.url).origin === location.origin) {
           const copy = res.clone();

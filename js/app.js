@@ -6,6 +6,7 @@ import { LESSONS, FAECHER, refreshLessons } from './lessons.js';
 import { getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, notionLink, week, todayPlan } from './private.js';
 import { getToken, setToken, clearToken, looksLikeToken, syncFromNotion } from './notion.js';
 import { renderReport } from './report.js';
+import { todaysWords, markKnown, recordWord, questionFor, checkTyped, TYPE_LABEL, WORDS_PER_DAY } from './words.js';
 import { MUSCLE3D, LAYER_NAMES, partText } from './data/muscle3d.js';
 import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, jointDetailQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked } from './quizgen.js';
 
@@ -134,6 +135,7 @@ const routes = {
   not: { title: 'Ders Notu', tab: 'bugun', render: renderLessonNote, back: '#/dersler' },
   ayarlar: { title: 'Ayarlar', tab: null, render: renderSettings, back: '#/bugun' },
   rapor: { title: 'Durum Raporu', tab: 'bugun', render: () => renderReport(view, toast), back: '#/bugun' },
+  kelime: { title: 'Günün Kelimeleri', tab: 'bugun', render: renderWordSession, back: '#/bugun' },
 };
 
 function navigate() {
@@ -178,6 +180,8 @@ function renderToday() {
     ...(fehlerOpen || d.fehler ? [{ done: !fehlerOpen, label: `✗ Hatalarımı tekrar et <span class="muted">(${fehlerOpen} kart)</span>`, href: '#/oturum/fehler' }] : []),
     ...(plan && plan.test.length && FAECHER.some((f) => plan.test.includes(f))
       ? [{ done: !!d.morning, label: `Sabah testi: <b>${esc(plan.test.join(' + '))}</b>`, href: `#/test?kat=${encodeURIComponent('Ders: ' + plan.test.join(','))}` }] : []),
+    { done: !!d.wordsMorning, label: `Sabah kelimeleri (${WORDS_PER_DAY})${d.wordsMorning ? ` <span class="muted">${d.wordsMorning.r}/${d.wordsMorning.n}</span>` : ''}`, href: '#/kelime/sabah' },
+    { done: !!d.wordsReturn, label: `Dönüş kelimeleri (${WORDS_PER_DAY})${d.wordsReturn ? ` <span class="muted">${d.wordsReturn.r}/${d.wordsReturn.n}</span>` : ''}`, href: '#/kelime/donus' },
     { done: d.lesson, label: `Günün kası: <b>${esc(m.la)}</b>`, href: `#/ders/${m.id}` },
     { done: d.lesson2, label: `Günün ${b.kind === 'bone' ? 'kemiği' : 'eklemi'}: <b>${esc(b.de)}</b>`, href: `#/ders/${b.id}` },
     { done: d.cards >= s.settings.cardsGoal, label: `${s.settings.cardsGoal} kart tekrar et <span class="muted">(${d.cards}/${s.settings.cardsGoal})</span>`, href: '#/oturum/vocab' },
@@ -425,6 +429,83 @@ function renderLessonNote([id]) {
     <div class="list">${l.vocab.map((v) => `<div><span class="grow"><b lang="de">${esc(v.de)}</b><div class="small">${esc(v.tr)}</div></span></div>`).join('')}</div>
     <a class="btn ghost block" href="#/oturum/${encodeURIComponent('ders:' + l.fach)}">Terimleri kartlarla çalış</a>
   `;
+}
+
+// ───────────────────────── Günün kelimeleri ─────────────────────────
+let wordSess = null;
+
+function renderWordSession([pass = 'sabah']) {
+  if (!wordSess || wordSess.pass !== pass || wordSess.date !== store.today()) {
+    wordSess = { pass, date: store.today(), i: 0, res: [], answered: false };
+  }
+  $('#title').textContent = pass === 'donus' ? 'Dönüş Kelimeleri' : 'Sabah Kelimeleri';
+  const words = todaysWords();
+  if (wordSess.i >= words.length) return renderWordEnd(words);
+  const w = words[wordSess.i];
+  const q = (wordSess.q && wordSess.q.id === w.id) ? wordSess.q.q : questionFor(w, pass);
+  wordSess.q = { id: w.id, q };
+  view.innerHTML = `
+    <div class="row"><span class="badge">${esc(w.cat.replace('GW · ', ''))}</span><span class="badge">${TYPE_LABEL[q.type]}</span><span class="spacer"></span><span class="muted small">${wordSess.i + 1} / ${words.length}</span></div>
+    <div class="progress"><div style="width:${(wordSess.i / words.length) * 100}%"></div></div>
+    <p class="muted small" style="margin:4px 0">${esc(q.prompt)}</p>
+    <div class="card" style="text-align:center"><div class="big-word" lang="de">${esc(q.big)}</div>${q.sub ? `<div class="muted small" style="margin-top:6px">${esc(q.sub)}</div>` : ''}</div>
+    ${q.typed
+      ? `<input type="text" id="wInput" placeholder="ör. die Schwellung" autocomplete="off" autocapitalize="off" spellcheck="false" lang="de">
+         <button class="btn block" id="wCheck" style="margin-top:8px">Kontrol et</button>`
+      : q.opts.map((o, n) => `<button class="opt" data-n="${n}" lang="de">${esc(o)}</button>`).join('')}
+    <div id="wAfter"></div>
+    <button class="btn plain block" id="wKnown" style="margin-top:14px">Biliyorum ✓ <span class="muted small">(seyrek tekrar, yerine yeni kelime)</span></button>`;
+  const finish = (ok, note = '') => {
+    if (wordSess.answered) return;
+    wordSess.answered = true;
+    const morningOk = (store.day().wordRes || {})[w.id];
+    // Morgens zählt für das Leitner-Fach; abends nur, wenn falsch (zurück in Fach 1) oder morgens nicht geübt
+    if (pass === 'sabah' || !ok || morningOk === undefined) recordWord(w.id, ok);
+    const d = store.day();
+    d.wordRes = { ...(d.wordRes || {}), [w.id]: ok };
+    store.save();
+    wordSess.res.push({ id: w.id, ok });
+    $('#wKnown').hidden = true;
+    $('#wAfter').innerHTML = `<div class="explain">${ok ? '✅ Doğru' : '❌ Yanlış'}${note ? ' · ' + esc(note) : ''}<br><b lang="de">${esc(w.de)}</b> = ${esc(w.tr)}${w.ex ? `<br><span class="muted" lang="de">„${esc(w.ex)}“</span>` : ''}${q.type === 'partizip' ? `<br>Partizip II: <b lang="de">${esc(q.answer)}</b>` : ''}</div>
+      <button class="btn block" id="wNext">${wordSess.i + 1 < words.length ? 'Sonraki kelime' : 'Bitir'}</button>`;
+    $('#wNext').addEventListener('click', () => { wordSess.i++; wordSess.answered = false; wordSess.q = null; renderWordSession([pass]); });
+  };
+  if (q.typed) {
+    const input = $('#wInput');
+    const check = () => {
+      const r = checkTyped(w, input.value);
+      input.disabled = true; $('#wCheck').hidden = true;
+      finish(r.ok, r.ok && !r.exact ? 'küçük yazım hatası kabul edildi' : r.hint === 'Artikel fehlt' ? 'artikel eksik' : '');
+    };
+    $('#wCheck').addEventListener('click', check);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') check(); });
+  } else {
+    $$('.opt').forEach((b) => b.addEventListener('click', () => {
+      const ok = q.opts[+b.dataset.n] === q.answer;
+      $$('.opt').forEach((x) => { x.disabled = true; if (q.opts[+x.dataset.n] === q.answer) x.classList.add('correct'); });
+      if (!ok) b.classList.add('wrong');
+      finish(ok);
+    }));
+  }
+  $('#wKnown').addEventListener('click', () => {
+    const next = markKnown(w.id);
+    toast(next ? `Tamam – yerine: ${next.de}` : 'Tamam – başka yeni kelime yok');
+    wordSess.q = null;
+    renderWordSession([pass]);
+  });
+}
+
+function renderWordEnd(words) {
+  const { pass, res } = wordSess;
+  const r = res.filter((x) => x.ok).length;
+  const d = store.day();
+  d[pass === 'donus' ? 'wordsReturn' : 'wordsMorning'] = { r, n: words.length };
+  store.save();
+  view.innerHTML = `
+    <div class="card" style="text-align:center"><div class="score">${r}/${words.length}</div><div class="muted">${pass === 'donus' ? 'Dönüş tekrarı tamam 🎉' : 'Sabah kelimeleri tamam – dönüşte aynı kelimeler başka soru tipiyle gelecek'}</div></div>
+    <div class="list">${words.map((w) => { const ok = (d.wordRes || {})[w.id]; return `<div><span class="grow"><b lang="de">${esc(w.de)}</b><div class="small">${esc(w.tr)}</div></span><span class="badge ${ok ? 'good' : ok === false ? 'bad' : ''}">${ok ? '✓' : ok === false ? '✗' : '–'}</span></div>`; }).join('')}</div>
+    <a class="btn block" href="#/bugun">Bugün'e dön</a>`;
+  wordSess = null;
 }
 
 // ───────────────────────── Quiz ─────────────────────────

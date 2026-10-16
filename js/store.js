@@ -8,6 +8,7 @@ const DEFAULT = () => ({
   days: {},         // 'YYYY-MM-DD' -> { cards, quiz, quizRight, open, lesson, lesson2, muscleId, boneId }
   learned: {},      // strukturId -> datum
   customVocab: [],  // eigene Vokabeln
+  words: {},        // Grundwortschatz-Leitner: wortId -> { box, due, r, w, last, known }
   settings: { cardsGoal: 15, quizGoal: 10, newPerDay: 10, reverse: false },
 });
 
@@ -53,7 +54,7 @@ export function day(date = today()) {
 
 export function streak() {
   // Ein Tag zählt, wenn irgendeine Aktivität stattgefunden hat
-  const active = (d) => d && (d.cards > 0 || d.quiz > 0 || d.open > 0 || d.lesson || d.lesson2);
+  const active = (d) => d && (d.cards > 0 || d.quiz > 0 || d.open > 0 || d.lesson || d.lesson2 || d.wordsMorning || d.wordsReturn);
   let n = 0;
   let off = active(state.days[today()]) ? 0 : -1;
   while (active(state.days[today(off)])) { n++; off--; }

@@ -245,3 +245,6 @@ body.focus3d .hud-top .chips, body.focus3d .hud-top .slider, body.focus3d .searc
 .lbl3d.lbl-i { background: #2563eb; }
 .lbl3d.lbl-part { background: rgba(255, 255, 255, .85); color: #111; }
 .lbl3d.lbl-active { outline: 2px solid var(--accent); }
+
+/* ───── Günün kelimeleri ───── */
+.big-word { font-size: 26px; font-weight: 800; letter-spacing: -.01em; line-height: 1.3; }
