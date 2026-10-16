@@ -79,10 +79,17 @@ const lower = (s) => s.toLocaleLowerCase('tr').normalize('NFD').replace(/[̀-ͯ]
 const fmt = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 
 // Fachnamen aus Freitext erkennen („ANA 1“, „All ANA“, „PT-Befund“ …)
+// Fächer ohne (bisherige) Notizen, die trotzdem im Stundenplan stehen
+export const EXTRA_FAECHER = ['AM', 'AKL', 'Atemtherapie', 'KI'];
+
 function faecherIn(text, faecher) {
-  const t = lower(text).replace(/[-–]/g, ' ');
+  const t = ' ' + lower(text).replace(/[-–]/g, ' ') + ' ';
   const alias = { Anatomie: ['anatomie', 'ana '], 'PT Befund': ['pt befund'], 'PT Grundlagen': ['pt grundlagen'] };
-  return faecher.filter((f) => (alias[f] || [lower(f)]).some((a) => (t + ' ').includes(a)));
+  const all = [...new Set([...faecher, ...EXTRA_FAECHER])];
+  return all.filter((f) => {
+    if (f.length <= 3 && !alias[f]) return new RegExp(`[^a-zäöüß]${lower(f)}[^a-zäöüß]`).test(t); // AM, AKL, KI, PPS, O/C
+    return (alias[f] || [lower(f)]).some((a) => t.includes(a));
+  });
 }
 
 const WD = { pzt: 1, sal: 2, car: 3, per: 4, cum: 5, cmt: 6, paz: 7 };

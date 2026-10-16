@@ -78,6 +78,14 @@ export function todaysWords() {
   return d.words.map((id) => words.find((w) => w.id === id)).filter(Boolean);
 }
 
+// Alle Wörter der letzten 7 Tage (für die Samstagswiederholung)
+export function weekWords() {
+  const ids = new Set();
+  for (let k = 0; k < 7; k++) ((store.get().days[store.today(-k)] || {}).words || []).forEach((id) => ids.add(id));
+  const words = allWords();
+  return [...ids].map((id) => words.find((w) => w.id === id)).filter(Boolean);
+}
+
 // „Biliyorum“: Wort wandert in ein spätes Fach (kommt selten wieder) und wird heute ersetzt
 export function markKnown(id) {
   const st = state();
@@ -153,7 +161,7 @@ export function questionFor(word, pass) {
   const types = ['de2tr', 'tr2de', 'cloze'];
   if (verb && PARTIZIP[verb.replace(/^sich\s+/, '')]) types.push('partizip');
   const seed = [...word.id].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7) + (store.today().split('-')[2] | 0);
-  let type = types[(seed + (pass === 'donus' ? 1 : 0)) % types.length];
+  let type = pass === 'hafta' ? (seed % 3 ? 'tr2de' : types[seed % types.length]) : types[(seed + (pass === 'donus' ? 1 : 0)) % types.length];
   const others = shuffle(allWords().filter((w) => w.id !== word.id));
   const sameCat = others.filter((w) => w.cat === word.cat);
   const pool = [...sameCat, ...others];

@@ -3,10 +3,10 @@ import { MUSCLES, BONES, JOINTS, ALL_STRUCTURES, findStructure } from './data/an
 import { GRUNDWORTSCHATZ, BASE_VOCAB } from './data/vocab.js';
 import { OPEN } from './data/questions.js';
 import { LESSONS, FAECHER, refreshLessons } from './lessons.js';
-import { getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, notionLink, week, todayPlan } from './private.js';
+import { getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, notionLink, week, todayPlan, tomorrowPlan } from './private.js';
 import { getToken, setToken, clearToken, looksLikeToken, syncFromNotion } from './notion.js';
 import { renderReport } from './report.js';
-import { todaysWords, markKnown, recordWord, questionFor, checkTyped, TYPE_LABEL, WORDS_PER_DAY } from './words.js';
+import { todaysWords, weekWords, markKnown, recordWord, questionFor, checkTyped, TYPE_LABEL, WORDS_PER_DAY } from './words.js';
 import { MUSCLE3D, LAYER_NAMES, partText } from './data/muscle3d.js';
 import { masteredLessons } from './quizgen.js';
 import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, jointDetailQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked } from './quizgen.js';
@@ -140,6 +140,7 @@ const routes = {
   kelime: { title: 'Günün Kelimeleri', tab: 'bugun', render: renderWordSession, back: '#/bugun' },
   donus: { title: 'Dönüş Yolu', tab: 'bugun', render: renderDonus, back: '#/bugun' },
   oku: { title: 'Ders Notları – Okuma', tab: 'bugun', render: renderReading, back: '#/donus' },
+  cumartesi: { title: 'Haftalık Tekrar', tab: 'bugun', render: renderSaturday, back: '#/bugun' },
 };
 
 function navigate() {
@@ -226,7 +227,8 @@ function renderToday() {
       <div class="eyebrow">Bugünkü dersler · KW ${week().kw}</div>
       ${plan.kurse.length ? plan.kurse.map((k) => `<div class="small">📚 ${esc(k)}</div>`).join('') : '<div class="small muted">Bugün ders yok.</div>'}
       ${plan.note ? `<p class="small muted" style="margin-bottom:0">📝 ${esc(plan.note)}</p>` : ''}
-    </div>` : ''}
+      ${tomorrowLine()}
+    </div>` : tomorrowLine() ? `<div class="card small">${tomorrowLine()}</div>` : ''}
 
     <div class="list">
       ${tasks.map((t) => `<a class="task" href="${t.href}"><span class="check ${t.done ? 'done' : ''}">${t.done ? '✓' : ''}</span><span class="grow">${t.label}</span><span class="chev">›</span></a>`).join('')}
@@ -261,8 +263,10 @@ function renderToday() {
       </div>
     </div>
 
+    ${[6, 0].includes(new Date().getDay()) ? `<a class="card row" href="#/cumartesi" style="text-decoration:none;color:inherit;border:2px solid var(--accent)"><span class="grow"><div class="eyebrow">📆 Haftalık tekrar</div><h2>Bu haftanın yanlışları + ✗ kartları + kelimeler</h2><div class="muted small">Çoğunlukla açık uçlu sorular</div></span><span class="chev">›</span></a>` : ''}
     ${(() => {
       const now = new Date();
+      if ([6, 0].includes(now.getDay())) return '';
       if (now.getHours() * 60 + now.getMinutes() < 14 * 60 + 30) return '';
       const { steps, total } = donusInfo();
       const left = steps.filter((x) => x.state === 'open').length;
@@ -279,6 +283,14 @@ function renderToday() {
       <div class="card" style="margin:0"><div class="muted small">Öğrenilen kart</div><h2>${Object.values(s.srs).filter((c) => c.int >= 1).length}</h2></div>
     </div>
   `;
+}
+
+// „Yarın: Physiologie + AM“ – Kursnamen ohne Lehrer/Raum
+function tomorrowLine() {
+  const t = tomorrowPlan();
+  if (!t) return '';
+  const names = [...new Set((t.kurse || []).flatMap((k) => k.replace(/\([^)]*\)/g, '').split(/\s*\+\s*/)).map((k) => k.replace(/×\s*\d+|·.*$|,.*$/g, '').trim()).filter(Boolean))];
+  return `<div class="small muted" style="margin-top:6px">⏭️ Yarın: ${names.length ? esc(names.join(' + ')) : 'ders yok'}</div>`;
 }
 
 function nextOpenQuestion() {
@@ -453,8 +465,9 @@ function renderWordSession([pass = 'sabah']) {
   if (!wordSess || wordSess.pass !== pass || wordSess.date !== store.today()) {
     wordSess = { pass, date: store.today(), i: 0, res: [], answered: false };
   }
-  $('#title').textContent = pass === 'donus' ? 'Dönüş Kelimeleri' : 'Sabah Kelimeleri';
-  const words = todaysWords();
+  $('#title').textContent = pass === 'donus' ? 'Dönüş Kelimeleri' : pass === 'hafta' ? 'Haftanın Kelimeleri' : 'Sabah Kelimeleri';
+  const words = pass === 'hafta' ? weekWords() : todaysWords();
+  if (!words.length) { view.innerHTML = '<p class="empty">Bu hafta henüz kelime çalışılmadı.</p><a class="btn block" href="#/bugun">Bugün</a>'; return; }
   if (wordSess.i >= words.length) return renderWordEnd(words);
   const w = words[wordSess.i];
   const q = (wordSess.q && wordSess.q.id === w.id) ? wordSess.q.q : questionFor(w, pass);
@@ -469,7 +482,7 @@ function renderWordSession([pass = 'sabah']) {
          <button class="btn block" id="wCheck" style="margin-top:8px">Kontrol et</button>`
       : q.opts.map((o, n) => `<button class="opt" data-n="${n}" lang="de">${esc(o)}</button>`).join('')}
     <div id="wAfter"></div>
-    <button class="btn plain block" id="wKnown" style="margin-top:14px">Biliyorum ✓ <span class="muted small">(seyrek tekrar, yerine yeni kelime)</span></button>`;
+    ${pass === 'hafta' ? '' : '<button class="btn plain block" id="wKnown" style="margin-top:14px">Biliyorum ✓ <span class="muted small">(seyrek tekrar, yerine yeni kelime)</span></button>'}`;
   const finish = (ok, note = '') => {
     if (wordSess.answered) return;
     wordSess.answered = true;
@@ -480,7 +493,7 @@ function renderWordSession([pass = 'sabah']) {
     d.wordRes = { ...(d.wordRes || {}), [w.id]: ok };
     store.save();
     wordSess.res.push({ id: w.id, ok });
-    $('#wKnown').hidden = true;
+    if ($('#wKnown')) $('#wKnown').hidden = true;
     $('#wAfter').innerHTML = `<div class="explain">${ok ? '✅ Doğru' : '❌ Yanlış'}${note ? ' · ' + esc(note) : ''}<br><b lang="de">${esc(w.de)}</b> = ${esc(w.tr)}${w.ex ? `<br><span class="muted" lang="de">„${esc(w.ex)}“</span>` : ''}${q.type === 'partizip' ? `<br>Partizip II: <b lang="de">${esc(q.answer)}</b>` : ''}</div>
       <button class="btn block" id="wNext">${wordSess.i + 1 < words.length ? 'Sonraki kelime' : 'Bitir'}</button>`;
     $('#wNext').addEventListener('click', () => { wordSess.i++; wordSess.answered = false; wordSess.q = null; renderWordSession([pass]); });
@@ -502,7 +515,7 @@ function renderWordSession([pass = 'sabah']) {
       finish(ok);
     }));
   }
-  $('#wKnown').addEventListener('click', () => {
+  if ($('#wKnown')) $('#wKnown').addEventListener('click', () => {
     const next = markKnown(w.id);
     toast(next ? `Tamam – yerine: ${next.de}` : 'Tamam – başka yeni kelime yok');
     wordSess.q = null;
@@ -514,13 +527,42 @@ function renderWordEnd(words) {
   const { pass, res } = wordSess;
   const r = res.filter((x) => x.ok).length;
   const d = store.day();
-  d[pass === 'donus' ? 'wordsReturn' : 'wordsMorning'] = { r, n: words.length };
+  d[pass === 'donus' ? 'wordsReturn' : pass === 'hafta' ? 'wordsWeek' : 'wordsMorning'] = { r, n: words.length };
   store.save();
   view.innerHTML = `
-    <div class="card" style="text-align:center"><div class="score">${r}/${words.length}</div><div class="muted">${pass === 'donus' ? 'Dönüş tekrarı tamam 🎉' : 'Sabah kelimeleri tamam – dönüşte aynı kelimeler başka soru tipiyle gelecek'}</div></div>
+    <div class="card" style="text-align:center"><div class="score">${r}/${words.length}</div><div class="muted">${pass === 'donus' ? 'Dönüş tekrarı tamam 🎉' : pass === 'hafta' ? 'Haftanın kelimeleri tamam 🎉' : 'Sabah kelimeleri tamam – dönüşte aynı kelimeler başka soru tipiyle gelecek'}</div></div>
     <div class="list">${words.map((w) => { const ok = (d.wordRes || {})[w.id]; return `<div><span class="grow"><b lang="de">${esc(w.de)}</b><div class="small">${esc(w.tr)}</div></span><span class="badge ${ok ? 'good' : ok === false ? 'bad' : ''}">${ok ? '✓' : ok === false ? '✗' : '–'}</span></div>`; }).join('')}</div>
     <a class="btn block" href="#/bugun">Bugün'e dön</a>`;
   wordSess = null;
+}
+
+// Ersten Muskel/Knochen/Gelenk finden, der in einem Text genannt wird (lateinisch oder deutsch)
+function structureInText(text) {
+  const t = ' ' + text.toLowerCase() + ' ';
+  const names = (s) => [s.la.replace(/\s*\(.*\)$/, ''), s.de].map((x) => x.toLowerCase()).filter((x) => x.length > 4);
+  const esc2 = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // nur am Wortanfang, damit z. B. kurze Namen nicht mitten in anderen Wörtern treffen
+  return ALL_STRUCTURES.filter((s) => s.kind !== 'joint').find((s) => names(s).some((n) => new RegExp(`[^a-zäöüß]${esc2(n)}`).test(t))) || null;
+}
+
+// ───────────────────────── Samstag: Wochenwiederholung ─────────────────────────
+function renderSaturday() {
+  const wrong = store.wrongSince(7).length;
+  const fehler = deckCards('fehler').length;
+  const words = weekWords();
+  const w = week();
+  const weekFaecher = w ? [...new Set(Object.values(w.days || {}).flatMap((d) => (d && d.test) || []))] : [];
+  const opens = allOpen().filter((q) => weekFaecher.includes(q.cat)).slice(0, 8);
+  const d = store.day();
+  view.innerHTML = `
+    <div class="card"><div class="eyebrow">📆 Haftalık tekrar</div><h2>Bu hafta: yanlışlar, ✗ kartlar, kelimeler, açık uçlu sorular</h2>
+      <div class="muted small">Çoğunlukla açık uçlu – sınav pratiği. ${weekFaecher.length ? 'Bu haftanın dersleri: ' + esc(weekFaecher.join(', ')) : ''}</div></div>
+    <div class="list">
+      <a href="#/test?kat=${encodeURIComponent('Hatalar: hafta')}"><span class="grow"><b>❌ Bu hafta yanlış yaptıkların</b><div class="muted small">${wrong} soru</div></span><span class="chev">›</span></a>
+      <a href="#/oturum/fehler"><span class="grow"><b>✗ Tüm ✗ kartları</b><div class="muted small">${fehler} kart (Notion)</div></span><span class="chev">›</span></a>
+      <a href="#/kelime/hafta"><span class="grow"><b>🔤 Haftanın kelimeleri</b><div class="muted small">${words.length} kelime · çoğunlukla yazarak${d.wordsWeek ? ` · bugün ${d.wordsWeek.r}/${d.wordsWeek.n}` : ''}</div></span><span class="chev">›</span></a>
+    </div>
+    ${opens.length ? `<div class="section-title">Açık uçlu sorular (bu haftanın dersleri)</div><div class="list">${opens.map((q) => `<a href="#/soru/${encodeURIComponent(q.id)}"><span class="grow small" lang="de">${esc(q.q)}</span><span class="badge">${esc(q.cat)}</span></a>`).join('')}</div>` : ''}`;
 }
 
 // ───────────────────────── Dönüş yolu (Rückweg) ─────────────────────────
@@ -528,7 +570,8 @@ function renderWordEnd(words) {
 function todayFaecher(plan = todayPlan()) {
   if (!plan) return [];
   const text = (plan.kurse || []).join(' ').replace(/PT-Befund/g, 'PT Befund');
-  const hit = FAECHER.filter((f) => text.includes(f) || (f === 'Anatomie' && /\bANA\b/.test(text)));
+  const all = [...new Set([...FAECHER, 'AM', 'AKL', 'Atemtherapie', 'KI'])];
+  const hit = all.filter((f) => (f.length <= 3 ? new RegExp(`(^|[^A-Za-zÄÖÜäöü])${f.replace('/', '\\/')}($|[^A-Za-zÄÖÜäöü])`).test(text) : text.includes(f)) || (f === 'Anatomie' && /\bANA\b/.test(text)));
   return [...new Set([...(plan.test || []), ...hit])];
 }
 
@@ -836,7 +879,11 @@ function renderCardSession([deckId]) {
     <div class="flash ${session.flipped ? 'flipped' : ''}" id="flash">
       <div class="flash-inner">
         <div class="face front"><span class="badge tag">${esc(card.tag)}</span><div class="big">${esc(card.front)}</div>${card.frontSub ? `<div class="sub">${esc(card.frontSub)}</div>` : ''}<div class="sub" style="margin-top:24px">Çevirmek için dokun</div></div>
-        <div class="face back">${card.back}</div>
+        <div class="face back">${card.back}${(() => {
+          if (!deckId.startsWith('fehler')) return '';
+          const s = structureInText(card.front + ' ' + card.back.replace(/<[^>]+>/g, ' '));
+          return s ? `<a class="btn ghost" style="margin-top:12px" href="#/3d?id=${s.id}" onclick="event.stopPropagation()">🦴 3D'de göster: ${esc(s.la)}</a>` : '';
+        })()}</div>
       </div>
     </div>
     <div id="rateBox" ${session.flipped ? '' : 'hidden'}>
