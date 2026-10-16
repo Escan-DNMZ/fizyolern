@@ -53,6 +53,9 @@ for l in lessons:
 text = json.dumps(lessons, ensure_ascii=False)
 text = re.sub(r'Bei (Herrn|Frau) [A-ZÄÖÜ][\wäöüß-]+ gilt', 'Im Unterricht gilt', text)
 for t in TEACHERS:
+    # typische Formulierungen neutralisieren, danach darf der Name nirgends mehr vorkommen
+    text = re.sub(rf"nach (Herrn |Frau )?{t}", 'laut Unterricht', text)
+    text = re.sub(rf"{t}['’]?(e|a|ye|ya) göre", 'derste anlatılana göre', text)
     assert t not in text, 'Lehrername im öffentlichen Inhalt: ' + t
 lessons = json.loads(text)
 os.makedirs(os.path.join(os.path.dirname(__file__), '..', 'private'), exist_ok=True)

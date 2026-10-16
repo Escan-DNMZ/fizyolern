@@ -3,11 +3,14 @@
 iPhone'a "Ana Ekrana Ekle" ile kurulan, çevrimdışı çalışan bir uygulama (PWA). Mac veya App Store gerekmez.
 
 ## Özellikler
-- **Bugün:** günlük plan (günün kası, günün kemiği/eklemi, kart tekrarı, test, açık uçlu soru), seri (🔥), istatistik
-- **Test:** çoktan seçmeli sorular (Almanca soru, Türkçe açıklama). Kas/kemik/eklem soruları anatomi verilerinden otomatik üretilir
-- **Sorular:** açık uçlu sorular – Almanca yazarsın, anahtar kavramlar kontrol edilir, örnek cevap gösterilir
-- **Kartlar:** aralıklı tekrar (spaced repetition) ile kelime, kas, kemik ve eklem kartları; kendi kelimeni ekleyebilirsin
-- **3D Anatomi:** döndürülebilir şematik model; kemik/kas/eklem katmanları, arama, izole etme, kas opaklığı
+- **Bugün:** Notion'daki haftalık programa göre günün dersleri ve „Yarın: …“ satırı, sabah testi, ✗ hata kartları, günün kası/kemiği, seri (🔥), Claude'a durum raporu
+- **Günün kelimeleri:** Grundwortschatz'tan 5 kelime – sabah ve dönüşte farklı soru tipiyle (DE→TR, TR→DE yazarak, Lückentext, Partizip II); „Biliyorum“ → seyrek tekrar (Leitner)
+- **Dönüş yolu (14:30'dan sonra):** bugünün yanlışları → ✗ kartları → dönüş kelimeleri → bugünün ders notları (okuma modu) + 5 soruluk mini test; her adım atlanabilir
+- **Cumartesi:** haftanın yanlışları, tüm ✗ kartları, haftanın kelimeleri, açık uçlu sorular
+- **Test:** ders notlarından sorular (falsch / Zuordnung / Reihenfolge / Fallbeispiel / Zahlen dahil) + otomatik kas/kemik/eklem/egzersiz soruları; Anatomie ve Physiologie ağırlıklı, yanlışlar sık, dün doğru bilinenler bugün tekrar gelmez; 2× doğru → açık uçlu soruya geçiş
+- **Kalça (PT-Befund):** folyo değerleri (Neutral-Null, ADL, kas grupları) + otomatik sorular; aynı yapı diz/omuz için de doldurulabilir (`rom`, `adl`, `muskelGruppen` alanları)
+- **Kartlar:** aralıklı tekrar ile kelime, kas (💪 stüdyo egzersizi dahil), kemik ve eklem kartları; kendi kelimeni ekleyebilirsin
+- **3D Anatomi:** BodyParts3D modelleri; kas odak modu (parçalar, Ursprung/Ansatz noktaları, derin kaslar), Yüzey/Orta/Derin katmanları
 
 ## İçerik nerede?
 | Dosya | İçerik |
