@@ -877,12 +877,7 @@ function renderCardSession([deckId]) {
   store.markIntroduced(card.id);
   const c = store.get().srs[card.id];
   const isNewCard = c.reps === 0;
-  const ivl = (r) => {
-    const int = c.int;
-    if (r === 0) return '<1g';
-    const n = r === 1 ? Math.max(1, Math.round(int * 1.2)) : r === 2 ? (int < 1 ? 1 : Math.round(int * 2.5)) : (int < 1 ? 4 : Math.round(int * 3.5));
-    return n + 'g';
-  };
+  const ivl = (r) => store.nextInterval(c, r).label;
   view.innerHTML = `
     <div class="row"><span class="muted small">Kalan: ${session.queue.length}</span><span class="spacer"></span>${isNewCard ? '<span class="badge good">yeni</span>' : ''}</div>
     <div class="flash ${session.flipped ? 'flipped' : ''}" id="flash">
@@ -915,9 +910,11 @@ function renderCardSession([deckId]) {
   $('#showBtn').addEventListener('click', flip);
   $$('[data-r]').forEach((b) => b.addEventListener('click', () => {
     const r = +b.dataset.r;
+    const step = store.nextInterval(store.get().srs[card.id], r);
     store.rate(card.id, r);
     session.queue.shift();
-    if (r === 0) session.queue.splice(Math.min(3, session.queue.length), 0, card); // bald wiederholen
+    if (step.requeue === 'soon') session.queue.splice(Math.min(3, session.queue.length), 0, card); // gleich nochmal
+    else if (step.requeue === 'end') session.queue.push(card);                                      // am Ende dieser Sitzung
     else session.done++;
     session.flipped = false;
     renderCardSession([deckId]);

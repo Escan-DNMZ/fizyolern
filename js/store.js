@@ -63,17 +63,34 @@ export function streak() {
 
 // ───── Spaced Repetition (vereinfachtes SM-2) ─────
 // rating: 0 = nochmal, 1 = schwer, 2 = gut, 3 = leicht
+// Nächstes Intervall für eine Bewertung – EINE Funktion für Speichern und Button-Beschriftung.
+// Neue/vergessene Karten (int < 1) haben Lernschritte: Tekrar = gleich nochmal (1 dk), Zor = heute am Ende (10 dk),
+// İyi = 1 Tag, Kolay = 4 Tage. Gelernte Karten: Zor ×1,2 · İyi ×2,5 · Kolay ×3,5, immer Zor < İyi < Kolay.
+export function nextInterval(c, rating) {
+  const int = (c && c.int) || 0;
+  if (int < 1) {
+    return [
+      { days: 0, label: '1dk', requeue: 'soon' },
+      { days: 0, label: '10dk', requeue: 'end' },
+      { days: 1, label: '1g' },
+      { days: 4, label: '4g' },
+    ][rating];
+  }
+  if (rating === 0) return { days: 0, label: '1dk', requeue: 'soon' };
+  // Obergrenze 1 Jahr – gestaffelt, damit die Reihenfolge auch dort erhalten bleibt
+  const hard = Math.min(363, Math.max(1, Math.round(int * 1.2)));
+  const good = Math.min(364, Math.max(hard + 1, Math.round(int * 2.5)));
+  const easy = Math.min(365, Math.max(good + 1, Math.round(int * 3.5)));
+  const days = [0, hard, good, easy][rating];
+  return { days, label: days < 100 || days >= 300 ? days + 'g' : (days / 30).toFixed(1).replace('.', ',') + 'ay' };
+}
+
 export function rate(cardId, rating) {
   const c = state.srs[cardId] || { int: 0, due: today(), reps: 0, lapses: 0 };
-  if (rating === 0) {
-    c.int = 0; c.lapses++; c.due = today();
-  } else {
-    if (rating === 1) c.int = Math.max(1, Math.round(c.int * 1.2));
-    else if (rating === 2) c.int = c.int < 1 ? 1 : Math.round(c.int * 2.5);
-    else c.int = c.int < 1 ? 4 : Math.round(c.int * 3.5);
-    c.int = Math.min(c.int, 365);
-    c.due = today(c.int);
-  }
+  const next = nextInterval(c, rating);
+  if (rating === 0 && c.int >= 1) c.lapses++;
+  c.int = next.days;
+  c.due = today(next.days);
   c.reps++;
   state.srs[cardId] = c;
   day().cards++;
