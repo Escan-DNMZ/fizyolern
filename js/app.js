@@ -4,7 +4,7 @@ import { GRUNDWORTSCHATZ, BASE_VOCAB } from './data/vocab.js';
 import { OPEN } from './data/questions.js';
 import { LESSONS, FAECHER, refreshLessons } from './lessons.js';
 import { cleanSegments, cleanText, cardFront } from './private.js';
-import { getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, odevList, notionLink, week, todayPlan, tomorrowPlan } from './private.js';
+import { getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, odevList, notionLink, week, todayPlan, tomorrowPlan, upcoming, examFaecher } from './private.js';
 import { getToken, setToken, clearToken, looksLikeToken, syncFromNotion } from './notion.js';
 import { renderReport } from './report.js';
 import { containsFuzzy } from './fuzzy.js';
@@ -14,6 +14,7 @@ import { todaysWords, weekWords, markKnown, recordWord, questionFor, checkTyped,
 import { MUSCLE3D, LAYER_NAMES, partText } from './data/muscle3d.js';
 import { UEBUNGEN } from './data/uebungen.js';
 import { masteredLessons } from './quizgen.js';
+import { initExam, renderMock } from './exam.js';
 import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, jointDetailQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked, weight, wpick } from './quizgen.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -135,6 +136,8 @@ const DECKS = () => [
 let viewer = null; // Anatomy3D-Instanz (lazy)
 let current = '';
 
+initExam({ view, $, $$, esc, escGap, toast, allOpen });
+
 const routes = {
   bugun: { title: 'Bugün', tab: 'bugun', render: renderToday },
   test: { title: 'Test', tab: 'test', render: renderQuizStart },
@@ -153,6 +156,7 @@ const routes = {
   donus: { title: 'Dönüş Yolu', tab: 'bugun', render: renderDonus, back: '#/bugun' },
   oku: { title: 'Ders Notları – Okuma', tab: 'bugun', render: renderReading, back: '#/donus' },
   cumartesi: { title: 'Haftalık Tekrar', tab: 'bugun', render: renderSaturday, back: '#/bugun' },
+  deneme: { title: 'Deneme Sınavı', tab: 'test', render: renderMock, back: '#/test' },
 };
 
 function navigate() {
@@ -201,8 +205,9 @@ function renderToday() {
     ...(deckCards('odev').length ? [{ done: !!d.lmQuiz, label: `🎯 Noktayı bul: Becken-Knochenpunkte ${d.lmQuiz ? `<span class="muted">${d.lmQuiz.r}/${d.lmQuiz.n}</span>` : '<span class="muted">(3D, 10 tur)</span>'}`, href: '#/3d?quiz=pelvis' }] : []),
     // erledigte Aufgabe bleibt (abgehakt) stehen, statt zu verschwinden
     ...(fehlerOpen || (d.fehlerSeen || []).length ? [{ done: !fehlerOpen, label: `✗ Hatalarımı tekrar et <span class="muted">(${fehlerOpen} kart)</span>`, href: '#/oturum/fehler' }] : []),
-    ...(plan && plan.test.length && FAECHER.some((f) => plan.test.includes(f))
-      ? [{ done: !!d.morning, label: `Sabah testi: <b>${esc(plan.test.join(' + '))}</b>`, href: `#/test?kat=${encodeURIComponent('Ders: ' + plan.test.join(','))}` }] : []),
+    // Morgentest: Fächer aus dem Wochenplan + Fächer mit Prüfung in ≤ 7 Tagen (📝)
+    ...(morningKat()
+      ? [{ done: !!d.morning, label: `Sabah testi: <b>${esc(morningFaecher().map((f) => (examFaecher(7).includes(f) ? '📝 ' + f : f)).join(' + '))}</b>`, href: `#/test?kat=${encodeURIComponent(morningKat())}` }] : []),
     { done: !!d.wordsMorning, label: `Sabah kelimeleri (${WORDS_PER_DAY})${d.wordsMorning ? ` <span class="muted">${d.wordsMorning.r}/${d.wordsMorning.n}</span>` : ''}`, href: '#/kelime/sabah' },
     { done: !!d.wordsReturn, label: `Dönüş kelimeleri (${WORDS_PER_DAY})${d.wordsReturn ? ` <span class="muted">${d.wordsReturn.r}/${d.wordsReturn.n}</span>` : ''}`, href: '#/kelime/donus' },
     { done: d.lesson, label: `Günün kası: <b>${esc(m.la)}</b>`, href: `#/ders/${m.id}` },
@@ -240,6 +245,8 @@ function renderToday() {
         </div>
       </div>
     </div>
+
+    ${examCard()}
 
     ${plan ? `<div class="card">
       <div class="eyebrow">Bugünkü dersler · KW ${week().kw}</div>
@@ -309,6 +316,33 @@ function tomorrowLine() {
   if (!t) return '';
   const names = [...new Set((t.kurse || []).flatMap((k) => k.replace(/\([^)]*\)/g, '').split(/\s*\+\s*/)).map((k) => k.replace(/×\s*\d+|·.*$|,.*$/g, '').trim()).filter(Boolean))];
   return `<div class="small muted" style="margin-top:6px">⏭️ Yarın: ${names.length ? esc(names.join(' + ')) : 'ders yok'}</div>`;
+}
+
+// Morgentest-Fächer: Prüfung bald zuerst, dann die Fächer aus dem Wochenplan (nur Fächer mit Fragen)
+function morningFaecher(plan = todayPlan()) {
+  return [...new Set([...examFaecher(7), ...((plan && plan.test) || [])])].filter((f) => FAECHER.includes(f));
+}
+const morningKat = () => (morningFaecher().length ? 'Ders: ' + morningFaecher().join(',') : '');
+
+// Countdown „📝 PT Befund sınavına 5 gün“ + Hausaufgaben der nächsten 7 Tage
+function examCard() {
+  const ex = upcoming('Sınav', 30).slice(0, 3);
+  const hw = upcoming('Ödev', 7).slice(0, 3);
+  if (!ex.length && !hw.length) return '';
+  const when = (e) => (e.days === 0 ? 'bugün!' : e.days === 1 ? 'yarın' : e.days + ' gün');
+  const soon = ex.some((e) => e.days <= 7);
+  return `<div class="card exam-card${soon ? ' soon' : ''}">
+    ${ex.map((e, k) => `<div class="${k ? 'small' : ''}" style="${k ? 'margin-top:6px' : ''}">
+      ${k ? '' : '<div class="eyebrow">Sınav geri sayımı</div>'}
+      ${k ? `📝 ${esc(e.fach || 'Sınav')}: <b>${when(e)}</b>` : `<h2>📝 ${esc(e.fach || 'Sınav')} ${e.days === 0 ? 'sınavı bugün!' : e.days === 1 ? 'sınavı yarın!' : `sınavına ${e.days} gün`}</h2>`}
+      ${e.topic && !k ? `<div class="muted small" lang="de">${esc(e.topic)} · ${e.date.slice(8, 10)}.${e.date.slice(5, 7)}.</div>` : ''}
+    </div>`).join('')}
+    ${hw.map((e) => `<div class="small" style="margin-top:6px">📌 Ödev${e.fach ? ' · ' + esc(e.fach) : ''}${e.topic ? ': ' + esc(e.topic) : ''} – <b>${when(e)}</b></div>`).join('')}
+    ${ex.length ? `<div class="grid2" style="margin-top:10px">
+      <a class="btn" href="#/deneme">Deneme sınavı</a>
+      ${FAECHER.includes(ex[0].fach) ? `<a class="btn ghost" href="#/test?kat=${encodeURIComponent('Ders: ' + ex[0].fach)}">Hızlı test</a>` : '<a class="btn ghost" href="#/test">Test</a>'}
+    </div>` : ''}
+  </div>`;
 }
 
 function nextOpenQuestion() {
@@ -648,11 +682,12 @@ function renderSaturday() {
 // ───────────────────────── Dönüş yolu (Rückweg) ─────────────────────────
 // Fächer von heute: Morgentest + erkannte Kursnamen
 function todayFaecher(plan = todayPlan()) {
-  if (!plan) return [];
+  if (!plan) return examFaecher(7);
   const text = (plan.kurse || []).join(' ').replace(/PT-Befund/g, 'PT Befund');
   const all = [...new Set([...FAECHER, 'AM', 'AKL', 'Atemtherapie', 'KI'])];
   const hit = all.filter((f) => (f.length <= 3 ? new RegExp(`(^|[^A-Za-zÄÖÜäöü])${f.replace('/', '\\/')}($|[^A-Za-zÄÖÜäöü])`).test(text) : text.includes(f)) || (f === 'Anatomie' && /\bANA\b/.test(text)));
-  return [...new Set([...(plan.test || []), ...hit])];
+  // Fächer mit Prüfung in ≤ 7 Tagen zuerst (Lesestoff und ✗-Karten im Rückweg)
+  return [...new Set([...examFaecher(7), ...(plan.test || []), ...hit])];
 }
 
 // Höchstens 2 Lektionen pro Rückweg: Fächer des Morgentests zuerst, je Fach die am längsten nicht gelesene
@@ -758,6 +793,7 @@ function renderQuizStart(_, params = new URLSearchParams()) {
       </div>
       <button class="btn block" id="startQuiz" style="margin-top:16px">${store.get().settings.quizGoal} soruluk testi başlat</button>
     </div>
+    <a class="card row" href="#/deneme" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">📝 Deneme sınavı</div><h2>Sınav provası</h2><div class="muted small">15 test + 3 açık uçlu · 30 dk · sonuç sonunda</div></span><span class="chev">›</span></a>
     <p class="muted small" style="padding:0 4px">Sorular Almanca, açıklamalar Türkçe. Kas/kemik/eklem soruları anatomi verilerinden her seferinde yeniden üretilir; yanlış yaptıkların ve uzun süredir görmediklerin daha sık gelir. Kas seviyesi: <b>${muscleLevel()}/3</b>${romUnlocked() ? ' · ROM soruları açık' : ''}.${weak ? ` Şu ana kadar <b>${weak}</b> soruda daha çok hata yaptın.` : ''}</p>
   `;
   $$('[data-cat]').forEach((b) => b.addEventListener('click', () => { quizCat = b.dataset.cat; renderQuizStart(); }));
@@ -796,7 +832,7 @@ function renderQuizQuestion() {
 function renderQuizEnd() {
   quiz.finished = true;
   const plan = todayPlan();
-  if (plan && plan.test.length && quiz.cat === 'Ders: ' + plan.test.join(',') && quiz.qs.length) { store.day().morning = true; store.save(); }
+  if (morningKat() && quiz.cat === morningKat() && quiz.qs.length) { store.day().morning = true; store.save(); }
   if (quiz.cat === 'Hatalar: bugün') markDonus('hatalar');
   if (quiz.donus) markDonus('test');
   const n = quiz.qs.length;
@@ -941,7 +977,8 @@ function renderCardSession([deckId]) {
       const fs = todayFaecher();
       const fach = Object.fromEntries(fehlerList().map((f) => [f.id, f.fach]));
       const srs = store.get().srs;
-      const key = (c) => [fs.includes(fach[c.id]) ? 0 : 1, store.isDue(c.id) ? 0 : 1, -((srs[c.id] || {}).lapses || 0)];
+      const ex = examFaecher(7); // Prüfung bald → diese Karten ganz vorne
+      const key = (c) => [ex.includes(fach[c.id]) ? 0 : fs.includes(fach[c.id]) ? 1 : 2, store.isDue(c.id) ? 0 : 1, -((srs[c.id] || {}).lapses || 0)];
       queue.sort((a, b) => { const x = key(a), y = key(b); return x[0] - y[0] || x[1] - y[1] || x[2] - y[2]; });
       const seen = store.day().fehlerSeen || [];
       const cap = Math.max(0, FEHLER_PER_DAY - seen.length);

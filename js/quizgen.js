@@ -5,7 +5,7 @@ import { MCQ } from './data/questions.js';
 import { UEBUNGEN } from './data/uebungen.js';
 import { LESSONS, FAECHER } from './lessons.js';
 import * as store from './store.js';
-import { week } from './private.js';
+import { week, examFaecher } from './private.js';
 
 export function shuffle(arr) {
   const a = [...arr];
@@ -300,12 +300,19 @@ export function muscleLevel() {
 // ROM-Fragen erst, wenn die übrigen Gelenkfragen sitzen
 export const romUnlocked = () => (accuracy((id) => topicOf(id) === 'Gelenke' && !id.startsWith('g:jnn:')) ?? 0) > 0.8;
 
-// Fächer der Morgentests dieser Woche (aus dem privaten Wochenplan)
+// Fächer der Morgentests dieser Woche (aus dem privaten Wochenplan) + Fächer mit Prüfung in ≤ 7 Tagen
 export function weekTestFaecher() {
   const w = week();
-  if (!w || !w.days || store.today() > w.to) return new Set();
-  return new Set(Object.values(w.days).flatMap((d) => (d && d.test) || []));
+  const tests = !w || !w.days || store.today() > w.to ? [] : Object.values(w.days).flatMap((d) => (d && d.test) || []);
+  return new Set([...tests, ...examFaecher(7)]);
 }
+
+// weight() läuft für tausende Fragen – Prüfungsfächer nur einmal pro Minute neu bestimmen
+let examMemo = { t: 0, set: new Set() };
+const soonExam = () => {
+  if (Date.now() - examMemo.t > 6e4) examMemo = { t: Date.now(), set: new Set(examFaecher(7)) };
+  return examMemo.set;
+};
 
 const daysSince = (iso) => (Date.now() - new Date(iso + 'T12:00:00')) / 864e5;
 
@@ -313,10 +320,8 @@ const daysSince = (iso) => (Date.now() - new Date(iso + 'T12:00:00')) / 864e5;
 // 3+ mal in Folge richtige seltener – aber nie 0
 // Wichtigkeit der Fächer für diesen Ausbildungsabschnitt
 const FACH_WEIGHT = { Anatomie: 1.6, Physiologie: 1.6, 'PT Befund': 1.2, 'PT Grundlagen': 1.1, PPS: 0.6, Hygiene: 0.6 };
-const fachWeight = (qid) => {
-  const f = lessonFach(qid) || (/^g:(inn|ans|urs|fkt|rev|bla|btr|jtyp|jnn|jx)/.test(qid) ? 'Anatomie' : null);
-  return FACH_WEIGHT[f] || 1;
-};
+const fachOf = (qid) => lessonFach(qid) || (/^g:(inn|ans|urs|fkt|rev|bla|btr|jtyp|jnn|jx)/.test(qid) ? 'Anatomie' : null);
+const fachWeight = (qid) => FACH_WEIGHT[fachOf(qid)] || 1;
 
 export function weight(qid, prio = new Set()) {
   const s = store.get().quiz[qid];
@@ -329,7 +334,9 @@ export function weight(qid, prio = new Set()) {
     if (s.last) w += Math.min(daysSince(s.last) / 7, 2); // lange nicht gesehen
     if (st >= 3) w *= st >= 6 ? 0.1 : 0.25;
   }
-  if (prio.size && prio.has(lessonFach(qid))) w *= 2.5;
+  const f = fachOf(qid);
+  if (soonExam().has(f)) w *= 6;                // Prüfung in ≤ 7 Tagen → deutlich öfter
+  else if (prio.size && prio.has(f)) w *= 2.5;  // Fach eines Morgentests dieser Woche
   // Gestern richtig beantwortet → heute kaum wieder (falsche kommen weiter über die Wiederholung)
   if (s && s.last === store.today(-1) && (s.st || 0) >= 1) w *= 0.1;
   if (s && s.last === store.today() && (s.st || 0) >= 1) w *= 0.05;
@@ -412,6 +419,18 @@ export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = []) {
     qs = pools[category]();
   }
   return shuffle(wpickQ(qs, n)).map(prepare);
+}
+
+// Fragenpool für den Deneme sınavı eines Fachs – ungewichtet, alle Schwierigkeitsstufen
+export function examPool(fach) {
+  return [
+    ...ALL_LESSON_MCQ().filter((q) => q.cat === fach),
+    ...ALL_JOINT_DETAIL().filter((q) => q.fach === fach),
+    ...(fach === 'Anatomie' ? [
+      ...MUSCLES.flatMap(muscleQuestions), ...BONES.flatMap(boneQuestions), ...JOINTS.flatMap(jointQuestions),
+      ...MCQ.filter((q) => q.cat === 'Anatomie' || q.cat === 'Gelenke'),
+    ] : []),
+  ];
 }
 
 // Lektionen, deren Fragen „sitzen“ (jede beantwortete Frage ≥ 2× in Folge richtig, mind. 3 beantwortet)

@@ -10,6 +10,8 @@ const DEFAULT = () => ({
   learned: {},      // strukturId -> datum
   customVocab: [],  // eigene Vokabeln
   words: {},        // Grundwortschatz-Leitner: wortId -> { box, due, r, w, last, known }
+  mocks: [],        // Deneme sınavı-Ergebnisse: { date, fach, pct, mcq: {r, n}, open: {score, n}, topics, min }
+  mockRun: null,    // laufender Deneme sınavı (übersteht Neuladen der App)
   settings: { cardsGoal: 15, quizGoal: 10, newPerDay: 10, reverse: false },
 });
 
@@ -142,6 +144,13 @@ export function markIntroduced(cardId) {
 
 export function dueCount(cards) {
   return cards.filter((c) => isDue(c.id)).length;
+}
+
+// ───── Deneme sınavı ─────
+export function recordMock(result) {
+  state.mocks = [...(state.mocks || []), result].slice(-50);
+  state.mockRun = null;
+  save();
 }
 
 // ───── Quiz-Statistik ─────

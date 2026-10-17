@@ -181,6 +181,69 @@ async function mistakeCard(rt, fach) {
   return { id: 'fx:' + (await sha16(full)), fach: fach || '', q: cardFront(seg), seg: cleanSegments(seg) };
 }
 
+// ───── Seite „Sınav & Ödev Takibi“: Prüfungen und Hausaufgaben ─────
+// Tabelle „Liste“ (Tür | Ders | Konu/Başlık | Tarih | Durum | Not) und offene To-dos unter „Yaklaşan“.
+// Datum: Notion-Datumserwähnung (@24.10.2026) oder Text „24.10.“, „24.10.2026“, „2026-10-24“.
+export function dateIn(rt, now = new Date()) {
+  const m = (rt || []).find((t) => t.type === 'mention' && t.mention && t.mention.date);
+  if (m) return m.mention.date.start.slice(0, 10);
+  const text = plain(rt);
+  let x = text.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (x) return `${x[1]}-${x[2]}-${x[3]}`;
+  x = text.match(/(?:^|[^\d.])(\d{1,2})\.(\d{1,2})\.(\d{2,4})?/);
+  if (!x || +x[2] < 1 || +x[2] > 12 || +x[1] < 1 || +x[1] > 31) return '';
+  let y = x[3] ? +x[3] : now.getFullYear();
+  if (y < 100) y += 2000;
+  let d = new Date(y, +x[2] - 1, +x[1]);
+  // ohne Jahr: liegt das Datum mehr als ein halbes Jahr zurück, ist das nächste Jahr gemeint
+  if (!x[3] && now - d > 182 * 864e5) d = new Date(y + 1, +x[2] - 1, +x[1]);
+  return fmt(d);
+}
+
+const DONE_RE = /✓|✅|☑|bitti|tamam|yap[ıi]ld[ıi]|teslim edildi|erledigt|geschrieben|abgegeben|\bdone\b/i;
+const EXAM_RE = /s[ıi]nav|klausur|pr[üu]fung|test|exam|quiz/i;
+
+export async function parseExamPage(blocks, faecher, loadChildren, now = new Date()) {
+  const out = [];
+  const fachOf = (text) => faecherIn(text, faecher)[0] || '';
+  for (const b of blocks) {
+    if (b.type === 'table') {
+      const rows = await loadChildren(b.id);
+      const cells0 = rows.length ? rows[0].table_row.cells.map((c) => lower(plain(c))) : [];
+      const col = (re, dflt) => { const i = cells0.findIndex((c) => re.test(c)); return b.table.has_column_header && i >= 0 ? i : dflt; };
+      const C = { typ: col(/tur|tür|typ/, 0), ders: col(/ders|fach/, 1), konu: col(/konu|baslik|thema/, 2), tarih: col(/tarih|datum/, 3), durum: col(/durum|status/, 4), not: col(/^not|notiz/, 5) };
+      for (const row of rows.slice(b.table.has_column_header ? 1 : 0)) {
+        const cells = row.table_row.cells;
+        const get = (k) => plain(cells[C[k]]).trim();
+        const date = dateIn(cells[C.tarih], now);
+        if (!date) continue; // leere Vorlagenzeile
+        const ders = get('ders');
+        out.push({
+          typ: EXAM_RE.test(get('typ')) ? 'Sınav' : 'Ödev',
+          fach: fachOf(ders) || ders,
+          topic: get('konu'),
+          date,
+          done: DONE_RE.test(get('durum')),
+          note: get('not'),
+        });
+      }
+    }
+    if (b.type === 'to_do') {
+      const rt = b.to_do.rich_text;
+      const text = plain(rt).trim();
+      const date = dateIn(rt, now);
+      if (!text || !date) continue;
+      const fach = fachOf(text);
+      const topic = text.replace(/\(?\s*\d{1,2}\.\d{1,2}\.(\d{2,4})?\s*\)?|\d{4}-\d{2}-\d{2}/g, '').replace(/\s*[–—:-]\s*$/, '').replace(/\s{2,}/g, ' ').trim();
+      out.push({ typ: EXAM_RE.test(text) ? 'Sınav' : 'Ödev', fach, topic, date, done: !!b.to_do.checked, note: '' });
+    }
+  }
+  // gleiche Prüfung aus Liste und „Yaklaşan“ nur einmal
+  const seen = new Set();
+  return out.filter((e) => { const k = e.typ + e.fach + e.date; return !seen.has(k) && seen.add(k); })
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
 // ───── Grundwortschatz-Datenbank ─────
 async function loadWords(db) {
   const words = [];
@@ -269,13 +332,14 @@ async function loadLessonLinks(dersler, lessons) {
 }
 
 export async function syncFromNotion({ faecher, lessons }) {
-  const [planPage, db, dersler, sorular] = await Promise.all([
+  const [planPage, db, dersler, sorular, sinav] = await Promise.all([
     findByTitle('Haftalık Plan', 'page'),
     findByTitle('Grundwortschatz', 'database'),
     findByTitle('Dersler', 'page'),
     findByTitle('FizyoLern Sorular', 'database'),
+    findByTitle('Sınav & Ödev Takibi', 'page'),
   ]);
-  if (!planPage && !db && !dersler && !sorular) throw new Error('Hiçbir sayfa görünmüyor – Notion\'da Dashboard sayfasına bu bağlantıyı (Connections) ekle');
+  if (!planPage && !db && !dersler && !sorular && !sinav) throw new Error('Hiçbir sayfa görünmüyor – Notion\'da Dashboard sayfasına bu bağlantıyı (Connections) ekle');
 
   const old = getPrivate() || {};
   const result = { kind: 'fizyolern-private', version: 2, source: 'notion', syncedAt: new Date().toISOString() };
@@ -298,6 +362,12 @@ export async function syncFromNotion({ faecher, lessons }) {
     result.lessonRows = await loadLessonRows(sorular);
     report.push(`${result.lessonRows.length} ders sorusu`);
   } else result.lessonRows = old.lessonRows || [];
+
+  if (sinav) {
+    result.exams = await parseExamPage(await children(sinav.id), faecher, children);
+    const n = result.exams.filter((e) => e.typ === 'Sınav' && !e.done).length;
+    report.push(`${n} sınav, ${result.exams.length - n} ödev/diğer`);
+  } else result.exams = old.exams || [];
 
   result.notion = dersler ? await loadLessonLinks(dersler, lessons) : old.notion || {};
   setPrivate(result);

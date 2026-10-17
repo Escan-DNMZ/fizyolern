@@ -113,3 +113,22 @@ export function tomorrowPlan(date = new Date()) {
   d.setDate(d.getDate() + 1);
   return todayPlan(d);
 }
+
+// ───── Prüfungen & Hausaufgaben (Notion-Seite „Sınav & Ödev Takibi“) ─────
+// { typ: 'Sınav' | 'Ödev', fach, topic, date: 'YYYY-MM-DD', done, note }
+export const examList = () => ((data && data.exams) || []);
+// Tage bis zu einem Datum (heute = 0)
+export function daysUntil(iso, now = new Date()) {
+  const t = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) - t) / 864e5);
+}
+// Kommende, noch nicht erledigte Einträge (heute eingeschlossen), nächster zuerst
+export function upcoming(typ = 'Sınav', days = Infinity, now = new Date()) {
+  return examList()
+    .filter((e) => e.typ === typ && !e.done && e.date)
+    .map((e) => ({ ...e, days: daysUntil(e.date, now) }))
+    .filter((e) => e.days >= 0 && e.days <= days)
+    .sort((a, b) => a.days - b.days);
+}
+// Fächer mit einer Prüfung in den nächsten 7 Tagen – haben Vorrang in Morgentest, Karten und Rückweg
+export const examFaecher = (days = 7, now = new Date()) => [...new Set(upcoming('Sınav', days, now).map((e) => e.fach).filter(Boolean))];

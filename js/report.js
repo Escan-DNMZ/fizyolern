@@ -4,7 +4,7 @@ import * as store from './store.js';
 import { LESSONS } from './lessons.js';
 import { MCQ } from './data/questions.js';
 import { MUSCLES, BONES, JOINTS } from './data/anatomy.js';
-import { fehlerList, odevList, todayPlan, week } from './private.js';
+import { fehlerList, odevList, todayPlan, week, upcoming } from './private.js';
 import { muscleQuestions, boneQuestions, jointQuestions, ALL_JOINT_DETAIL, exerciseQuestions } from './quizgen.js';
 import { todaysWords } from './words.js';
 
@@ -120,6 +120,19 @@ export function buildReport() {
     const fmt = (x) => (x ? `${x.r}/${x.n}` : 'yapılmadı');
     lines.push(`🔤 Kelimeler: sabah ${fmt(d.wordsMorning)}, dönüş ${fmt(d.wordsReturn)} · ${tw.map((x) => `${x.de}${wr[x.id] === 'close' ? ' ½' : wr[x.id] === false ? ' ✗' : wr[x.id] ? ' ✓' : ''}`).join(', ')}`);
   }
+  // Prüfungen & Hausaufgaben (Notion „Sınav & Ödev Takibi“) + letzte Probeklausuren
+  const exams = upcoming('Sınav', 60);
+  const hw = upcoming('Ödev', 14);
+  const when = (e) => `${trDate(e.date).slice(0, 6)}, ${e.days === 0 ? 'bugün' : e.days === 1 ? 'yarın' : e.days + ' gün sonra'}`;
+  if (exams.length) lines.push(`📝 Yaklaşan sınavlar: ${exams.map((e) => `${e.fach || 'Sınav'}${e.topic ? ' (' + e.topic + ')' : ''} – ${when(e)}`).join(' · ')}`);
+  if (hw.length) lines.push(`📌 Teslim edilecek ödevler: ${hw.map((e) => `${e.fach ? e.fach + ': ' : ''}${e.topic || 'Ödev'} – ${when(e)}`).join(' · ')}`);
+  const mocks = (s.mocks || []).filter((m) => m.date >= daysAgo(14));
+  if (mocks.length) {
+    lines.push(`🧪 Deneme sınavları (son 14 gün): ${mocks.slice(-4).map((m) => `${m.fach} %${m.pct} (${trDate(m.date).slice(0, 6)})`).join(' · ')}`);
+    const last = mocks[mocks.length - 1];
+    const weakT = Object.entries(last.topics).filter(([, v]) => v.n && v.r / v.n < 0.6).sort(([, a], [, b]) => a.r / a.n - b.r / b.n).slice(0, 3).map(([t, v]) => `${t} %${Math.round((v.r / v.n) * 100)}`);
+    if (weakT.length) lines.push(`   Son denemede zayıf konular (${last.fach}): ${weakT.join(', ')}`);
+  }
   if (w) lines.push(`📅 Program: KW ${w.kw}${plan && plan.kurse.length ? ' · bugün: ' + plan.kurse.join(' / ') : ''}${plan && plan.test.length ? ' · sabah testi: ' + plan.test.join(' + ') : ''}`);
 
   const fachRows = Object.entries(byFach).map(([f, v]) => [f, pct(v.r, v.w), v.r + v.w]).filter((x) => x[2] >= 2).sort((a, b) => a[1] - b[1]);
@@ -161,7 +174,9 @@ export function buildReport() {
   lines.push('1. Kısa bir motivasyon ve bugünkü durumumun yorumu');
   lines.push('2. En zayıf 2 konumu Türkçe kısaca açıkla (Almanca terimlerle)');
   lines.push('3. Bu konulardan 5 soruluk mini sınav yap (Almanca, cevapları ben yazayım)');
-  lines.push('4. Gerekirse Notion\'daki Haftalık Plan\'da ✗ listemi güncelle');
+  const examSoon = exams.length && exams[0].days <= 7;
+  if (examSoon) lines.push(`4. ${exams[0].fach || 'Sınav'} sınavına ${exams[0].days} gün kaldı: o derse öncelik ver, kısa bir sınav planı öner`);
+  lines.push(`${examSoon ? 5 : 4}. Gerekirse Notion'daki Haftalık Plan'da ✗ listemi güncelle`);
   return lines.join('\n');
 }
 

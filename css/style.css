@@ -273,3 +273,18 @@ body.focus3d .hud-top .chips, body.focus3d .hud-top .slider, body.focus3d .searc
 .pq-fb.bad { background: var(--bad-soft); color: var(--bad); }
 .pq-fb.ok .muted { color: inherit; opacity: .8; }
 .lm-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+/* ───── Sınav geri sayımı + Deneme sınavı ───── */
+.exam-card.soon { border: 2px solid var(--warn); }
+.exam-card h2 { margin: 2px 0; }
+.list > button { font: inherit; color: var(--text); }
+.mock-head { position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 4px 0; }
+.mock-timer { font-weight: 800; font-variant-numeric: tabular-nums; font-size: 17px; }
+.mock-timer.low { color: var(--bad); }
+.mock-nav { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; margin-top: 6px; }
+.mock-nav button { aspect-ratio: 1; min-width: 0; border-radius: 9px; border: 1.5px solid var(--line); background: var(--card); color: var(--text); font: inherit; font-size: 13px; font-weight: 700; padding: 0; cursor: pointer; }
+.mock-nav button.open { border-style: dashed; }
+.mock-nav button.done { background: var(--accent-soft); border-color: var(--accent); }
+.mock-nav button.on { outline: 2.5px solid var(--accent); outline-offset: 1px; }
+.opt.picked { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+.mock-topic { margin: 8px 0; }
+.mock-topic .progress { margin: 4px 0 0; }
