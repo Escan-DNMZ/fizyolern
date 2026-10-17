@@ -252,3 +252,7 @@ body.focus3d .hud-top .chips, body.focus3d .hud-top .slider, body.focus3d .searc
 /* ───── Dönüş yolu: Lesemodus ───── */
 .read-card { font-size: 18px; line-height: 1.5; }
 .read-card .muted { font-size: 15px; margin-top: 6px; }
+
+/* Lücke im Lückentext: nicht umbrechen, unterstrichenes Kästchen */
+.gap { display: inline-block; min-width: 3.4em; height: 1.05em; vertical-align: -0.15em; border-bottom: 2.5px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 4px 4px 0 0; white-space: nowrap; }

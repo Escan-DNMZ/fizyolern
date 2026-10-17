@@ -18,6 +18,8 @@ const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const view = $('#view');
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Text escapen und Lücken „＿＿＿“ als nicht umbrechendes Kästchen darstellen
+const escGap = (s) => esc(s).replace(/\s*＿+\s*/g, (m) => `${/^\s/.test(m) ? ' ' : ''}<span class="gap" aria-label="Lücke"></span>${/\s$/.test(m) ? ' ' : ''}`);
 const norm = (s) => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ı/g, 'i');
 
 function toast(msg) {
@@ -480,7 +482,7 @@ function renderWordSession([pass = 'sabah']) {
     <div class="row"><span class="badge">${esc(w.cat.replace('GW · ', ''))}</span><span class="badge">${TYPE_LABEL[q.type]}</span><span class="spacer"></span><span class="muted small">${wordSess.i + 1} / ${words.length}</span></div>
     <div class="progress"><div style="width:${(wordSess.i / words.length) * 100}%"></div></div>
     <p class="muted small" style="margin:4px 0">${esc(q.prompt)}</p>
-    <div class="card" style="text-align:center"><div class="big-word" lang="de">${esc(q.big)}</div>${q.sub ? `<div class="muted small" style="margin-top:6px">${esc(q.sub)}</div>` : ''}</div>
+    <div class="card" style="text-align:center"><div class="big-word" lang="de">${escGap(q.big)}</div>${q.sub ? `<div class="muted small" style="margin-top:6px">${esc(q.sub)}</div>` : ''}</div>
     ${q.typed
       ? `<input type="text" id="wInput" placeholder="ör. die Schwellung" autocomplete="off" autocapitalize="off" spellcheck="false" lang="de">
          <button class="btn block" id="wCheck" style="margin-top:8px">Kontrol et</button>`
@@ -700,7 +702,7 @@ function renderQuizQuestion() {
   view.innerHTML = `
     <div class="row"><span class="badge">${esc(q.cat)}</span><span class="spacer"></span><span class="muted small">${quiz.i + 1} / ${quiz.qs.length}</span></div>
     <div class="progress"><div style="width:${(quiz.i / quiz.qs.length) * 100}%"></div></div>
-    <div class="question">${esc(q.q)}</div>
+    <div class="question">${escGap(q.q)}</div>
     ${q.opts.map((o, i) => `<button class="opt" data-i="${i}">${esc(o)}</button>`).join('')}
     <div id="after"></div>
     <button class="btn plain block" id="quitQuiz" style="margin-top:20px">Testi bitir</button>
@@ -822,7 +824,7 @@ function renderDecks() {
     const due = store.dueCount(cards);
     const fresh = cards.filter((c) => store.isNew(c.id)).length;
     return `<a href="#/oturum/${encodeURIComponent(d.id)}"><span class="grow"><b>${esc(d.name)}</b><div class="muted small">${esc(d.sub)}</div></span>
-      ${due ? `<span class="badge warn">${due} tekrar</span>` : ''}<span class="badge">${fresh} yeni</span></a>`;
+      ${due ? `<span class="badge warn">${due} tekrar</span>` : ''}<span class="badge">${fresh} ${d.id.startsWith('fehler') ? 'hata' : 'yeni'}</span></a>`;
   });
   view.innerHTML = `
     <div class="section-title">Desteler</div>
@@ -855,12 +857,26 @@ function renderDecks() {
 }
 
 let session = null;
+const FEHLER_PER_DAY = 20;
 
 function renderCardSession([deckId]) {
   if (!session || session.deck !== deckId) {
     const cards = deckCards(deckId);
-    // Fehlerkarten immer alle zeigen (kein Tageslimit für neue Karten)
-    session = { deck: deckId, queue: store.buildSession(cards, { noNewLimit: deckId.startsWith('fehler') }), done: 0, flipped: false };
+    let queue = store.buildSession(cards, { noNewLimit: deckId.startsWith('fehler') });
+    let later = 0;
+    if (deckId.startsWith('fehler')) {
+      // Höchstens 20 Fehlerkarten pro Tag: heutige Fächer zuerst, dann fällige, dann die am häufigsten vergessenen
+      const fs = todayFaecher();
+      const fach = Object.fromEntries(fehlerList().map((f) => [f.id, f.fach]));
+      const srs = store.get().srs;
+      const key = (c) => [fs.includes(fach[c.id]) ? 0 : 1, store.isDue(c.id) ? 0 : 1, -((srs[c.id] || {}).lapses || 0)];
+      queue.sort((a, b) => { const x = key(a), y = key(b); return x[0] - y[0] || x[1] - y[1] || x[2] - y[2]; });
+      const seen = store.day().fehlerSeen || [];
+      const cap = Math.max(0, FEHLER_PER_DAY - seen.length);
+      later = Math.max(0, queue.length - cap);
+      queue = queue.slice(0, cap);
+    }
+    session = { deck: deckId, queue, done: 0, flipped: false, later };
   }
   const deck = DECKS().find((d) => d.id === deckId);
   $('#title').textContent = deck ? deck.name : 'Kartlar';
@@ -869,7 +885,7 @@ function renderCardSession([deckId]) {
     if (deckId.startsWith('fehler:')) markDonus('fehler');
     view.innerHTML = `
       <div class="empty"><div style="font-size:48px">🎉</div><h2>Bu deste için bugünlük bitti!</h2>
-      <p>${session.done} kart tekrar edildi.</p></div>
+      <p>${session.done} kart tekrar edildi.</p>${session.later ? `<p class="muted">Kalan ${session.later} hata kartı yarın gelecek (günde en fazla ${FEHLER_PER_DAY}).</p>` : ''}</div>
       <div class="grid2"><a class="btn ghost" href="#/kartlar">Destelere dön</a><a class="btn" href="#/bugun">Bugün</a></div>`;
     session = null;
     return;
@@ -879,10 +895,10 @@ function renderCardSession([deckId]) {
   const isNewCard = c.reps === 0;
   const ivl = (r) => store.nextInterval(c, r).label;
   view.innerHTML = `
-    <div class="row"><span class="muted small">Kalan: ${session.queue.length}</span><span class="spacer"></span>${isNewCard ? '<span class="badge good">yeni</span>' : ''}</div>
+    <div class="row"><span class="muted small">Kalan: ${session.queue.length}</span><span class="spacer"></span>${deckId.startsWith('fehler') ? '<span class="badge bad">✗ hata</span>' : isNewCard ? '<span class="badge good">yeni</span>' : ''}</div>
     <div class="flash ${session.flipped ? 'flipped' : ''}" id="flash">
       <div class="flash-inner">
-        <div class="face front"><span class="badge tag">${esc(card.tag)}</span><div class="big">${esc(card.front)}</div>${card.frontSub ? `<div class="sub">${esc(card.frontSub)}</div>` : ''}<div class="sub" style="margin-top:24px">Çevirmek için dokun</div></div>
+        <div class="face front"><span class="badge tag">${esc(card.tag)}</span><div class="big">${escGap(card.front)}</div>${card.frontSub ? `<div class="sub">${esc(card.frontSub)}</div>` : ''}<div class="sub" style="margin-top:24px">Çevirmek için dokun</div></div>
         <div class="face back">${card.back}${(() => {
           if (!deckId.startsWith('fehler')) return '';
           const s = structureInText(card.front + ' ' + card.back.replace(/<[^>]+>/g, ' '));
@@ -912,6 +928,7 @@ function renderCardSession([deckId]) {
     const r = +b.dataset.r;
     const step = store.nextInterval(store.get().srs[card.id], r);
     store.rate(card.id, r);
+    if (deckId.startsWith('fehler')) { const d = store.day(); d.fehlerSeen = [...new Set([...(d.fehlerSeen || []), card.id])]; store.save(); }
     session.queue.shift();
     if (step.requeue === 'soon') session.queue.splice(Math.min(3, session.queue.length), 0, card); // gleich nochmal
     else if (step.requeue === 'end') session.queue.push(card);                                      // am Ende dieser Sitzung
