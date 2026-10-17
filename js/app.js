@@ -8,6 +8,8 @@ import { getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, not
 import { getToken, setToken, clearToken, looksLikeToken, syncFromNotion } from './notion.js';
 import { renderReport } from './report.js';
 import { containsFuzzy } from './fuzzy.js';
+import { LANDMARKS, findLandmark, shortLa } from './data/landmarks.js';
+import { axesOf } from './data/axes.js';
 import { todaysWords, weekWords, markKnown, recordWord, questionFor, checkTyped, TYPE_LABEL, WORDS_PER_DAY } from './words.js';
 import { MUSCLE3D, LAYER_NAMES, partText } from './data/muscle3d.js';
 import { UEBUNGEN } from './data/uebungen.js';
@@ -30,7 +32,10 @@ function toast(msg) {
   setTimeout(() => t.remove(), 1800);
 }
 
-const KIND_LABEL = { muscle: 'Kas', bone: 'Kemik', joint: 'Eklem' };
+const KIND_LABEL = { muscle: 'Kas', bone: 'Kemik', joint: 'Eklem', landmark: 'Kemik noktası' };
+// Struktur oder Knochenpunkt
+const findAny = (id) => findStructure(id) || (findLandmark(id) ? { ...findLandmark(id), kind: 'landmark' } : null);
+const shortName = (s) => (s.kind === 'landmark' ? shortLa(s) : s.la.replace(/\s*\(.*\)$/, ''));
 // Grundwortschatz: live aus Notion, falls synchronisiert – sonst die mitgelieferte Kopie
 const gwWords = () => (getPrivate() && getPrivate().gw && getPrivate().gw.length ? getPrivate().gw : GRUNDWORTSCHATZ);
 const allVocab = () => [...gwWords(), ...BASE_VOCAB, ...store.get().customVocab];
@@ -402,7 +407,7 @@ function renderLesson([id]) {
         $$('.opt', box).forEach((b2, j) => { b2.disabled = true; if (j === q.ans) b2.classList.add('correct'); });
         if (i !== q.ans) btn.classList.add('wrong');
         store.recordQuiz(q.id, i === q.ans);
-        $('.ex', box).innerHTML = `<div class="explain">${esc(q.x)}</div>`;
+        $('.ex', box).innerHTML = `<div class="explain">${esc(q.x)}</div>${btn3d(`${q.q} ${q.opts[q.ans]} ${q.x}`, { style: 'margin-top:8px' })}`;
       }));
       mq.appendChild(box);
     });
@@ -501,7 +506,7 @@ function renderWordSession([pass = 'sabah']) {
     store.save();
     wordSess.res.push({ id: w.id, ok, near });
     if ($('#wKnown')) $('#wKnown').hidden = true;
-    $('#wAfter').innerHTML = `<div class="explain">${ok ? '✅ Doğru' : near ? '⚠️ Neredeyse' : '❌ Yanlış'}${note ? ' · ' + note : ''}<br><b lang="de">${esc(w.de)}</b> = ${esc(w.tr)}${w.ex ? `<br><span class="muted" lang="de">„${esc(w.ex)}“</span>` : ''}${q.type === 'partizip' ? `<br>Partizip II: <b lang="de">${esc(q.answer)}</b>` : ''}</div>
+    $('#wAfter').innerHTML = `<div class="explain">${ok ? '✅ Doğru' : near ? '⚠️ Neredeyse' : '❌ Yanlış'}${note ? ' · ' + note : ''}<br><b lang="de">${esc(w.de)}</b> = ${esc(w.tr)}${w.ex ? `<br><span class="muted" lang="de">„${esc(w.ex)}“</span>` : ''}${q.type === 'partizip' ? `<br>Partizip II: <b lang="de">${esc(q.answer)}</b>` : ''}</div>${btn3d(w.de, { style: 'margin:0 0 10px' })}
       <button class="btn block" id="wNext">${wordSess.i + 1 < words.length ? 'Sonraki kelime' : 'Bitir'}</button>`;
     $('#wNext').addEventListener('click', () => { wordSess.i++; wordSess.answered = false; wordSess.q = null; renderWordSession([pass]); });
   };
@@ -547,13 +552,66 @@ function renderWordEnd(words) {
   wordSess = null;
 }
 
-// Ersten Muskel/Knochen/Gelenk finden, der in einem Text genannt wird (lateinisch oder deutsch)
-function structureInText(text) {
-  const t = ' ' + text.toLowerCase() + ' ';
-  const names = (s) => [s.la.replace(/\s*\(.*\)$/, ''), s.de].map((x) => x.toLowerCase()).filter((x) => x.length > 4);
-  const esc2 = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  // nur am Wortanfang, damit z. B. kurze Namen nicht mitten in anderen Wörtern treffen
-  return ALL_STRUCTURES.filter((s) => s.kind !== 'joint').find((s) => names(s).some((n) => new RegExp(`[^a-zäöüß]${esc2(n)}`).test(t))) || null;
+// Sammelbegriffe → mehrere Strukturen
+const GROUP_NAMES = [
+  [/wirbelsäule|columna vertebralis/, ['hws', 'bws', 'lws', 'sacrum']],
+  [/\bmm\.\s*gemelli\b|\bgemelli\b|zwillingsmuskeln/, ['gemellus_superior', 'gemellus_inferior']],
+  [/\bmm\.\s*obturatorii\b|\bobturatorii\b/, ['obturatorius_internus', 'obturatorius_externus']],
+  [/ischiocrural|ischiokrural|hamstrings/, ['biceps_femoris', 'semitendinosus', 'semimembranosus']],
+  [/quadri[cz]eps/, ['rectus_femoris', 'vastus_lateralis', 'vastus_medialis', 'vastus_intermedius']],
+  [/\bmm\.\s*vasti\b/, ['vastus_lateralis', 'vastus_medialis', 'vastus_intermedius']],
+  [/tri[cz]eps surae/, ['gastrocnemius', 'soleus']],
+  [/rotatorenmanschette/, ['supraspinatus', 'infraspinatus', 'teres_minor', 'subscapularis']],
+  [/adduktoren|\bmm\.\s*adductores\b/, ['pectineus', 'adductor_longus', 'adductor_brevis', 'adductor_magnus', 'gracilis']],
+  [/tiefen? (hüft)?außenrotatoren|pelvitrochant/, ['piriformis', 'gemellus_superior', 'obturatorius_internus', 'gemellus_inferior', 'obturatorius_externus', 'quadratus_femoris']],
+  [/\bmm\.\s*glutei\b|gesäßmuskeln|glutealmuskulatur/, ['gluteus_maximus', 'gluteus_medius', 'gluteus_minimus']],
+];
+const LETTERS = 'a-zäöüß';
+let nameIndex = null;
+function structureNames() {
+  if (nameIndex) return nameIndex;
+  const rx = (n) => n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\.\s+/g, '\\.\\s*').replace(/\s+/g, '\\s+');
+  nameIndex = [...ALL_STRUCTURES, ...LANDMARKS.map((l) => ({ ...l, kind: 'landmark' }))].map((st) => {
+    const v = new Set();
+    for (const b of [st.la.replace(/\s*\(.*\)$/, ''), st.de]) {
+      v.add(b);
+      v.add(b.replace(/^(M|Mm|Lig|Ligg)\.\s+/, ''));        // „gluteus minimus“ ohne „M.“
+      v.add(b.replace(/^Articulatio\b/, 'Art.'));
+    }
+    const ab = (st.la.match(/\(([^)]+)\)$/) || [])[1];      // Abkürzung in Klammern: SIAS, ISG, OSG, AC-Gelenk …
+    if (ab && /^[A-ZÄÖÜ][\wÄÖÜäöü–-]+$/.test(ab)) v.add(ab);
+    const names = [...v].filter((x) => x.length > 3 || /^[A-Z]{3}$/.test(x));
+    // nur ganze Wörter (mit Genitiv-/Plural-Endung), damit „Tibia“ nicht in „tibialis“ trifft
+    return { st, re: new RegExp(`(^|[^${LETTERS}])(${names.map(rx).join('|')})(?:s|es|n|en)?(?![${LETTERS}])`) };
+  });
+  return nameIndex;
+}
+
+// Alle Muskeln, Knochen, Gelenke und Knochenpunkte, die in einem Text genannt werden (Reihenfolge wie im Text)
+function structuresInText(text, max = 8) {
+  const t = ' ' + String(text || '').replace(/\((M\. (quadriceps femoris|triceps surae))\)/g, ' ').toLowerCase() + ' ';
+  const hits = [];
+  for (const { st, re } of structureNames()) {
+    const m = re.exec(t);
+    if (m) hits.push({ at: m.index + m[1].length, len: m[2].length, ids: [st.id] });
+  }
+  for (const [re, ids] of GROUP_NAMES) {
+    const m = re.exec(t);
+    if (m) hits.push({ at: m.index, len: m[0].length, ids });
+  }
+  hits.sort((x, y) => x.at - y.at || y.len - x.len);
+  // Treffer, die ganz in einem längeren Namen liegen, weglassen
+  const kept = hits.filter((h, i) => !hits.some((o, j) => j !== i && o.len > h.len && o.at <= h.at && o.at + o.len >= h.at + h.len && !o.ids.includes(h.ids[0])));
+  const ids = [...new Set(kept.flatMap((h) => h.ids))];
+  return ids.map(findAny).filter(Boolean).slice(0, max);
+}
+
+// „🦴 3D'de göster“-Knopf für alle Strukturen in einem Text
+function btn3d(text, { style = 'margin-top:10px', stop = false, block = true } = {}) {
+  const ss = structuresInText(text);
+  if (!ss.length) return '';
+  const label = ss.length > 1 ? `🦴 3D'de göster (${ss.length} yapı)` : `🦴 3D'de göster: ${esc(shortName(ss[0]))}`;
+  return `<a class="btn ghost${block ? ' block' : ''}" style="${style}" href="#/3d?ids=${ss.map((x) => x.id).join(',')}"${stop ? ' onclick="event.stopPropagation()"' : ''}>${label}</a>`;
 }
 
 // ───────────────────────── Samstag: Wochenwiederholung ─────────────────────────
@@ -650,7 +708,7 @@ function renderReading() {
     <p class="muted small" style="padding:0 4px">Kaydırarak oku · Almanca cümle, altında Türkçesi</p>
     ${lessons.map((l) => `
       <div class="section-title" lang="de">${esc(l.fach)} · ${esc(l.title)}</div>
-      ${l.kern.map((k) => `<div class="card read-card"><div lang="de">${esc(k.de)}</div><div class="muted">🇹🇷 ${esc(k.tr)}</div></div>`).join('')}`).join('')}
+      ${l.kern.map((k) => `<div class="card read-card"><div lang="de">${esc(k.de)}</div><div class="muted">🇹🇷 ${esc(k.tr)}</div>${btn3d(k.de, { style: 'margin-top:10px', block: false })}</div>`).join('')}`).join('')}
     <button class="btn block" id="readDone" style="margin-top:12px">Okudum ✓ → Mini test (5 soru)</button>
     <button class="btn plain block" id="readSkip" style="margin-top:8px">Testi atla</button>`;
   const markRead = () => { lessons.forEach((l) => { store.get().learned['les:' + l.id] = store.today(); }); markDonus('notlar'); };
@@ -714,7 +772,7 @@ function renderQuizQuestion() {
     if (!ok) { btn.classList.add('wrong'); quiz.wrong.push(q); } else quiz.right++;
     if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(ok ? 15 : [30, 40, 30]);
     store.recordQuiz(q.id, ok);
-    $('#after').innerHTML = `<div class="explain">${ok ? '✅ Doğru! ' : '❌ Yanlış. '}${esc(q.x)}</div><button class="btn block" id="next">${quiz.i + 1 < quiz.qs.length ? 'Sonraki soru' : 'Sonucu gör'}</button>`;
+    $('#after').innerHTML = `<div class="explain">${ok ? '✅ Doğru! ' : '❌ Yanlış. '}${esc(q.x)}</div>${btn3d(`${q.q} ${q.opts[q.ans]} ${q.x}`, { style: 'margin:0 0 10px' })}<button class="btn block" id="next">${quiz.i + 1 < quiz.qs.length ? 'Sonraki soru' : 'Sonucu gör'}</button>`;
     $('#next').addEventListener('click', () => { quiz.i++; renderQuizQuestion(); });
     $('#next').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }));
@@ -739,7 +797,7 @@ function renderQuizEnd() {
       <div class="score">${quiz.right}/${n}</div>
       <div class="muted">${pct >= 80 ? 'Harika! 💪' : pct >= 50 ? 'İyi gidiyor, devam!' : 'Tekrar zamanı – yanlışlara bak 👇'}</div>
     </div>
-    ${quiz.wrong.length ? `<div class="section-title">Yanlışların</div>${quiz.wrong.map((q) => `<div class="card small"><b>${esc(q.q)}</b><div class="explain">✔︎ ${esc(q.opts[q.ans])}<br><span class="muted">${esc(q.x)}</span></div></div>`).join('')}` : ''}
+    ${quiz.wrong.length ? `<div class="section-title">Yanlışların</div>${quiz.wrong.map((q) => `<div class="card small"><b>${esc(q.q)}</b><div class="explain">✔︎ ${esc(q.opts[q.ans])}<br><span class="muted">${esc(q.x)}</span></div>${btn3d(`${q.q} ${q.opts[q.ans]} ${q.x}`, { style: 'margin-top:8px' })}</div>`).join('')}` : ''}
     ${upgrade.map(({ l, q }) => `<a class="card row" href="#/soru/${encodeURIComponent(q.id)}" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">⬆️ Seviye atla</div><b lang="de">${esc(l.title)}</b><div class="muted small">Bu dersin soruları 2× üst üste doğru → şimdi açık uçlu soru</div></span><span class="chev">›</span></a>`).join('')}
     <div class="grid2">
       ${quiz.wrong.length ? '<button class="btn ghost" id="retryWrong">Yanlışları tekrarla</button>' : ''}
@@ -798,7 +856,7 @@ function renderOpenQuestion([id]) {
         <h3 style="margin-top:0">Anahtar kavramlar (${hits.filter((h) => h.hit).length}/${hits.length})</h3>
         ${hits.map((h) => `<span class="kw ${h.hit ? 'hit' : 'miss'}">${h.hit ? '✓' : '✗'} ${esc(h.k.split('|')[0])}</span>`).join('')}
         <h3>Örnek cevap (Musterlösung)</h3>
-        <p class="small">${esc(q.a)}</p>
+        <p class="small">${esc(q.a)}</p>${btn3d(`${q.q} ${q.a}`, { style: 'margin-bottom:10px' })}
         <h3>Kendini değerlendir</h3>
         <div class="grid2" style="grid-template-columns:1fr 1fr 1fr">
           <button class="btn danger" data-s="0">Bilmedim</button>
@@ -899,11 +957,7 @@ function renderCardSession([deckId]) {
     <div class="flash ${session.flipped ? 'flipped' : ''}" id="flash">
       <div class="flash-inner">
         <div class="face front"><span class="badge tag">${esc(card.tag)}</span><div class="big">${escGap(card.front)}</div>${card.frontSub ? `<div class="sub">${esc(card.frontSub)}</div>` : ''}<div class="sub" style="margin-top:24px">Çevirmek için dokun</div></div>
-        <div class="face back">${card.back}${(() => {
-          if (!deckId.startsWith('fehler')) return '';
-          const s = structureInText(card.front + ' ' + card.back.replace(/<[^>]+>/g, ' '));
-          return s ? `<a class="btn ghost" style="margin-top:12px" href="#/3d?id=${s.id}" onclick="event.stopPropagation()">🦴 3D'de göster: ${esc(s.la)}</a>` : '';
-        })()}</div>
+        <div class="face back">${card.back}${btn3d(card.front + ' ' + card.back.replace(/<[^>]+>/g, ' '), { style: 'margin-top:12px', stop: true, block: false })}</div>
       </div>
     </div>
     <div id="rateBox" ${session.flipped ? '' : 'hidden'}>
@@ -970,8 +1024,9 @@ async function render3D(_, params) {
     if (!threeLoading) {
       $('#hint3d').textContent = '3D model yükleniyor…';
       threeLoading = import('./anatomy3d.js').then(({ Anatomy3D }) => {
-        viewer = new Anatomy3D($('#canvas3d'), { onSelect: (sid, o) => (o && o.focus ? startFocus(sid) : showSheet(sid)) });
-        viewer.onPart = (k) => renderFocusSheet(k);
+        viewer = new Anatomy3D($('#canvas3d'), { onSelect: (sid, o) => (o && o.focus ? openFrom(sid) : showSheet(sid)) });
+        viewer.onPart = (k) => (k && k.group ? showTourStep(tour.ids.indexOf(k.group)) : renderFocusSheet(k));
+        viewer.onLandmark = (lid) => (focusState ? openFrom(lid) : startFocus(lid));
         $('#hint3d').textContent = 'Döndürmek için sürükle · yakınlaştırmak için iki parmak · seçmek için dokun';
         setup3DControls();
       }).catch((e) => {
@@ -984,25 +1039,51 @@ async function render3D(_, params) {
   }
   if (current !== '3d') return;
   viewer.start();
-  const id = params.get('id');
-  if (!id) return;
-  // Muskeln (z. B. „Günün kası“ oder aus einer Lektion) direkt im Fokusmodus zeigen
-  const s = findStructure(id);
-  if (s && s.kind === 'muscle') {
-    $('#hint3d').textContent = 'Kas modeli hazırlanıyor…';
-    await viewer.ready;
-    if (current === '3d') startFocus(id);
-  } else viewer.select(id);
+  // #/3d?ids=a,b,c (mehrere Strukturen nacheinander) – altes #/3d?id=a funktioniert weiter
+  const ids = (params.get('ids') || params.get('id') || '').split(',').map((x) => x.trim()).filter((x) => findAny(x));
+  if (!ids.length) return;
+  $('#hint3d').textContent = '3D model hazırlanıyor…';
+  await viewer.ready;
+  if (current !== '3d') return;
+  focusHistory = [];
+  if (ids.length > 1) { tour = { ids, k: 0 }; showTourStep(0); } else startFocus(ids[0]);
 }
 
-// ───── Fokusmodus: ein Muskel mit Teilen, Ursprung/Ansatz und tieferen Muskeln ─────
+// ───── Fokusmodus: Muskel (Teile, Ursprung/Ansatz, tiefere Muskeln), Knochen, Gelenk, Knochenpunkt ─────
 let focusState = null;
+let tour = null;           // { ids, k } – Schritt k; k === ids.length = alle zusammen
+let focusHistory = [];     // für „‹ Geri“ nach dem Antippen eines Knochenpunkts / Muskels
 
-function startFocus(id) {
-  const s = findStructure(id);
-  const info = viewer.enterFocus(id);
-  if (!s || !info) { showSheet(id); return; }
-  focusState = { id, s, info };
+function startFocus(id, { ghosts = [], keepTour = false } = {}) {
+  const s = findAny(id);
+  if (!keepTour) tour = null;
+  const info = s && viewer.enterFocus(id, { ghosts });
+  if (!info) { if (focusState) exitFocus(); showSheet(id); return; }
+  focusState = { id, s, info, axes: false };
+  document.body.classList.add('focus3d');
+  $('#hint3d').hidden = true;
+  renderFocusSheet(null);
+}
+
+// Von der aktuellen Fokusansicht zu einer anderen Struktur springen (mit „‹ Geri“)
+function openFrom(id) {
+  if (focusState) focusHistory.push({ id: focusState.id, tour: tour && { ...tour } });
+  startFocus(id);
+}
+
+function goBack() {
+  const h = focusHistory.pop();
+  if (!h) return;
+  if (h.tour) { tour = h.tour; showTourStep(tour.k); } else if (h.id) startFocus(h.id);
+}
+
+function showTourStep(k) {
+  if (!tour || k < 0 || k > tour.ids.length) return;
+  tour.k = k;
+  if (k < tour.ids.length) { startFocus(tour.ids[k], { ghosts: tour.ids.slice(0, k), keepTour: true }); return; }
+  const info = viewer.enterGroup(tour.ids);
+  if (!info) return;
+  focusState = { id: null, s: null, info };
   document.body.classList.add('focus3d');
   $('#hint3d').hidden = true;
   renderFocusSheet(null);
@@ -1010,11 +1091,26 @@ function startFocus(id) {
 
 function exitFocus() {
   const id = focusState && focusState.id;
+  const kind = focusState && focusState.info.kind;
   focusState = null;
+  tour = null;
+  focusHistory = [];
   viewer.exitFocus();
   document.body.classList.remove('focus3d');
-  if (id) viewer.select(id); else showSheet(null);
+  if (id && kind !== 'landmark') viewer.select(id); else showSheet(null);
 }
+
+function stepperHtml() {
+  const back = focusHistory.length ? `<button class="chip" id="fBack">‹ Geri</button>` : '';
+  if (!tour) return back ? `<div class="stepper">${back}</div>` : '';
+  const n = tour.ids.length, k = tour.k;
+  return `<div class="stepper">${back}<button class="chip" id="stPrev" ${k === 0 ? 'disabled' : ''}>‹ Önceki</button>
+    <span class="count">${k < n ? `${k + 1}/${n}` : 'Hepsi'}</span>
+    <button class="chip" id="stNext" ${k >= n ? 'disabled' : ''}>${k === n - 1 ? 'Hepsi ›' : 'Sonraki ›'}</button></div>`;
+}
+
+const lmChip = (l, prefix = '') => `<button class="chip lm-go" data-go="${l.id}">${prefix}${esc(shortLa(l))}</button>`;
+const muscleChip = (id) => { const m = findStructure(id); return m ? `<button class="chip lm-go" data-go="${id}">${esc(m.la)}</button>` : ''; };
 
 function renderFocusSheet(k) {
   if (!focusState) return;
@@ -1022,14 +1118,23 @@ function renderFocusSheet(k) {
   const sheet = $('#sheet3d');
   sheet.hidden = false;
   sheet.classList.remove('collapsed');
-  const part = k !== null && k !== undefined ? info.parts[k] : null;
-  const o = part ? partText(s.o, part.la) : s.o;
-  const i = part ? partText(s.i, part.la) : s.i;
-  sheet.innerHTML = `
+  const head = (badge, cls) => `${stepperHtml()}
     <button class="close" aria-label="Tüm vücut">✕</button>
-    <span class="badge muscle">Kas</span> <span class="badge">${LAYER_NAMES[info.layer] || ''} katman</span>
+    <span class="badge ${cls}">${badge}</span>
     <h2 style="margin:6px 0 0;font-size:18px">${esc(s.la)}</h2>
-    <div class="muted small">${esc(s.de)} · 🇹🇷 ${esc(s.tr)}</div>
+    <div class="muted small">${esc(s.de)} · 🇹🇷 ${esc(s.tr)}</div>`;
+  const foot = (lesson = true) => `<div class="grid2" style="margin-top:8px">
+      <button class="btn plain" id="exitFocus">Tüm vücut</button>
+      ${lesson && s && findStructure(s.id) ? `<a class="btn" href="#/ders/${s.id}">Dersi aç</a>` : `<button class="btn" onclick="history.back()">↩ Geri dön</button>`}
+    </div>`;
+  let body = '';
+  if (info.kind === 'muscle') {
+    const part = k !== null && k !== undefined ? info.parts[k] : null;
+    const o = part ? partText(s.o, part.la) : s.o;
+    const i = part ? partText(s.i, part.la) : s.i;
+    const lmRole = (r) => info.landmarks.filter((x) => x.role === r).map((x) => findLandmark(x.id));
+    const lmLine = [...lmRole('o').map((l) => lmChip(l, '🟢 ')), ...lmRole('i').map((l) => lmChip(l, '🔵 ')), ...lmRole('via').map((l) => lmChip(l, '🟠 '))].join('');
+    body = `${head('Kas', 'muscle')} <span class="badge">${LAYER_NAMES[info.layer] || ''} katman</span>
     ${info.parts.length > 1 ? `<div class="chips" style="margin-top:10px">${info.parts.map((p, n) => `<button class="chip part-chip ${n === k ? 'on' : ''}" data-part="${n}"><span class="dot" style="background:${p.color}"></span>${esc(p.la)}</button>`).join('')}</div>` : ''}
     ${part ? `<div class="small" style="margin-top:8px"><b lang="de">${esc(part.la)}</b> · ${esc(part.de)} · 🇹🇷 ${esc(part.tr)}</div>` : ''}
     <dl class="facts small" lang="de">
@@ -1037,13 +1142,50 @@ function renderFocusSheet(k) {
       <dt>🔵 Ansatz</dt><dd>${esc(i)}</dd>
       ${part ? '' : `<dt>Innervation</dt><dd>${esc(s.inn)}</dd><dt>Funktion</dt><dd>${esc(s.f)}</dd>`}
     </dl>
-    <p class="muted small" style="margin:8px 0 0">🟢 U = Ursprung · 🔵 A = Ansatz · soluk kırmızı = altındaki derin kaslar (dokununca onlara geçer)${info.parts.length > 1 ? ' · parçaya dokunarak seç' : ''}</p>
-    <div class="grid2" style="margin-top:8px">
-      <button class="btn plain" id="exitFocus">Tüm vücut</button>
-      <a class="btn" href="#/ders/${s.id}">Dersi aç</a>
-    </div>`;
+    ${lmLine ? `<div class="small muted" style="margin-top:6px">Kemik noktaları (dokun):</div><div class="lm-list">${lmLine}</div>` : ''}
+    <p class="muted small" style="margin:8px 0 0">🟢 Ursprung · 🔵 Ansatz${lmRole('via').length ? ' · 🟠 Umlenkung (tendon buradan geçer)' : ''} · soluk kırmızı = altındaki derin kaslar (dokununca onlara geçer)${tour && tour.k ? ' · gri = önceki adımlar' : ''}${info.parts.length > 1 ? ' · parçaya dokunarak seç' : ''}</p>
+    ${foot()}`;
+  } else if (info.kind === 'bone') {
+    const lms = info.landmarks.map(findLandmark);
+    body = `${head('Kemik', 'bone')}
+    <p class="small" style="margin:6px 0">${esc(s.typ || '')}</p>
+    ${s.merk ? `<dl class="facts small" lang="de"><dt>Wichtige Strukturen</dt><dd>${esc(s.merk)}</dd></dl>` : ''}
+    ${lms.length ? `<div class="small muted" style="margin-top:6px">🟣 Kemik noktaları – dokununca hangi kasların başladığı/bittiği görünür:</div><div class="lm-list">${lms.map((l) => lmChip(l)).join('')}</div>` : ''}
+    ${foot()}`;
+  } else if (info.kind === 'joint') {
+    body = `${head('Eklem', 'joint')}
+    <p class="small" style="margin:6px 0">${esc(s.typ || '')}</p>
+    <dl class="facts small" lang="de"><dt>Neutral-Null</dt><dd>${esc(s.nn || '')}</dd>${s.baender ? `<dt>Bänder</dt><dd>${esc(s.baender)}</dd>` : ''}</dl>
+    ${info.axes.length ? `<button class="btn ghost block" id="axesBtn" style="margin-top:8px">${focusState.axes ? '📐 Eksenleri gizle' : '📐 Hareket eksenlerini göster'}</button>
+      ${focusState.axes ? `<div class="small" style="margin-top:8px" lang="de">${info.axes.map((a) => `<div style="margin:4px 0"><span class="dot" style="background:${a.color}"></span><b>${esc(a.la)}</b> <span class="muted">(${esc(a.tr)})</span> → ${esc(a.mv)} <span class="muted">· in der ${esc(a.ebene)}</span></div>`).join('')}</div>` : ''}` : ''}
+    ${foot()}`;
+  } else if (info.kind === 'landmark') {
+    const bone = findStructure(s.bone);
+    const list = (ids, title) => (ids.length ? `<div class="small" style="margin-top:8px"><b>${title}</b></div><div class="lm-list">${ids.map(muscleChip).join('')}</div>` : '');
+    body = `${head('Kemik noktası', 'landmark')}
+    <div class="small" style="margin-top:4px">Kemik: <b lang="de">${esc(bone ? bone.la : s.bone)}</b>${s.note ? ` · <span lang="de">${esc(s.note)}</span>` : ''}</div>
+    ${list(info.o, '🟢 Buradan başlayan kaslar (Ursprung)')}
+    ${list(info.i, '🔵 Burada biten kaslar (Ansatz)')}
+    ${list(info.via, '🟠 Tendonu buradan geçen / yön değiştiren')}
+    ${!info.o.length && !info.i.length && !info.via.length ? '<p class="muted small">Bu noktaya listede kas bağlanmıyor.</p>' : ''}
+    ${s.approx ? `<p class="muted small">BodyParts3D modelinde koksiks yok – nokta sakrumun alt ucunda yaklaşık gösteriliyor.</p>` : ''}
+    ${foot(false)}`;
+  } else if (info.kind === 'group') {
+    body = `${stepperHtml()}<button class="close" aria-label="Tüm vücut">✕</button>
+    <h2 style="margin:2px 0 0;font-size:18px">Hepsi birlikte (${info.legend.length} yapı)</h2>
+    <div class="legend">${info.legend.map((x) => { const st = findAny(x.id); return `<button data-step="${tour.ids.indexOf(x.id)}"><span class="dot" style="background:${x.color}"></span><span class="grow"><b lang="de">${esc(shortName(st))}</b> <span class="muted small">· ${esc(st.tr)}</span></span><span class="badge ${st.kind}">${KIND_LABEL[st.kind]}</span></button>`; }).join('')}</div>
+    <p class="muted small" style="margin:8px 0 0">Bir yapıya dokun → o adıma geç</p>
+    ${foot(false)}`;
+  }
+  sheet.innerHTML = body;
   $('.close', sheet).addEventListener('click', exitFocus);
   $('#exitFocus').addEventListener('click', exitFocus);
+  if ($('#fBack')) $('#fBack').addEventListener('click', goBack);
+  if ($('#stPrev')) $('#stPrev').addEventListener('click', () => showTourStep(tour.k - 1));
+  if ($('#stNext')) $('#stNext').addEventListener('click', () => showTourStep(tour.k + 1));
+  $$('[data-step]', sheet).forEach((b) => b.addEventListener('click', () => showTourStep(+b.dataset.step)));
+  $$('.lm-go', sheet).forEach((b) => b.addEventListener('click', () => openFrom(b.dataset.go)));
+  if ($('#axesBtn')) $('#axesBtn').addEventListener('click', () => { focusState.axes = !focusState.axes; viewer.setAxes(focusState.axes); renderFocusSheet(null); });
   $$('.part-chip', sheet).forEach((b) => b.addEventListener('click', () => {
     const n = +b.dataset.part;
     const next = n === k ? null : n;
@@ -1058,6 +1200,12 @@ function setup3DControls() {
     b.classList.toggle('on', on);
     viewer.setLayer(b.dataset.layer, on);
   }));
+  $('#lmBtn').addEventListener('click', (e) => {
+    const on = !e.currentTarget.classList.contains('on');
+    e.currentTarget.classList.toggle('on', on);
+    viewer.setLandmarks(on);
+    if (on) toast('🟣 Kemik noktaları: yakınlaştır ve noktaya dokun');
+  });
   $('#isolateBtn').addEventListener('click', (e) => {
     const on = !e.currentTarget.classList.contains('on');
     e.currentTarget.classList.toggle('on', on);
@@ -1077,7 +1225,7 @@ function setup3DControls() {
   input.addEventListener('input', () => {
     const q = norm(input.value.trim());
     if (!q) { results.hidden = true; return; }
-    const found = ALL_STRUCTURES.filter((s) => norm(`${s.de} ${s.la} ${s.tr}`).includes(q)).slice(0, 12);
+    const found = [...ALL_STRUCTURES, ...LANDMARKS.map((l) => ({ ...l, kind: 'landmark' }))].filter((s) => norm(`${s.de} ${s.la} ${s.tr}`).includes(q)).slice(0, 12);
     results.hidden = false;
     results.className = 'search-results list';
     results.innerHTML = found.length
@@ -1085,8 +1233,8 @@ function setup3DControls() {
       : '<div class="muted small">Sonuç yok</div>';
     $$('button', results).forEach((b) => b.addEventListener('click', () => {
       if (focusState) exitFocus();
-      const hit = findStructure(b.dataset.id);
-      if (hit && hit.kind === 'muscle') startFocus(b.dataset.id); else viewer.select(b.dataset.id);
+      const hit = findAny(b.dataset.id);
+      if (hit && hit.kind !== 'joint' && hit.kind !== 'bone') startFocus(b.dataset.id); else viewer.select(b.dataset.id);
       input.value = '';
       results.hidden = true;
       input.blur();
@@ -1120,9 +1268,7 @@ function showSheet(id) {
     </div>`;
   $('.close', sheet).addEventListener('click', () => viewer.select(null));
   $('#moreBtn').addEventListener('click', (e) => {
-    if (s.kind === 'muscle') { startFocus(s.id); return; } // Kas: parçalar + Ursprung/Ansatz + derin kaslar
-    const collapsed = sheet.classList.toggle('collapsed');
-    e.currentTarget.textContent = collapsed ? 'Detaylar' : 'Daha az';
+    startFocus(s.id); // Kas: parçalar + Ursprung/Ansatz · Kemik: kemik noktaları · Eklem: hareket eksenleri
   });
 }
 
