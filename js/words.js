@@ -4,6 +4,7 @@ import * as store from './store.js';
 import { GRUNDWORTSCHATZ } from './data/vocab.js';
 import { getPrivate, todayPlan } from './private.js';
 import { shuffle } from './quizgen.js';
+import { fold, close, abbreviations } from './fuzzy.js';
 
 export const WORDS_PER_DAY = 5;
 const BOX_DAYS = [0, 1, 3, 7, 14, 30, 60]; // Leitner-Fächer → Tage bis zur nächsten Wiederholung
@@ -101,12 +102,18 @@ export function markKnown(id) {
   return next || null;
 }
 
-export function recordWord(id, ok) {
+export function recordWord(id, ok, near = false) {
   const st = state();
   const s = st[id] || { box: 0, r: 0, w: 0 };
-  s.box = ok ? Math.min(s.box + 1, BOX_DAYS.length - 1) : 1;
-  s.due = store.today(BOX_DAYS[s.box]);
-  if (ok) s.r = (s.r || 0) + 1; else s.w = (s.w || 0) + 1;
+  if (near) {
+    // fast richtig (z. B. Artikel falsch): Fach bleibt, morgen wiederholen
+    s.due = store.today(1);
+    s.c = (s.c || 0) + 1;
+  } else {
+    s.box = ok ? Math.min(s.box + 1, BOX_DAYS.length - 1) : 1;
+    s.due = store.today(BOX_DAYS[s.box]);
+  }
+  if (ok) s.r = (s.r || 0) + 1; else if (!near) s.w = (s.w || 0) + 1;
   s.last = store.today();
   st[id] = s;
   store.save();
@@ -114,41 +121,49 @@ export function recordWord(id, ok) {
 
 // ───── Fragetypen ─────
 const stripArt = (v) => v.replace(/^(der|die|das)\s+/i, '');
-const normAns = (s) => s.toLowerCase().replace(/[|.,!?„“"()]/g, '').replace(/\s+/g, ' ').trim();
 
-function levenshtein(a, b) {
-  const dp = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
-  for (let j = 1; j <= b.length; j++) dp[0][j] = j;
-  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) {
-    dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-  }
-  return dp[a.length][b.length];
-}
 
-// Getippte Antwort prüfen: Artikel muss bei Nomen stimmen, ein Tippfehler wird toleriert
-// Ein einzelner Teil der Antwort gegen alle Varianten des Eintrags
+// Ein einzelner Teil der Antwort gegen alle Varianten des Eintrags.
+// Ergebnis: { ok, exact, close, hint, abbr, art, target }
+const ART = /^(der|die|das)\s+/;
 function matchPart(word, part) {
-  const ans = normAns(part).replace(/^sich\s+/, '');
+  const ans = fold(part).replace(/^sich\s+/, '');
   if (!ans) return null;
-  for (const v of variants(word.de)) {
-    const target = normAns(v).replace(/^sich\s+/, '');
-    if (ans === target) return { ok: true, exact: true };
-    const hasArt = /^(der|die|das)\s/i.test(v);
-    if (hasArt && normAns(stripArt(v)) === ans) return { ok: false, close: true, hint: 'Artikel fehlt' };
-    if (levenshtein(ans, target) <= 1 && target.length > 4) return { ok: true, exact: false };
+  let best = { ok: false, close: false };
+  // 1. Durchgang: Wort genau getroffen (bei allen Varianten), erst 2. Durchgang mit Tippfehler-Toleranz –
+  //    sonst würde „Kräftigung“ (Artikel fehlt) als Tippfehler von „kräftigen“ durchgehen
+  for (const fuzzy of [false, true]) {
+    for (const v of variants(word.de)) {
+      const target = fold(v).replace(/^sich\s+/, '');
+      const shown = v.replace(/\s*\([^)]*\)/g, '').trim();
+      if (ans === target) return { ok: true, exact: true, target: shown };
+      const tArt = (target.match(ART) || [])[1], aArt = (ans.match(ART) || [])[1];
+      const tNoun = target.replace(ART, ''), aNoun = ans.replace(ART, '');
+      if (!(fuzzy ? close(aNoun, tNoun) : tNoun === aNoun)) continue;
+      if (tArt && !aArt) best = { ok: false, close: true, hint: 'Artikel fehlt', art: tArt, target: shown };
+      else if (tArt && aArt && tArt !== aArt) best = { ok: false, close: true, hint: 'Artikel falsch', art: tArt, target: shown };
+      else return { ok: true, exact: !fuzzy, target: shown };
+    }
+    if (best.close) return best;
   }
-  return { ok: false, close: false };
+  // Abkürzung aus der Klammer („WS“) ist auch richtig
+  if (!best.close && abbreviations(word.de).some((a) => fold(a) === ans)) {
+    return { ok: true, exact: true, abbr: true, target: variants(word.de)[0].replace(/\s*\([^)]*\)/g, '').trim() };
+  }
+  return best;
 }
 
 // Getippte Antwort prüfen: eine Variante („kräftigen“) oder mehrere zusammen („kräftigen / die Kräftigung“)
-// sind richtig; Artikel muss bei Nomen stimmen, ein Tippfehler pro Teil wird toleriert
+// sind richtig; Artikel muss bei Nomen stimmen (falsch/fehlend = „close“), Tippfehler nach Wortlänge toleriert
 export function checkTyped(word, input) {
   const parts = input.split(/\s*(?:\/|,|;|\bund\b)\s*/i).map((p) => p.trim()).filter(Boolean);
   if (!parts.length) return { ok: false, close: false };
   const results = parts.map((p) => matchPart(word, p)).filter(Boolean);
-  if (results.every((r) => r.ok)) return { ok: true, exact: results.every((r) => r.exact) };
-  const missingArt = results.find((r) => r.hint);
-  return missingArt ? { ok: false, close: true, hint: missingArt.hint } : { ok: false, close: false };
+  if (results.every((r) => r.ok)) {
+    return { ok: true, exact: results.every((r) => r.exact), abbr: results.some((r) => r.abbr), target: results.map((r) => r.target).join(' / ') };
+  }
+  const near = results.find((r) => r.close);
+  return near ? { ok: false, close: true, hint: near.hint, art: near.art, target: near.target } : { ok: false, close: false };
 }
 
 function lueckentext(word) {

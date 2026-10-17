@@ -86,7 +86,7 @@ export function buildReport() {
   if (tw.length) {
     const wr = d.wordRes || {};
     const fmt = (x) => (x ? `${x.r}/${x.n}` : 'yapılmadı');
-    lines.push(`🔤 Kelimeler: sabah ${fmt(d.wordsMorning)}, dönüş ${fmt(d.wordsReturn)} · ${tw.map((x) => `${x.de}${wr[x.id] === false ? ' ✗' : wr[x.id] ? ' ✓' : ''}`).join(', ')}`);
+    lines.push(`🔤 Kelimeler: sabah ${fmt(d.wordsMorning)}, dönüş ${fmt(d.wordsReturn)} · ${tw.map((x) => `${x.de}${wr[x.id] === 'close' ? ' ½' : wr[x.id] === false ? ' ✗' : wr[x.id] ? ' ✓' : ''}`).join(', ')}`);
   }
   if (w) lines.push(`📅 Program: KW ${w.kw}${plan && plan.kurse.length ? ' · bugün: ' + plan.kurse.join(' / ') : ''}${plan && plan.test.length ? ' · sabah testi: ' + plan.test.join(' + ') : ''}`);
 
