@@ -3,6 +3,7 @@ import { MUSCLES, BONES, JOINTS, ALL_STRUCTURES, findStructure } from './data/an
 import { GRUNDWORTSCHATZ, BASE_VOCAB } from './data/vocab.js';
 import { OPEN } from './data/questions.js';
 import { LESSONS, FAECHER, refreshLessons } from './lessons.js';
+import { cleanSegments, cleanText } from './private.js';
 import { getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, notionLink, week, todayPlan, tomorrowPlan } from './private.js';
 import { getToken, setToken, clearToken, looksLikeToken, syncFromNotion } from './notion.js';
 import { renderReport } from './report.js';
@@ -73,10 +74,10 @@ function deckCards(deck) {
   if (deck === 'fehler' || deck.startsWith('fehler:')) {
     const only = deck.startsWith('fehler:') ? deck.slice(7).split(',').filter(Boolean) : null;
     return fehlerList().filter((f) => !only || only.includes(f.fach)).map((f) => ({
-      id: f.id, tag: '✗ ' + f.fach, front: f.q,
+      id: f.id, tag: '✗ ' + f.fach, front: cleanText(f.q),
       // Aus Notion: Lückentext-Segmente (fett = Antwort); aus Datei: Frage/Antwort/Türkçe
       back: f.seg
-        ? `<div class="detail" style="font-size:15px">${f.seg.map((x) => (x.b ? `<b style="color:var(--accent)">${esc(x.t)}</b>` : esc(x.t))).join('')}</div>`
+        ? `<div class="detail" style="font-size:15px">${cleanSegments(f.seg).map((x) => (x.b ? `<b style="color:var(--accent)">${esc(x.t)}</b>` : esc(x.t))).join('')}</div>`
         : `<div class="detail" style="font-size:15px"><b>${esc(f.a)}</b><br><br><span class="muted">🇹🇷 ${esc(f.tr)}</span></div>`,
     }));
   }

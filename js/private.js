@@ -36,6 +36,26 @@ export async function loadLocalDevFile() {
   } catch { return false; }
 }
 
+// Notion-interne Notizen aus Fehlerkarten entfernen: „(2. Tur ✅)“, „(3. Tur ✅ 15.10)“, Status-Emojis.
+// Funktioniert auch, wenn eine Notiz über mehrere fett/normal formatierte Segmente verteilt ist.
+const NOTE_RE = /\s*\(\s*\d+\.\s*Tur[^)]*\)|\s*\((?:\s*[✅❌✓]\s*)+\)|[✅❌]/g;
+export const cleanText = (s) => String(s || '').replace(NOTE_RE, '').replace(/\s{2,}/g, ' ').trim();
+export function cleanSegments(seg) {
+  if (!seg || !seg.length) return seg;
+  const full = seg.map((x) => x.t).join('');
+  const drop = new Uint8Array(full.length);
+  for (const m of full.matchAll(NOTE_RE)) drop.fill(1, m.index, m.index + m[0].length);
+  let pos = 0;
+  const out = seg.map((x) => {
+    let t = '';
+    for (let i = 0; i < x.t.length; i++) if (!drop[pos + i]) t += x.t[i];
+    pos += x.t.length;
+    return { ...x, t: t.replace(/\s{2,}/g, ' ') };
+  }).filter((x) => x.t.length);
+  if (out.length) { out[0].t = out[0].t.replace(/^\s+/, ''); out[out.length - 1].t = out[out.length - 1].t.replace(/\s+$/, ''); }
+  return out;
+}
+
 export const fehlerList = () => (data && data.fehler) || [];
 export const notionLink = (lessonId) => data && data.notion && data.notion[lessonId];
 const isoDate = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');

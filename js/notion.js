@@ -5,7 +5,7 @@
 //  • Keine Seiten-IDs im öffentlichen Code: Seiten werden per Suche gefunden – die Integration
 //    sieht nur, was in Notion ausdrücklich mit ihr geteilt wurde.
 //  • Die Content-Security-Policy in index.html erlaubt Verbindungen nur zu 'self' und api.notion.com.
-import { setPrivate, getPrivate } from './private.js';
+import { setPrivate, getPrivate, cleanSegments, cleanText } from './private.js';
 
 const API = 'https://api.notion.com/v1';
 const NOTION_VERSION = '2022-06-28';
@@ -172,7 +172,8 @@ async function mistakeCard(rt, fach) {
     const parts = full.split(/\s(?:=|→)\s/);
     q = parts.length > 1 ? parts[0] + ' = ?' : 'Hatırla: ' + full.slice(0, 60) + (full.length > 60 ? '…' : '');
   }
-  return { id: 'fx:' + (await sha16(full)), fach: fach || '', q, seg };
+  // ID wie bisher aus „full“ (nur ohne „(n. Tur …)“) – so bleibt der Lernfortschritt alter Karten erhalten
+  return { id: 'fx:' + (await sha16(full)), fach: fach || '', q: cleanText(q), seg: cleanSegments(seg) };
 }
 
 // ───── Grundwortschatz-Datenbank ─────
