@@ -923,7 +923,7 @@ export const LESSONS = [
      "Ein neuer, höherer Sollwert",
      "Eine akute Gegenreaktion"
     ],
-    "x": "Hocanın ⚓ cümlesi: homeostazın çökmesi hastalık veya ölüm demektir. Kronik uyum ya da akut karşı tepki homeostazın çalıştığını gösterir, çöktüğünü değil."
+    "x": "Dersin ⚓ işaretli cümlesi: homeostazın çökmesi hastalık veya ölüm demektir. Kronik uyum ya da akut karşı tepki homeostazın çalıştığını gösterir, çöktüğünü değil."
    },
    {
     "id": "L:physiologie-1:3",
@@ -4918,7 +4918,7 @@ export const LESSONS = [
   ],
   "open": [
    {
-    "q": "Definieren Sie Training nach der Folie der Lehrkraft (Hottenrott, 2020) und erläutern Sie die enthaltenen Bestandteile.",
+    "q": "Definieren Sie Training nach Hottenrott (2020) und erläutern Sie die enthaltenen Bestandteile.",
     "a": "Training ist ein komplexer Handlungsprozess, der auf systematischer Planung, Ausführung und Evaluation basiert und nachhaltige Ziele in den Anwendungsfeldern Sport, Prävention und Rehabilitation verfolgt. Prozess bedeutet, dass Training ein Weg und keine einmalige Aktion ist. Der Weg wird vorher geplant (Trainingsplan), dann durchgeführt und am Ende evaluiert. In der Physiotherapie ist das Ziel vor allem die Verbesserung des Gesundheitszustands.",
     "kw": [
      "Handlungsprozess|Prozess",
