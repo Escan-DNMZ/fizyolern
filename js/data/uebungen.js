@@ -13,6 +13,9 @@ export const UEBUNGEN = {
   tensor_fasciae_latae: [
     { n: 'Seitliches Beinheben', b: 'Hüftabduktion', tr: 'yan yatarak bacağı kaldırma' },
   ],
+  gluteus_minimus: [{ n: 'Abduktorenmaschine', b: 'Hüftabduktion', tr: 'bacakları dışa açma makinesi' }],
+  pectineus: [{ n: 'Adduktorenmaschine', b: 'Hüftadduktion', tr: 'bacakları içe kapatma makinesi' }],
+  adductor_brevis: [{ n: 'Adduktorenmaschine', b: 'Hüftadduktion', tr: 'bacakları içe kapatma makinesi' }],
   adductor_longus: [{ n: 'Adduktorenmaschine', b: 'Hüftadduktion', tr: 'bacakları içe kapatma makinesi' }],
   adductor_magnus: [{ n: 'Adduktorenmaschine', b: 'Hüftadduktion', tr: 'bacakları içe kapatma makinesi' }],
   gracilis: [{ n: 'Adduktorenmaschine', b: 'Hüftadduktion', tr: 'bacakları içe kapatma makinesi' }],
