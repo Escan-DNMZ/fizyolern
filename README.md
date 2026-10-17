@@ -2,6 +2,9 @@
 
 ### A personal study app for physiotherapy training, with an interactive 3D anatomy model, adaptive tests and spaced repetition
 
+**Idea, concept and content:** Escan Dönmez · [LinkedIn](https://www.linkedin.com/in/escan-donmez/)  
+**Code and design:** [Claude Code](https://claude.com/claude-code) (Anthropic)
+
 **▶ Live app:** https://escan-dnmz.github.io/fizyolern/ (works in any browser; on an iPhone use Safari → *Share* → *Add to Home Screen*)
 
 <p align="center">
@@ -44,12 +47,20 @@ Explanations are in my native language, Turkish; the content stays in the German
 
 ---
 
-## My role
+## Who did what
 
-- **Idea and product design.** I identified the problem from my own studies and defined the features and the daily study routine. I decided what stays private.
-- **Content.** All learning content comes from my own lesson notes in Notion. Every lesson was cross-checked against those notes and standard textbooks. Where a slide contradicted the textbook, the app teaches the textbook-correct version.
-- **Testing.** I used the app every day on my iPhone and reported what was confusing or wrong. Examples: an answer being marked wrong for a different spelling, homework mixed up with mistakes, a 3D view showing too much at once. Each round of feedback became the next improvement.
-- **Implementation.** I built it with an AI pair programmer (Claude Code by Anthropic). I set the requirements, made the design and privacy decisions, and reviewed and tested every change; the AI wrote most of the code. The project shows how a domain expert can turn a real need into working software with modern AI tools.
+The whole idea behind FizyoLern belongs to **Escan Dönmez**. The code and the design were created by **Claude Code**, Anthropic's AI programming assistant, following Escan's ideas and instructions.
+
+**Escan Dönmez**
+- **Idea and concept.** Identified the problem from personal experience as a student, came up with every feature and the daily study routine, and decided what stays private.
+- **Content.** All learning content comes from Escan's own lesson notes in Notion. Every lesson was cross-checked against those notes and standard textbooks. Where a slide contradicted the textbook, the app teaches the textbook-correct version.
+- **Testing and feedback.** Used the app every day on an iPhone and reported what was confusing or wrong. Examples: an answer being marked wrong for a different spelling, homework mixed up with mistakes, a 3D view showing too much at once. Each round of feedback became the next improvement.
+
+**Claude Code (Anthropic)**
+- **Code and design.** It wrote the app's code and designed the user interface, the 3D viewer and the technical architecture from Escan's requirements.
+- **Content support.** It turned Escan's notes into questions and cross-checked every lesson against those notes and standard textbooks.
+
+The project shows how someone with a clear idea and deep knowledge of a field can turn a real need into working software with modern AI tools.
 
 ---
 
@@ -268,5 +279,6 @@ python tools/bump_sw.py             # after any change, so phones load the new v
 
 - 3D anatomy models: **BodyParts3D**, © The Database Center for Life Science (DBCLS), licensed CC BY 4.0.
 - 3D rendering: [Three.js](https://threejs.org) (MIT).
-- Built with AI pair programming: [Claude Code](https://claude.com/claude-code) by Anthropic.
+- Idea, concept and content: **Escan Dönmez** ([LinkedIn](https://www.linkedin.com/in/escan-donmez/)).
+- Code and design: [Claude Code](https://claude.com/claude-code) by Anthropic.
 - The learning content is a personal study aid based on my own lesson notes and checked against standard textbooks. It does not replace official course materials.
