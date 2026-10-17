@@ -47,17 +47,39 @@ Explanations are in my native language, Turkish; the content stays in the German
 
 ---
 
+## About me
+
+I am **Escan Dönmez**. I have been programming since I was 14 and am now training as a physiotherapist in Germany. FizyoLern is where my two worlds meet: understanding of technology and software, applied to a real problem in healthcare education.
+
+Some of my earlier software projects (2021–2024):
+
+| Area | Technologies | Examples |
+|---|---|---|
+| **Game development** | Unreal Engine 5, C++ | [Shooter](https://github.com/Escan-DNMZ/Shooter), [RPG with the Gameplay Ability System](https://github.com/Escan-DNMZ/RPG_GAS), [Combat system](https://github.com/Escan-DNMZ/CombatSystem), [Recoil system](https://github.com/Escan-DNMZ/RecoilSystem) |
+| **Web development** | C#, ASP.NET Core MVC, JavaScript | [Blog](https://github.com/Escan-DNMZ/AspNetCoreMvc5-Blog), [E-commerce site](https://github.com/Escan-DNMZ/E-Trade-Project), [Admin panel](https://github.com/Escan-DNMZ/Admin-Panel) |
+| **Networking and security tools** | Python | [Port scanner](https://github.com/Escan-DNMZ/Basic-PortScanner), [ARP scanner](https://github.com/Escan-DNMZ/ArpScanner-Basic) |
+| **Mobile and backend** | Kotlin, Go | [Kotlin notes](https://github.com/Escan-DNMZ/Kotlin-Syntax), [Token service](https://github.com/Escan-DNMZ/agora-token-service) |
+
+More on my [GitHub profile](https://github.com/Escan-DNMZ) and [LinkedIn](https://www.linkedin.com/in/escan-donmez/).
+
+---
+
 ## Who did what
 
 The whole idea behind FizyoLern belongs to **Escan Dönmez**. The code and the design were created by **Claude Code**, Anthropic's AI programming assistant, following Escan's ideas and instructions.
 
 **Escan Dönmez**
 - **Idea and concept.** Identified the problem from personal experience as a student, came up with every feature and the daily study routine, and decided what stays private.
+- **Technical direction.** The main technical decisions were Escan's:
+  - an installable web app (PWA) instead of a native iOS app, so it runs on an iPhone without a Mac or the App Store, works offline and is hosted for free;
+  - the privacy model: no server, data only on the device, and Notion connected live with a read-only key that never leaves the phone;
+  - real 3D anatomy from a scientific database (BodyParts3D) instead of simplified shapes, plus a focus mode that shows one muscle at a time;
+  - Notion as the single source of truth, so updating notes and the weekly plan there is enough to update the app.
 - **Content.** All learning content comes from Escan's own lesson notes in Notion. Every lesson was cross-checked against those notes and standard textbooks. Where a slide contradicted the textbook, the app teaches the textbook-correct version.
 - **Testing and feedback.** Used the app every day on an iPhone and reported what was confusing or wrong. Examples: an answer being marked wrong for a different spelling, homework mixed up with mistakes, a 3D view showing too much at once. Each round of feedback became the next improvement.
 
 **Claude Code (Anthropic)**
-- **Code and design.** It wrote the app's code and designed the user interface, the 3D viewer and the technical architecture from Escan's requirements.
+- **Code and design.** It wrote the app's code and designed the user interface and the 3D viewer, and it implemented the architecture from Escan's requirements and decisions.
 - **Content support.** It turned Escan's notes into questions and cross-checked every lesson against those notes and standard textbooks.
 
 The project shows how someone with a clear idea and deep knowledge of a field can turn a real need into working software with modern AI tools.
