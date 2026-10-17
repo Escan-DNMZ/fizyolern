@@ -258,6 +258,7 @@ const MCQ_CAT = Object.fromEntries(MCQ.map((q) => [q.id, q.cat]));
 
 // Themen-Schlüssel einer Frage = Kategorie, mit der buildQuiz genau dieses Thema startet
 export function topicOf(qid) {
+  if (qid.startsWith('lm:')) return 'Knochenpunkte'; // 3D-Quiz „Noktayı bul“
   const fach = lessonFach(qid);
   if (fach) return 'Ders: ' + fach;
   if (qid.startsWith('g:')) return GEN_TOPIC[qid.split(':')[1]] || null;

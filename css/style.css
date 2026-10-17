@@ -267,4 +267,9 @@ body.focus3d .hud-top .chips, body.focus3d .hud-top .slider, body.focus3d .searc
 .stepper .chip:disabled { opacity: .35; }
 .legend { display: grid; gap: 6px; margin-top: 10px; }
 .legend button { display: flex; align-items: center; gap: 4px; text-align: left; background: none; border: 0; padding: 4px 0; color: var(--text); font: inherit; font-size: 14px; }
+.sheet.pq-end { max-height: 72%; }
+.pq-fb { margin-top: 8px; padding: 8px 10px; border-radius: 12px; font-size: 14px; }
+.pq-fb.ok { background: var(--good-soft); color: var(--good); }
+.pq-fb.bad { background: var(--bad-soft); color: var(--bad); }
+.pq-fb.ok .muted { color: inherit; opacity: .8; }
 .lm-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }

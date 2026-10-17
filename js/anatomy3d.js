@@ -270,6 +270,7 @@ export class Anatomy3D {
     container.appendChild(this.labelLayer);
     this.alias = {}; // Struktur-ID -> ID der Gruppe, deren echtes Mesh sie mitdarstellt
     this.onLandmark = () => {};
+    this.onQuizTap = () => {};
     this.showLm = false; // Knochenpunkte in der Gesamtansicht
     this.lmRoot = null;
 
@@ -834,6 +835,101 @@ export class Anatomy3D {
     return { kind: 'group', legend };
   }
 
+  // ───── Quiz „Noktayı bul“: nur die Knochen (beidseitig), Antippen liefert den Treffpunkt ─────
+  enterPointQuiz(boneIds = ['os_coxae', 'sacrum', 'femur']) {
+    const kit = this._kit();
+    const mat = kit.mat({ color: COLORS.bone, roughness: 0.65 });
+    const bones = [];
+    for (const b of this.meshes) {
+      if (b.userData.kind !== 'bone' || !b.userData.real || !boneIds.includes(b.userData.id)) continue;
+      const c = cloneMesh(b, mat, { quizBone: b.userData.id });
+      bones.push(c);
+      kit.root.add(c);
+    }
+    if (!bones.length) return null;
+    kit.root.updateMatrixWorld(true);
+    // Becken bildschirmfüllend (2 cm ≈ 25 px) – für den Oberschenkelschaft herauszoomen
+    const box = boxOf(bones.filter((b) => b.userData.quizBone !== 'femur'));
+    if (box.isEmpty()) box.copy(boxOf(bones));
+    const marks = new THREE.Group();
+    kit.root.add(marks);
+    const home = { box, dir: new THREE.Vector3(0.2, 0.15, 1).normalize() };
+    this._show(kit, { id: null, kind: 'quiz', bones, marks, markLabels: [], home }, box, 1, home.dir);
+    this.quizHome();
+    return { kind: 'quiz' };
+  }
+
+  // Weltposition eines Knochenpunkts; sx = -1 → rechte Seite (Mittellinie nie gespiegelt)
+  lmPos(lm, sx = 1) { return V(lm.pos, lm.mid ? 1 : sx); }
+
+  quizHome() {
+    const f = this.focus;
+    if (!f || f.kind !== 'quiz') return;
+    // Hochformat: die Breite des Beckens begrenzt; oben bleibt wegen des Blatts unten nur ~ein Viertel Platz
+    const cam = this.camera, size = f.home.box.getSize(new THREE.Vector3());
+    const tv = Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2), th = tv * cam.aspect;
+    const d = Math.max((size.x * 0.54) / th, (size.y * 0.55) / (tv * 0.7)) + size.z / 2;
+    const c = f.home.box.getCenter(new THREE.Vector3());
+    c.y += size.y * 0.25;
+    this.goal = { target: c, pos: c.clone().addScaledVector(f.home.dir, d) };
+  }
+
+  // Abstand des Antippens zum Knochenpunkt (beide Körperseiten). hit = Treffpunkt auf dem Knochen;
+  // durch Löcher (Foramen obturatum) oder knapp daneben zählt der Abstand des Strahls, wenn nichts davor liegt.
+  // sy < 1: in der Höhe großzügiger (Linea aspera ist eine lange Linie)
+  judgePoint(lm, hit, ray, { tol = 0.02, sy = 1 } = {}) {
+    let best = { d: Infinity, pos: V(lm.pos) };
+    const front = hit ? hit.distanceTo(ray.origin) : Infinity;
+    const q = new THREE.Vector3();
+    for (const sx of lm.mid ? [1] : [1, -1]) {
+      const p = V(lm.pos, sx);
+      const dist = (a) => { const d = a.clone().sub(p); d.y *= sy; return d.length(); };
+      let d = hit ? dist(hit) : Infinity;
+      const t = p.clone().sub(ray.origin).dot(ray.direction);
+      if (t > 0 && front >= t - 0.015) d = Math.min(d, dist(ray.at(t, q)));
+      if (d < best.d) best = { d, pos: p };
+    }
+    return { ok: best.d <= tol, d: best.d, pos: best.pos };
+  }
+
+  // Wie viele Bildschirmpixel eine Strecke len (m) an der Stelle pos gerade lang ist
+  pxPer(pos, len) {
+    const right = new THREE.Vector3().setFromMatrixColumn(this.camera.matrixWorld, 0).multiplyScalar(len);
+    const a = pos.clone().project(this.camera), b = pos.clone().add(right).project(this.camera);
+    return Math.hypot(b.x - a.x, (b.y - a.y) * this.container.clientHeight / this.container.clientWidth) / 2 * this.container.clientWidth;
+  }
+
+  // Markierung im Quiz (Antippstelle bzw. richtiger Punkt mit Namen)
+  quizMark(pos, color, text = null, r = 0.006) {
+    const f = this.focus;
+    if (!f || f.kind !== 'quiz') return;
+    const tmp = { root: f.marks, labels: [] };
+    this._dot(tmp, pos, color, text, 'lbl-lm', null, r);
+    f.markLabels.push(...tmp.labels);
+    f.labels.push(...tmp.labels);
+  }
+
+  quizClear() {
+    const f = this.focus;
+    if (!f || f.kind !== 'quiz') return;
+    for (const o of [...f.marks.children]) { f.marks.remove(o); o.geometry.dispose(); o.material.dispose(); }
+    f.markLabels.forEach((l) => l.el.remove());
+    this.labels = this.labels.filter((l) => !f.markLabels.includes(l));
+    f.labels = f.labels.filter((l) => !f.markLabels.includes(l));
+    f.markLabels = [];
+  }
+
+  // Kamera auf einen Punkt richten, von außen (weg von der Beckenmitte)
+  quizLook(pos) {
+    const f = this.focus;
+    if (!f || f.kind !== 'quiz') return;
+    const out = pos.clone().sub(f.home.box.getCenter(new THREE.Vector3()));
+    out.y *= 0.3;
+    if (Math.abs(out.z) < 0.01) out.z = 0.02;
+    out.normalize();
+    this.focusBox(new THREE.Box3().setFromCenterAndSize(pos, new THREE.Vector3(0.14, 0.14, 0.14)), 2.4, out);
+  }
+
   // Bewegungsachsen am Gelenk ein-/ausblenden
   setAxes(on) {
     const f = this.focus;
@@ -1055,6 +1151,11 @@ export class Anatomy3D {
       const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
       const ray = new THREE.Raycaster();
       ray.setFromCamera(ndc, this.camera);
+      if (this.focus && this.focus.kind === 'quiz') {
+        const h = ray.intersectObjects(this.focus.bones, false)[0];
+        this.onQuizTap(h ? h.point.clone() : null, ray.ray.clone());
+        return;
+      }
       if (this.focus) {
         const pick = [];
         this.focus.root.traverse((o) => { if (o.isMesh && (o.userData.focusPart !== undefined || o.userData.deepId || o.userData.landmark || o.userData.groupId)) pick.push(o); });

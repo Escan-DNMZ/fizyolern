@@ -14,7 +14,7 @@ import { todaysWords, weekWords, markKnown, recordWord, questionFor, checkTyped,
 import { MUSCLE3D, LAYER_NAMES, partText } from './data/muscle3d.js';
 import { UEBUNGEN } from './data/uebungen.js';
 import { masteredLessons } from './quizgen.js';
-import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, jointDetailQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked } from './quizgen.js';
+import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, jointDetailQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked, weight, wpick } from './quizgen.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -197,6 +197,8 @@ function renderToday() {
   const odevOpen = deckCards('odev').filter((c) => store.isNew(c.id) || store.isDue(c.id)).length;
   const tasks = [
     ...(deckCards('odev').length ? [{ done: !odevOpen, label: `📌 Ödev: <b>${esc([...new Set(odevList().map((f) => f.odev))].join(', '))}</b> <span class="muted">(${odevOpen} kart)</span>`, href: '#/oturum/odev' }] : []),
+    // Knochenpunkte gehören zur Hausaufgabe (PT Befund) – am 3D-Modell zeigen
+    ...(deckCards('odev').length ? [{ done: !!d.lmQuiz, label: `🎯 Noktayı bul: Becken-Knochenpunkte ${d.lmQuiz ? `<span class="muted">${d.lmQuiz.r}/${d.lmQuiz.n}</span>` : '<span class="muted">(3D, 10 tur)</span>'}`, href: '#/3d?quiz=pelvis' }] : []),
     // erledigte Aufgabe bleibt (abgehakt) stehen, statt zu verschwinden
     ...(fehlerOpen || (d.fehlerSeen || []).length ? [{ done: !fehlerOpen, label: `✗ Hatalarımı tekrar et <span class="muted">(${fehlerOpen} kart)</span>`, href: '#/oturum/fehler' }] : []),
     ...(plan && plan.test.length && FAECHER.some((f) => plan.test.includes(f))
@@ -252,7 +254,7 @@ function renderToday() {
 
     ${weak.length ? `<div class="section-title">Zayıf konular</div>
     <div class="list">
-      ${weak.map((t) => `<a href="#/test?kat=${encodeURIComponent(t.topic)}"><span class="grow">${esc(topicLabel(t.topic))}<div class="muted small">%${Math.round(t.acc * 100)} doğru · ${t.total} cevap</div></span><span class="mini">Test et</span></a>`).join('')}
+      ${weak.map((t) => `<a href="${t.topic === 'Knochenpunkte' ? '#/3d?quiz=pelvis' : `#/test?kat=${encodeURIComponent(t.topic)}`}"><span class="grow">${esc(topicLabel(t.topic))}<div class="muted small">%${Math.round(t.acc * 100)} doğru · ${t.total} cevap</div></span><span class="mini">Test et</span></a>`).join('')}
     </div>` : ''}
 
     ${LESSONS.length ? `<a class="card row" href="#/dersler" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">Notion'dan</div><h2>Ders notları</h2><div class="muted small">${LESSONS.length} ders · özet, test, terimler</div></span><span class="chev">›</span></a>` : ''}
@@ -625,7 +627,7 @@ function btn3d(text, { style = 'margin-top:10px', stop = false, block = true } =
 
 // ───────────────────────── Samstag: Wochenwiederholung ─────────────────────────
 function renderSaturday() {
-  const wrong = store.wrongSince(7).length;
+  const wrong = store.wrongSince(7).filter((id) => !id.startsWith('lm:')).length; // 3D-Quiz läuft nicht im Test
   const fehler = deckCards('fehler').length;
   const words = weekWords();
   const w = week();
@@ -669,7 +671,7 @@ function donusInfo() {
   const d = store.day();
   const fs = todayFaecher();
   const st = d.donus || {};
-  const wrong = (d.wrong || []).length;
+  const wrong = (d.wrong || []).filter((id) => !id.startsWith('lm:')).length; // 3D-Quiz läuft nicht im Test
   const fehlerCards = deckCards('fehler:' + fs.join(',')).filter((c) => store.isNew(c.id) || store.isDue(c.id)).length;
   const odevOpen = deckCards('odev').filter((c) => store.isNew(c.id) || store.isDue(c.id)).length;
   const lessons = readingLessons(fs);
@@ -731,7 +733,7 @@ function renderReading() {
 // ───────────────────────── Quiz ─────────────────────────
 let quiz = null;
 
-const topicLabel = (t) => (t.startsWith('Ders: ') ? t.slice(6) + ' (ders)' : t === 'Gemischt' ? 'Karışık' : t);
+const topicLabel = (t) => (t.startsWith('Ders: ') ? t.slice(6) + ' (ders)' : t === 'Gemischt' ? 'Karışık' : t === 'Knochenpunkte' ? 'Kemik noktaları (Knochenpunkte)' : t);
 let quizCat = 'Gemischt';
 
 function renderQuizStart(_, params = new URLSearchParams()) {
@@ -1040,6 +1042,7 @@ async function render3D(_, params) {
         viewer = new Anatomy3D($('#canvas3d'), { onSelect: (sid, o) => (o && o.focus ? openFrom(sid) : showSheet(sid)) });
         viewer.onPart = (k) => (k && k.group ? showTourStep(tour.ids.indexOf(k.group)) : renderFocusSheet(k));
         viewer.onLandmark = (lid) => (focusState ? openFrom(lid) : startFocus(lid));
+        viewer.onQuizTap = onQuizTap;
         $('#hint3d').textContent = 'Döndürmek için sürükle · yakınlaştırmak için iki parmak · seçmek için dokun';
         setup3DControls();
       }).catch((e) => {
@@ -1052,6 +1055,14 @@ async function render3D(_, params) {
   }
   if (current !== '3d') return;
   viewer.start();
+  // #/3d?quiz=pelvis – „Noktayı bul“
+  if (params.get('quiz')) {
+    $('#hint3d').textContent = '3D model hazırlanıyor…';
+    await viewer.ready;
+    $('#hint3d').textContent = 'Döndürmek için sürükle · yakınlaştırmak için iki parmak · seçmek için dokun';
+    if (current === '3d') startPointQuiz(params.get('quiz'));
+    return;
+  }
   // #/3d?ids=a,b,c (mehrere Strukturen nacheinander) – altes #/3d?id=a funktioniert weiter
   const ids = (params.get('ids') || params.get('id') || '').split(',').map((x) => x.trim()).filter((x) => findAny(x));
   if (!ids.length) return;
@@ -1103,11 +1114,13 @@ function showTourStep(k) {
 }
 
 function exitFocus() {
+  $('#sheet3d').classList.remove('pq-end');
   const id = focusState && focusState.id;
   const kind = focusState && focusState.info.kind;
   focusState = null;
   tour = null;
   focusHistory = [];
+  pq = null;
   viewer.exitFocus();
   document.body.classList.remove('focus3d');
   if (id && kind !== 'landmark') viewer.select(id); else showSheet(null);
@@ -1128,6 +1141,7 @@ const muscleChip = (id) => { const m = findStructure(id); return m ? `<button cl
 function renderFocusSheet(k) {
   if (!focusState) return;
   const { s, info } = focusState;
+  if (info.kind === 'quiz') { renderPointQuizSheet(); return; }
   const sheet = $('#sheet3d');
   sheet.hidden = false;
   sheet.classList.remove('collapsed');
@@ -1207,6 +1221,152 @@ function renderFocusSheet(k) {
   }));
 }
 
+// ───── Quiz „Noktayı bul“: Knochenpunkt bzw. Ursprung/Ansatz eines Muskels am Modell antippen ─────
+const PQ_SETS = { pelvis: ['os_coxae', 'sacrum', 'femur'] };
+// Toleranz in Metern; lange oder flächige Strukturen großzügiger (sy < 1: in der Höhe großzügiger)
+const PQ_TOL = { crista_iliaca: { tol: 0.035 }, linea_aspera: { tol: 0.02, sy: 0.2 }, foramen_obturatum: { tol: 0.025 }, acetabulum: { tol: 0.025 } };
+const PQ_ROUNDS = 10;
+let pq = null; // { set, qs, k, results, answer }
+
+function pointQuestions(set) {
+  const bones = PQ_SETS[set] || PQ_SETS.pelvis;
+  const lms = LANDMARKS.filter((l) => bones.includes(l.bone));
+  const qs = lms.map((l) => ({ id: 'lm:' + l.id, kind: 'point', ans: [l] }));
+  for (const role of ['o', 'i']) {
+    const by = {};
+    for (const l of lms) for (const mid of l[role] || []) (by[mid] = by[mid] || []).push(l);
+    for (const [mid, ans] of Object.entries(by)) {
+      const m = findStructure(mid);
+      if (m) qs.push({ id: `lm:${role}:${mid}`, kind: role, m, ans });
+    }
+  }
+  return qs;
+}
+
+// 6 Knochenpunkte + 4 Muskelfragen, schwache/neue bevorzugt; only = nur diese IDs (Fehler wiederholen)
+function buildPointQuiz(set, only = null) {
+  const all = pointQuestions(set);
+  if (only) return shuffle(all.filter((q) => only.includes(q.id)));
+  const w = (q) => weight(q.id);
+  const pts = wpick(all.filter((q) => q.kind === 'point'), 6, w);
+  return shuffle([...pts, ...wpick(all.filter((q) => q.kind !== 'point'), PQ_ROUNDS - pts.length, w)]);
+}
+
+function startPointQuiz(set = 'pelvis', only = null) {
+  if (focusState) exitFocus();
+  const info = viewer.enterPointQuiz(PQ_SETS[set] || PQ_SETS.pelvis);
+  if (!info) { toast('3D model henüz hazır değil'); return; }
+  pq = { set, qs: buildPointQuiz(set, only), k: 0, results: [], answer: null };
+  focusState = { id: null, s: null, info };
+  document.body.classList.add('focus3d');
+  $('#hint3d').hidden = true;
+  renderPointQuizSheet();
+}
+
+const pqCm = (d) => (d * 100).toFixed(1).replace('.', ',') + ' cm';
+
+function onQuizTap(hit, ray) {
+  if (!pq || pq.answer || pq.k >= pq.qs.length) return;
+  const q = pq.qs[pq.k];
+  let best = null;
+  for (const l of q.ans) {
+    const r = viewer.judgePoint(l, hit, ray, PQ_TOL[l.id]);
+    if (!best || r.d < best.d) best = { ...r, l };
+  }
+  if (!hit && !best.ok) { toast('Kemiğin üzerine dokun'); return; }
+  // knapp daneben, aber so weit herausgezoomt, dass 2 cm kaum ein Fingertipp sind → nicht werten
+  if (!best.ok && best.d < 0.05 && viewer.pxPer(best.pos, 0.02) < 22) { toast('🔍 Çok yakın! Yakınlaştırıp tekrar dokun'); return; }
+  answerPoint(q, best.ok, { tap: hit, best });
+}
+
+function answerPoint(q, ok, { tap = null, best = null } = {}) {
+  store.recordQuiz(q.id, ok);
+  pq.results.push({ q, ok });
+  pq.answer = { ok, skipped: !tap && !best, d: best ? best.d : null, hitLm: best && best.l };
+  if (tap) viewer.quizMark(tap, ok ? 0x16a34a : 0xdc2626, null, 0.004);
+  // richtige Punkte zeigen – auf der Seite, auf die getippt wurde
+  const right = tap && tap.x < 0 ? -1 : 1;
+  for (const l of q.ans) viewer.quizMark(viewer.lmPos(l, right), 0x9333ea, shortLa(l), 0.006);
+  if (!ok) { viewer.quizLook(viewer.lmPos(best && best.l ? best.l : q.ans[0], right)); pq.moved = true; }
+  renderPointQuizSheet();
+}
+
+function nextPoint() {
+  viewer.quizClear();
+  if (pq.moved) { viewer.quizHome(); pq.moved = false; }
+  pq.answer = null;
+  pq.k++;
+  if (pq.k >= pq.qs.length) {
+    const r = pq.results.filter((x) => x.ok).length;
+    const d = store.day();
+    d.lmQuiz = { r: Math.max(r, (d.lmQuiz || {}).r || 0), n: pq.results.length };
+    store.save();
+  }
+  renderPointQuizSheet();
+}
+
+function pqPrompt(q) {
+  if (q.kind === 'point') {
+    const l = q.ans[0];
+    return `<h2 style="margin:4px 0 0;font-size:18px" lang="la">${esc(l.la)}</h2>
+      <div class="muted small"><span lang="de">${esc(l.de)}</span> · 🇹🇷 ${esc(l.tr)}</div>
+      <div class="small" style="margin-top:6px">Bu noktayı modelde göster.</div>`;
+  }
+  const verb = q.kind === 'o' ? 'nereden başlar?' : 'nerede biter?';
+  return `<div class="small muted" style="margin-top:2px" lang="de">${q.kind === 'o' ? '🟢 Ursprung' : '🔵 Ansatz'}</div>
+    <h2 style="margin:2px 0 0;font-size:18px"><span lang="la">${esc(q.m.la.replace(/\s*\(.*\)$/, ''))}</span> ${verb}</h2>
+    <div class="small" style="margin-top:6px">Kemik noktasını modelde göster.${q.ans.length > 1 ? ' <span class="muted">(Birden fazla doğru nokta var – biri yeterli.)</span>' : ''}</div>`;
+}
+
+function renderPointQuizSheet() {
+  const sheet = $('#sheet3d');
+  sheet.hidden = false;
+  sheet.classList.remove('collapsed');
+  const n = pq.qs.length;
+  sheet.classList.toggle('pq-end', pq.k >= n);
+  const close = `<button class="close" aria-label="Kapat">✕</button>`;
+  let body;
+  if (pq.k >= n) {
+    const r = pq.results.filter((x) => x.ok).length;
+    const wrong = pq.results.filter((x) => !x.ok).map((x) => x.q);
+    body = `${close}<div class="eyebrow">🎯 Noktayı bul · Sonuç</div>
+      <h2 style="margin:6px 0 0;font-size:22px">${r}/${n} doğru ${r === n ? '🎉' : r >= n * 0.7 ? '👍' : '💪'}</h2>
+      <div class="muted small">${r === n ? 'Bütün noktaları buldun!' : r >= n * 0.7 ? 'Çok iyi – yanlışları bir kez daha göster.' : 'Yanlışları tekrar et, sonra yeni bir tur dene.'}</div>
+      ${wrong.length ? `<div class="small" style="margin-top:10px"><b>Yanlışların</b></div><div class="small" style="margin-top:4px">${wrong.map((q) => `<div style="margin:4px 0">• ${q.kind === 'point' ? `<b lang="la">${esc(shortLa(q.ans[0]))}</b> <span class="muted">· ${esc(q.ans[0].tr)}</span>` : `<span lang="de">${q.kind === 'o' ? 'Ursprung' : 'Ansatz'}</span> ${esc(q.m.la.replace(/\s*\(.*\)$/, ''))} → <b lang="la">${q.ans.map((l) => esc(shortLa(l))).join(', ')}</b>`}</div>`).join('')}</div>` : ''}
+      <div class="grid2" style="margin-top:10px">
+        ${wrong.length ? '<button class="btn ghost" id="pqRetry">Yanlışları tekrarla</button>' : '<button class="btn plain" id="pqExit">Bitir</button>'}
+        <button class="btn" id="pqAgain">Yeni tur</button>
+      </div>
+      ${wrong.length ? '<button class="btn plain block" id="pqExit" style="margin-top:8px">Bitir</button>' : ''}`;
+  } else {
+    const q = pq.qs[pq.k];
+    const a = pq.answer;
+    let fb = '';
+    if (a) {
+      const where = q.ans.map((l) => `<b lang="la">${esc(shortLa(l))}</b>`).join(', ');
+      fb = a.ok
+        ? `<div class="pq-fb ok">✓ Doğru! ${a.hitLm && q.ans.length > 1 ? `<b lang="la">${esc(shortLa(a.hitLm))}</b> · ` : ''}<span class="muted">${pqCm(a.d)} uzaklık</span></div>`
+        : `<div class="pq-fb bad">${a.skipped ? 'Doğru nokta' : `✗ Yanlış – ${a.d < 1 ? pqCm(a.d) + ' uzakta. ' : ''}Doğru nokta`}${q.ans.length > 1 ? 'lar' : ''}: ${where} (🟣 işaretli)</div>`;
+      if (q.kind !== 'point') fb += `<div class="muted small" style="margin-top:4px">${q.ans.map((l) => `<span lang="de">${esc(l.de)}</span>`).join(' · ')}</div>`;
+    }
+    body = `${close}<div class="stepper"><span class="eyebrow" style="flex:1">🎯 Noktayı bul · ${pq.k + 1}/${n}</span><span class="muted small">${pq.results.filter((x) => x.ok).length} ✓</span></div>
+      ${pqPrompt(q)}
+      ${fb}
+      <div class="grid2" style="margin-top:8px">
+        ${a ? '<span></span>' : '<button class="btn plain" id="pqSkip">Bilmiyorum</button>'}
+        ${a ? `<button class="btn" id="pqNext">${pq.k + 1 < n ? 'Sonraki ›' : 'Sonuç ›'}</button>` : '<span class="muted small" style="align-self:center">👆 Modele dokun · sürükleyerek döndür</span>'}
+      </div>`;
+  }
+  sheet.innerHTML = body;
+  $('.close', sheet).addEventListener('click', exitFocus);
+  const on = (id, f) => { const b = $('#' + id, sheet); if (b) b.addEventListener('click', f); };
+  on('pqSkip', () => answerPoint(pq.qs[pq.k], false));
+  on('pqNext', nextPoint);
+  on('pqExit', exitFocus);
+  on('pqAgain', () => startPointQuiz(pq.set));
+  on('pqRetry', () => startPointQuiz(pq.set, pq.results.filter((x) => !x.ok).map((x) => x.q.id)));
+}
+
 function setup3DControls() {
   $$('[data-layer]').forEach((b) => b.addEventListener('click', () => {
     const on = !b.classList.contains('on');
@@ -1230,6 +1390,7 @@ function setup3DControls() {
     viewer.setDepth(+b.dataset.depth);
   }));
   $('#focusExitBtn').addEventListener('click', exitFocus);
+  $('#pqBtn').addEventListener('click', () => viewer.ready.then(() => startPointQuiz('pelvis')));
   $$('[data-view]').forEach((b) => b.addEventListener('click', () => viewer.view(b.dataset.view)));
   $('#resetView').addEventListener('click', () => viewer.resetView());
 
