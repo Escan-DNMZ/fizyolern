@@ -1,237 +1,272 @@
-# FizyoLern – a daily study companion for physiotherapy training
+# FizyoLern
 
-**Live app:** https://escan-dnmz.github.io/fizyolern/ (open it in Safari on an iPhone and choose *Add to Home Screen*)
+### A personal study app for physiotherapy training, with an interactive 3D anatomy model, adaptive tests and spaced repetition
 
-FizyoLern is a free, offline-capable web app (PWA) for a first-year physiotherapy student in the German *Ausbildung*. It turns the student's own lesson notes, weekly timetable and test mistakes into short daily study sessions that fit on the phone: in the morning before class, on the way home, and on the weekly review day.
-
-The subject matter is in **German and Latin**, as it is taught and examined at school. The app's interface and all explanations are in **Turkish**, so a learner whose first language is not German understands *why* an answer is right while practising the exact German wording needed for exams.
-
-> The app's interface language is Turkish. This README explains in English what it does and how to use it.
+**▶ Live app:** https://escan-dnmz.github.io/fizyolern/ (works in any browser; on an iPhone use Safari → *Share* → *Add to Home Screen*)
 
 <p align="center">
-  <img src="docs/screenshots/today.png" width="230" alt="Today screen with the daily plan">
-  <img src="docs/screenshots/test.png" width="230" alt="Test question with explanation and 3D button">
-  <img src="docs/screenshots/3d-muscle-focus.png" width="230" alt="3D focus mode: origin and insertion of a muscle">
+  <img src="docs/screenshots/today.png" width="230" alt="Daily plan">
+  <img src="docs/screenshots/3d-muscle-focus.png" width="230" alt="3D muscle with origin and insertion">
+  <img src="docs/screenshots/test.png" width="230" alt="Test question with explanation">
 </p>
 
 ---
 
-## Why it is useful
+## In one minute
 
-Vocational physiotherapy training packs a lot into the first months: anatomy (bones, muscles with origin, insertion, innervation and function, joints with range of motion), physiology, training theory, hygiene, assessment (*Befund*), massage and psychology. Mostly it has to be reproduced **word for word** in written and oral exams.
+**The problem.** I am training as a physiotherapist in Germany. My first language is not German. In the first months we learn hundreds of anatomical structures, every muscle's origin, insertion, nerve supply and function, joint ranges of motion, and definitions in physiology, training science, hygiene, assessment and psychology. Much of it has to be reproduced *word for word* in German in written and oral exams. Classic flash-card apps did not know my timetable, my teachers' slides or my mistakes, and textbooks only show anatomy in 2D.
 
-FizyoLern helps with the parts that are hardest to do alone:
+**The solution.** FizyoLern is an installable web app that turns my own lesson notes, weekly timetable and test mistakes into a short, guided study plan for every day:
 
-- **Every day has a plan.** The *Today* screen knows which subjects are on the timetable today and tomorrow. It schedules the matching morning test, your mistake cards, five vocabulary words, a muscle and a bone of the day, and a review session for the commute home.
-- **Mistakes come back until they stick.** Every wrong answer, in the app or in a test at school, becomes a flash card. Spaced repetition decides when it returns.
-- **Memorisation homework is planned in.** Lists you have to learn by heart, such as pelvic landmarks or hip range-of-motion values, become their own homework deck. Separate drills and an exam countdown support it (see [Homework and memorisation](#homework-and-memorisation)).
-- **Answers are checked the way a teacher would check them.** Typed answers allow small spelling mistakes and umlaut variants (ä = ae). They insist on the correct article. Words that look alike but mean the opposite (*Abduktion* vs. *Adduktion*, *Sympathikus* vs. *Parasympathikus*) are never mixed up.
-- **Anatomy is shown, not just named.** Any muscle, bone, joint or bony landmark mentioned in a question or card can be opened in an interactive 3D model.
-- **Content is checked against the textbook.** Questions are generated from the student's notes and then compared with them. Where a slide contradicts the standard textbook, the app teaches the textbook version and notes the difference.
+- it knows which subjects I have today and tomorrow;
+- it tests me on exactly those subjects;
+- it brings back every mistake until I know it;
+- it schedules memorisation homework before the deadline;
+- it shows any muscle, bone, joint or bony landmark in an interactive 3D model.
+
+Explanations are in my native language, Turkish; the content stays in the German and Latin that the exams require.
+
+**The result.** One app replaces flash cards, a quiz book, a vocabulary trainer, an anatomy atlas and a study planner. It works offline on the phone, has no server or account, and my personal data never leaves the device.
 
 ---
 
-## A typical day
+## Key numbers
 
-| When | What the app offers |
+| | |
 |---|---|
-| **Morning, before class** | Morning test for today's subjects, 5 new words (German → Turkish, typing, cloze, *Partizip II*), the muscle and bone of the day |
-| **During the day** | Flash cards: mistake cards first (max. 20 per day), then homework cards, vocabulary, muscles, bones, joints |
-| **On the way home (after 14:30)** | *Dönüş yolu*: today's wrong answers → mistake cards for today's subjects → homework cards → the same 5 words in a different question type → today's lesson notes in a large-print reading mode with a 5-question mini test. Every step can be skipped with one tap. |
-| **Saturday** | Weekly review: all wrong answers of the week, all mistake cards, the week's words, open (essay) questions for the week's subjects |
-| **Any time** | Status report: one tap turns today's progress into a ready-to-send message for an AI tutor (Claude). The tutor can then explain weak topics and set a mini exam. |
+| **21** lessons in **9** subjects | Anatomy, physiology, PT basics, PT assessment, orthopaedics/surgery, training science, massage, hygiene, psychology |
+| **830+** multiple-choice questions | 377 hand-written (337 of them from the lesson notes), plus questions generated automatically from the anatomy data |
+| **100+** open (essay) questions | Answers typed in German, checked for the required key terms |
+| **56** muscles, **23** bone groups, **12** joints | Each with origin, insertion, innervation and function, or range of motion, in German and Latin with Turkish explanations |
+| **19** bony landmarks in 3D | SIAS, Tuber ischiadicum, Trochanter major and others, each linked to the muscles attached there |
+| **600+** vocabulary items | Basic medical vocabulary, lesson terms, and 55 gym exercises linked to the muscles they train |
+| **~2 MB** of 3D models | Real anatomical meshes (BodyParts3D), compressed so the whole app runs offline on a phone |
+
+---
+
+## My role
+
+- **Idea and product design.** I identified the problem from my own studies and defined the features and the daily study routine. I decided what stays private.
+- **Content.** All learning content comes from my own lesson notes in Notion. Every lesson was cross-checked against those notes and standard textbooks. Where a slide contradicted the textbook, the app teaches the textbook-correct version.
+- **Testing.** I used the app every day on my iPhone and reported what was confusing or wrong. Examples: an answer being marked wrong for a different spelling, homework mixed up with mistakes, a 3D view showing too much at once. Each round of feedback became the next improvement.
+- **Implementation.** I built it with an AI pair programmer (Claude Code by Anthropic). I set the requirements, made the design and privacy decisions, and reviewed and tested every change; the AI wrote most of the code. The project shows how a domain expert can turn a real need into working software with modern AI tools.
 
 ---
 
 ## Features
 
-### Today (*Bugün*)
-- Today's and tomorrow's classes from the weekly timetable in Notion. If several weeks are planned ahead, the right week is chosen by date.
-- A checklist of the day's tasks with a progress ring and a study streak 🔥.
-- Weak topics with a one-tap "test this" button.
-- An exam countdown card ("5 days until the PT Befund exam") when exams are entered in Notion.
+The interface is in Turkish. A short glossary is at the end of this page.
 
-### Tests (*Test*)
-- **More than 800 multiple-choice questions** from three sources:
-  - questions written from the lesson notes, including *which statement is false*, matching, ordering, case studies and numbers;
-  - hand-written clinical and anatomy questions;
-  - questions generated automatically from the anatomy data (origin, insertion, nerve and function of each muscle, bones, joint types, range of motion, gym exercises).
-- **Adaptive selection:**
-  - weak topics and recently missed questions come more often;
-  - questions answered correctly yesterday are skipped today;
-  - harder question types unlock as accuracy improves.
-- **Distractors that make you think:** wrong options for a muscle come from the same body region and are of similar length. The explanation says which muscle each wrong option belongs to.
-- **Mock exam (*Deneme sınavı*)** per subject:
-  - 15 multiple-choice and 3 open questions in 30 minutes;
-  - no feedback until the end;
-  - then a result per topic with every wrong answer listed.
+### 1. A plan for every day (*Bugün* = Today)
+- Today's and tomorrow's classes, read from my weekly timetable in Notion. If several weeks are planned ahead, the right one is picked by date.
+- A checklist with a progress ring and a streak: morning test for today's subjects, mistake cards, homework cards, 5 words of the day, the muscle and bone of the day.
+- **Way-home mode** (after 14:30), steps that can each be skipped with one tap:
+  1. today's wrong answers;
+  2. mistake cards for today's subjects;
+  3. homework;
+  4. the same 5 words in a new question type;
+  5. today's lesson notes in a large-print reading mode, followed by a 5-question mini test.
+- **Saturday review**: everything I got wrong this week, all mistake cards, the week's words and open questions.
+- **Exam countdown** ("5 days until the PT assessment exam"), read from Notion. Subjects with an exam within 7 days get priority everywhere.
 
-### Open questions (*Sorular*)
-- About 100 essay-style questions, as in the written exams.
-- You type your answer in German. The app checks it for the required key terms, in any order and with tolerance for word forms (*gesteigert* counts for *steigern*). It then shows the model answer, and you rate yourself.
+### 2. Tests that adapt (*Test*)
+- **Adaptive selection.** Questions I missed come back more often; questions I answered correctly yesterday are skipped today; harder question types unlock as accuracy rises.
+- **Varied formats.** Single answer, "which statement is false", matching, ordering, case studies and numbers.
+- **Generated anatomy questions.** "Where does M. … insert?", "Which nerve supplies …?". The wrong options come from the same body region and have similar length, so the answer cannot be guessed from the layout. The explanation names the muscle each wrong option belongs to.
+- **Mock exam.** 15 multiple-choice and 3 essay questions in 30 minutes, with no feedback until the end, then a result per topic.
+- **3D button.** When a question mentions anatomy, a button after the answer opens every structure it names in the 3D model.
 
-<p align="center">
-  <img src="docs/screenshots/open-question.png" width="230" alt="Open question: key terms found and missing, model answer">
-</p>
+### 3. Essay questions with a smart answer check (*Sorular*)
+<img src="docs/screenshots/open-question.png" width="230" align="right" alt="Open question with key-term check">
 
-### Flash cards (*Kartlar*)
-- Spaced repetition with learning steps: *Again* returns in 1 minute and *Hard* in 10 minutes. After that *Hard* < *Good* < *Easy* always.
+- I type my answer in German. The app checks it for the exam-relevant key terms (green ✓ found, red ✗ missing), then shows the model answer.
+- The check works the way a teacher marks:
+  - word order does not matter;
+  - different word forms count (*gesteigert* for *steigern*);
+  - small typos are tolerated;
+  - umlauts may be written as *ae/oe/ue*.
+- **Opposites are never accepted as typos.** *Abduktion* ≠ *Adduktion*, *Sympathikus* ≠ *Parasympathikus*, *hyper-* ≠ *hypo-*. They differ by a letter or two but mean the opposite.
+
+<br clear="right">
+
+### 4. Flash cards with spaced repetition (*Kartlar*)
+- An Anki-style algorithm with learning steps. *Again* comes back in 1 minute and *Hard* in 10 minutes. After that, *Hard* < *Good* < *Easy* in days, which can never be equal.
 - Decks:
-  - mistake cards from Notion;
-  - homework cards;
-  - lesson vocabulary per subject;
-  - basic vocabulary (*Grundwortschatz*);
-  - muscles, each with a typical gym exercise 💪;
-  - bones and joints.
-- You can add your own words.
+  - mistake cards and homework cards from Notion;
+  - lesson vocabulary per subject and basic medical vocabulary;
+  - muscles (each with a typical gym exercise), bones and joints.
+- At most 20 mistake cards per day, today's subjects first, so reviewing never becomes overwhelming.
 
-### Words of the day
-- Five words from the *Grundwortschatz* each day, chosen from the categories that match today's classes.
-- The morning and the way home ask the same words with different question types, which reinforces them.
-- Separable verbs are marked like `auf|richten`, and the *Partizip II* is drilled.
+### 5. Words of the day
+- 5 words a day, chosen from categories that match today's classes.
+- The morning and the way home ask the same words in different formats: German→Turkish, typing the German word with its article, cloze sentence, *Partizip II* of separable verbs (`an|schwellen` → *angeschwollen*). Practising each word twice in different ways helps it stick.
 
-### 3D anatomy
-- Real bone and muscle models (BodyParts3D).
-- **Focus mode** for one muscle at a time:
-  - its parts in different colours (e.g. *Pars clavicularis / acromialis / spinalis*);
-  - origin and insertion marked on the bone with the name of the landmark ("Ursprung: Spina ischiadica");
-  - deeper muscles shown semi-transparent.
-- **Layers** (superficial / middle / deep).
-- **Bony landmarks:** SIAS, SIAI, SIPS, Crista iliaca, Tuber ischiadicum, Trochanter major/minor, Linea aspera and more. Tap one to see which muscles start or end there.
-- **Joint axes:** transverse, sagittal and longitudinal axes drawn through a joint, with the movement around each one.
-- **Step-by-step viewer:** a question that mentions several structures (e.g. *Wirbelsäule* → cervical, thoracic, lumbar spine and sacrum) opens them one after another, then all together in different colours.
-
-<p align="center">
-  <img src="docs/screenshots/3d-step-by-step.png" width="230" alt="Step-by-step viewer: the spine in four colours">
-  <img src="docs/screenshots/3d-joint-axes.png" width="230" alt="Hip joint with its three movement axes">
-</p>
-
-### Lesson notes (*Ders notları*)
-- 21 lessons across Anatomy, Physiology, PT basics, PT assessment, orthopaedics/surgery, training theory, massage, hygiene and psychology.
-- Each lesson has key sentences (German + Turkish), a test, open questions and vocabulary, plus a link back to the original Notion page.
-
----
-
-## Homework and memorisation
-
-Much of the first year is pure memorisation homework: *"learn the pelvic landmarks and the origin/insertion of the hip muscles for next week"*. FizyoLern treats this as its own kind of work, separate from mistakes:
-
-1. **Write it once in Notion.** In the weekly plan, write a list headed e.g. `✗ Ezber kartları – Becken & Hüft-ROM`; any heading containing *Ezber*, *Ödev* or *Hausaufgabe* counts. Write one line per fact and put the answer in **bold**:
-   `SIAS = **Spina iliaca anterior superior** → Ursprung **M. sartorius** und **M. tensor fasciae latae**`
-2. **The app turns each line into a cloze card.** The bold parts become gaps, and the card goes into the **📌 Ödevlerim** (my homework) deck, not into the mistake list.
-3. **It is scheduled for you.**
-   - The homework appears as a task on *Today* and as a step on the way home.
-   - There is no daily limit, so the whole list can be learned before the deadline.
-   - Spaced repetition keeps it fresh afterwards.
-4. **Practise it in 3D.** The **🎯 Noktayı bul** ("find the point") drill asks "Show the SIAS" or "Where does M. sartorius originate?". You tap the bone in the 3D model; a tap within 2 cm on either side of the body counts. A wrong tap shows the correct point with its label.
-5. **Track it.**
-   - The daily report has its own homework section ("Becken & Hüft-ROM: 29 cards · 12 learned · 9 in progress · 8 not seen yet"), so homework is never confused with mistakes.
-   - Exams and homework deadlines from the Notion page *Sınav & Ödev Takibi* show up as a countdown.
-   - Subjects with an exam in the next 7 days get priority in tests, cards and the way-home review.
-
-<p align="center">
-  <img src="docs/screenshots/homework-card.png" width="230" alt="Homework card: bold parts are the answer, with a 3D button">
+### 6. Interactive 3D anatomy
+<p>
+  <img src="docs/screenshots/3d-step-by-step.png" width="230" alt="Spine shown step by step in four colours">
+  <img src="docs/screenshots/3d-joint-axes.png" width="230" alt="Hip joint with three movement axes">
   <img src="docs/screenshots/3d-find-the-point.png" width="230" alt="Find-the-point drill on the pelvis">
 </p>
 
-Mistakes from tests at school work the same way: write a line under a `✗ Test 14.10 …` heading with the correct answer in bold. It becomes a mistake card, and at most 20 come per day, today's subjects first.
+- **Real anatomical models** of the skeleton and 56 muscles from the BodyParts3D research database. 4 muscles missing from the database are reconstructed from skeletal landmarks. Rotate with one finger, zoom with two.
+- **Focus mode** for one muscle at a time:
+  - its parts in different colours (e.g. the three parts of the deltoid);
+  - origin and insertion marked on the bone with the landmark name ("Ursprung: Spina ischiadica");
+  - the deeper muscles underneath shown semi-transparent.
+- **Layers:** superficial / middle / deep.
+- **Bony landmarks:** 19 points on the pelvis and leg. Tap one to see which muscles start, end or change direction there.
+- **Joint axes:** transverse, sagittal and longitudinal axes drawn through a joint (left picture), each with the movement that happens around it.
+- **Step-by-step viewer:** a question about "the spine" opens the cervical, thoracic and lumbar spine and the sacrum one after another, then all together in four colours (middle picture).
+- **"Find the point" drill:** the app asks "Show the SIAS" or "Where does M. sartorius originate?" and I tap the bone. A wrong tap shows the correct point with its name (right picture).
+
+### 7. Homework and memorisation
+<img src="docs/screenshots/homework-card.png" width="230" align="right" alt="Homework flash card">
+
+Much of the first year is homework like *"learn the pelvic landmarks and the hip muscles by next week"*. FizyoLern keeps it separate from mistakes:
+
+1. I write the list once in Notion and put the answers in **bold**.
+2. Each line becomes a fill-in-the-gap card in the **📌 homework deck** (picture).
+3. The homework appears as a task every day and in the way-home routine until it is learned. Spaced repetition keeps it fresh afterwards.
+4. The 3D "find the point" drill trains the same landmarks visually.
+5. The daily report shows homework progress separately ("29 cards · 12 learned · 9 in progress · 8 not seen yet"), next to the exam and homework countdown.
+
+<br clear="right">
+
+### 8. Lesson notes and AI tutor report
+- Each lesson has key sentences in German with a Turkish translation, a test, essay questions and vocabulary, plus a link to the original note.
+- **Status report.** One tap turns the day's progress into a message for an AI tutor. The message gives context, the study streak, cards (reviews vs. new), weak subjects, the most frequent mistakes in readable form, and homework. The tutor can then explain weak topics and set a mini exam.
 
 ---
 
-## How content gets into the app
+## Built on learning science
 
-```
-Notion (the student's own workspace, read-only)
-├── Weekly plan  → timetable, morning tests, ✗ mistake cards, 📌 homework cards
-├── Grundwortschatz database → words of the day
-├── Lesson notes ("Dersler") → lessons: key sentences, tests, open questions, vocabulary
-├── "FizyoLern Sorular" database → extra questions added without an app update
-└── "Sınav & Ödev Takibi" → exam and homework countdown
-                │
-                ▼  synced on the phone, at most every 3 hours (or "Update now")
-           FizyoLern on the iPhone (works offline)
-```
-
-The lesson content in `js/data/lessons.js` is built from the notes with `tools/build_lessons.py`. The personal parts (timetable, mistakes, homework, exams, teacher names, Notion links) are never part of this repository. They are read live from Notion on the phone.
-
----
-
-## Privacy by design
-
-- **No server and no account.** All progress is stored only in the phone's browser storage. A backup can be downloaded and restored in the settings.
-- **The Notion key never leaves the phone.** The read-only key is stored on the device and sent only to `api.notion.com`. The page's Content-Security-Policy blocks connections to any other server.
-- **Nothing personal is in the public repository.** The repository contains only general lesson content. Teacher names are filtered out at build time, and the build fails if one slips through.
-- **The daily report contains statistics only**, never the Notion key.
-
----
-
-## Getting started
-
-### 1. Install on an iPhone
-1. Open https://escan-dnmz.github.io/fizyolern/ in **Safari**.
-2. Tap **Share** → **Add to Home Screen**.
-3. Start the app from the home screen. It works offline from then on.
-
-The app runs as is with the built-in lessons, anatomy, vocabulary and questions. Connecting Notion adds your personal timetable, mistakes, homework and exams.
-
-### 2. Connect your Notion (optional)
-1. On a computer, go to https://www.notion.so/profile/integrations → **New integration**.
-   - Type **Internal**, name e.g. `FizyoLern`.
-   - **Capabilities:** keep only **Read content** switched on.
-   - Copy the **Internal Integration Secret** (`ntn_…`) and keep it private.
-2. In Notion, open your study dashboard page → **•••** → **Connections** → add `FizyoLern`. Only this page and its sub-pages become visible to the app.
-3. In the app: ⚙️ **Settings** → **Notion bağlantısı** → paste the key → **Bağlan ve güncelle** (connect and update).
-
-The app finds these pages by title:
-
-| Page | Expected content |
+| Principle | How the app applies it |
 |---|---|
-| `Haftalık Plan` | `## … KW 43 (19.–23.10.2026 …)` headings, each followed by a table (day · class 1 · class 2 · review with "Sabah testi: …" · homework/notes). Under subject headings (`###`), lists after a `✗ …` paragraph become mistake or homework cards; **bold** = answer. |
-| `Grundwortschatz` (database) | Wort, Türkçe, Beispiel, Kategorie, Stufe, Nächste Wiederholung |
-| `Dersler` | One sub-page per lesson note |
-| `FizyoLern Sorular` (database, optional) | Extra rows of type Kern / MCQ / Offen / Wort |
-| `Sınav & Ödev Takibi` (optional) | Exams and homework with dates |
-
-If the phone is lost: Notion → integrations → `FizyoLern` → **Delete/refresh secret**. The old key stops working immediately.
+| **Retrieval practice** | Everything is asked, never just shown: tests, typed answers, cloze cards, essay questions |
+| **Spaced repetition** | Cards, words and mistakes come back at growing intervals |
+| **Interleaving** | Mixed tests across subjects; the same word in different question types |
+| **Immediate, explained feedback** | Every answer explains why it is right and what each wrong option actually is |
+| **Dual coding** | Words and 3D pictures together: every term in a question can be opened in the model |
+| **Desirable difficulty** | Plausible distractors from the same region; harder levels unlock with accuracy |
+| **Low barrier to start** | A clear daily list; the way-home routine runs in short, skippable steps on the phone |
 
 ---
 
-## Development
+## Engineering highlights
 
-No build step: plain HTML, CSS and JavaScript modules. Three.js is vendored in `vendor/`.
+```
+                ┌──────────────── iPhone (offline PWA) ────────────────┐
+ Notion  ──────▶│ read-only sync ─▶ private data (on device only)      │
+ (my notes,     │                                                      │
+  timetable,    │ lessons + anatomy data ─▶ question generator         │
+  mistakes,     │   ─▶ adaptive selection ─▶ spaced repetition store   │
+  exams)        │                                                      │
+                │ Three.js 3D viewer ◀─ BodyParts3D meshes (Draco)     │
+                └──────────────────────────────────────────────────────┘
+       No server · no account · progress stored in the browser
+```
+
+- **No framework, no build step.** Plain HTML, CSS and JavaScript modules, hosted for free on GitHub Pages. A service worker caches everything for offline use.
+- **3D pipeline.** Python scripts convert the BodyParts3D anatomy models into compressed glTF files: welded, simplified, Draco-compressed, about 2 MB for all bones and muscles.
+  - Bony landmarks were placed by geometry rules on the real meshes. Example: SIAS = the most anterior point of the upper iliac crest.
+  - Origin and insertion markers are found by measuring where a muscle mesh touches the bone.
+  - Muscles missing from the database are drawn as surfaces between real skeletal landmarks.
+- **Tolerant answer checking for German.** Edit distance scaled to word length, umlaut folding, article checks, word-stem and word-order tolerance, plus a guard so that medical opposites never count as typos.
+- **Notion integration with privacy by design.**
+  - The app reads Notion directly from the phone with a read-only key that stays on the device.
+  - A Content-Security-Policy allows network connections only to Notion's API.
+  - Weekly plans, mistakes, homework and exams are parsed from ordinary Notion pages (headings, tables, bold text), so no special format is needed.
+- **Content quality checks.** An audit script checks every question, card and word. It catches:
+  - duplicate or empty options;
+  - two defensible correct answers;
+  - answers given away by the question;
+  - model answers that would fail their own key-term check;
+  - homework cards whose answer shows on the front.
+
+  Unit tests cover the answer checker and the term detection.
+- **Privacy filter.** The build script removes teacher names from public content and fails if one remains. Personal files are excluded from the repository.
+
+---
+
+## Privacy and security
+
+- **No backend, no account, no tracking.** Progress lives only in the phone's browser storage. A backup file can be downloaded and restored.
+- **The Notion key never leaves the device.** It is read-only and sent only to `api.notion.com`; the browser blocks every other destination.
+- **The public repository contains only general learning content.** It holds no timetable, mistakes, teacher names or links to personal pages.
+
+---
+
+## Try it
+
+1. Open https://escan-dnmz.github.io/fizyolern/ (best on a phone).
+2. On an iPhone: Safari → **Share** → **Add to Home Screen**. It then starts like a normal app and works offline.
+3. Without any setup you can use the tests, essay questions, flash cards, words and 3D anatomy with the built-in content. Connecting your own Notion (⚙️ Settings) adds a personal timetable, mistakes, homework and exams.
+
+<details>
+<summary><b>Connecting Notion (optional)</b></summary>
+
+1. Go to https://www.notion.so/profile/integrations → **New integration** (type *Internal*, only **Read content**). Copy the secret and keep it private.
+2. In Notion, open your study dashboard → **•••** → **Connections** → add the integration.
+3. In the app: ⚙️ → *Notion bağlantısı* → paste the key → *Bağlan ve güncelle* (connect and update).
+
+| Notion page | Used for |
+|---|---|
+| `Haftalık Plan` (weekly plan) | `## … KW 43 (19.–23.10.2026)` headings with a timetable table; lists after a `✗ …` line become mistake cards, or homework cards if the heading says *Ezber/Ödev/Hausaufgabe*; **bold** = answer |
+| `Grundwortschatz` (database) | Words of the day |
+| `Dersler` | Lesson notes |
+| `FizyoLern Sorular` (database) | Extra questions without an app update |
+| `Sınav & Ödev Takibi` | Exam and homework dates |
+
+If a phone is lost, delete or renew the key in Notion. The old key stops working immediately.
+</details>
+
+<details>
+<summary><b>Development</b></summary>
 
 ```bash
-python -m http.server 8765
+python -m http.server 8765          # then open http://localhost:8765
+node tools/test_check.mjs           # answer checking
+node tools/test_structures.mjs      # term detection for the 3D buttons
+node tools/audit_content.mjs        # content audit of all questions and cards
+python tools/bump_sw.py             # after any change, so phones load the new version
 ```
-Then open http://localhost:8765. On `localhost`, a private bundle in `private/fizyolern-ozel.json` (git-ignored) is loaded automatically for testing.
 
 | Path | Purpose |
 |---|---|
 | `js/app.js` | Screens and routing |
-| `js/quizgen.js` | Question generation and adaptive selection |
-| `js/store.js` | Progress, spaced repetition |
+| `js/quizgen.js` | Question generation, adaptive selection |
+| `js/store.js` | Progress and spaced repetition |
 | `js/words.js`, `js/fuzzy.js` | Words of the day, tolerant answer checking |
-| `js/notion.js`, `js/private.js` | Read-only Notion sync, private data on the device |
-| `js/exam.js` | Mock exam |
-| `js/report.js` | Daily status report |
-| `js/anatomy3d.js` | 3D viewer (focus mode, landmarks, axes, step-by-step, "find the point") |
-| `js/data/` | Anatomy (`anatomy.js`, `landmarks.js`, `axes.js`, `muscle3d.js`), lessons, vocabulary, questions, gym exercises |
+| `js/notion.js`, `js/private.js` | Read-only Notion sync, on-device private data |
+| `js/exam.js`, `js/report.js` | Mock exam, daily status report |
+| `js/anatomy3d.js` | 3D viewer: focus mode, landmarks, axes, step-by-step, "find the point" |
+| `js/data/` | Anatomy, landmarks, axes, lessons, vocabulary, questions, gym exercises |
 | `tools/` | Build scripts (lessons, 3D models, icons) and checks |
+</details>
 
-Checks:
+---
 
-```bash
-node tools/test_check.mjs        # typed-answer and keyword checking
-node tools/test_structures.mjs   # finding anatomy terms in text for the 3D buttons
-node tools/audit_content.mjs     # every question, card and word: duplicates, two correct options, keywords missing from model answers …
-```
+## Glossary of the Turkish interface
 
-After changing anything, run `python tools/bump_sw.py` so that phones load the new version (the service worker caches files for offline use).
+| Turkish | English |
+|---|---|
+| Bugün | Today |
+| Test / Sorular / Kartlar | Test / (Essay) questions / Flash cards |
+| 3D Anatomi | 3D anatomy |
+| Dönüş yolu | Way home (afternoon review) |
+| Ödevlerim · Hatalarım | My homework · My mistakes |
+| Günün kası / kemiği | Muscle / bone of the day |
+| Noktayı bul | Find the point |
+| Deneme sınavı | Mock exam |
+| 3D'de göster | Show in 3D |
+| Tekrar · Zor · İyi · Kolay | Again · Hard · Good · Easy |
+| Doğru · Yanlış | Correct · Wrong |
 
 ---
 
 ## Credits
 
-- 3D bone and muscle models: **BodyParts3D**, © The Database Center for Life Science (DBCLS), CC BY 4.0. They are converted with `tools/build_bp3d.py` and `tools/compress_models.sh`. Four muscles missing from BodyParts3D (latissimus dorsi, rectus abdominis, transversus abdominis, quadratus lumborum) are drawn from real skeleton landmarks.
+- 3D anatomy models: **BodyParts3D**, © The Database Center for Life Science (DBCLS), licensed CC BY 4.0.
 - 3D rendering: [Three.js](https://threejs.org) (MIT).
-- The content is a study aid written from the student's own lesson notes and checked against standard textbooks. It does not replace the school's materials or a teacher.
+- Built with AI pair programming: [Claude Code](https://claude.com/claude-code) by Anthropic.
+- The learning content is a personal study aid based on my own lesson notes and checked against standard textbooks. It does not replace official course materials.
