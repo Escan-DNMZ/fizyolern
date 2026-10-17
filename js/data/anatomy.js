@@ -842,7 +842,7 @@ export const JOINTS = [
   },
   {
     id: 'art_coxae', de: 'Hüftgelenk', la: 'Articulatio coxae', tr: 'Kalça eklemi', region: 'Hüfte',
-    typ: 'Nussgelenk (Sonderform des Kugelgelenks) – 3 Freiheitsgrade (Anatomie I zählt: 3 BA / 6 FG)',
+    typ: 'Nussgelenk (Sonderform des Kugelgelenks) – 3 Freiheitsgrade',
     // Werte nach der Folie aus PT-Befund (Prüfungsmaßstab); Lehrbuch-Spannen separat
     nn: 'Flexion/Extension 130° – 0° – 10° · Abduktion/Adduktion 45° – 0° – 30° · Außen-/Innenrotation 50° – 0° – 30° (Folie PT-Befund)',
     lehrbuch: 'Extension/Flexion 10–15 / 0 / 130–140; Abduktion/Adduktion 30–45 / 0 / 20–30; Außen-/Innenrotation 40–50 / 0 / 30–45',
@@ -856,9 +856,9 @@ export const JOINTS = [
       { akt: 'Gehen', w: '30° Flexion, 10° Extension, 5° Abduktion, 5° Adduktion, 5° AR, 5° IR', flex: 30 },
       { akt: 'Treppensteigen', w: '65° Flexion, 5° Extension', flex: 65 },
       { akt: 'Sitzen', w: '90° Flexion', flex: 90 },
-      { akt: 'Schnürsenkel binden', w: '50° Flexion', flex: 50 },
+      { akt: 'Schnürsenkel binden', w: 'ca. 120° Flexion (Literatur; Folie 102 nannte 50°)', flex: 120 },
     ],
-    adlQuelle: 'Folie 102 (Soames 2003)',
+    adlQuelle: 'ADL-Werte, Folie 102 / Literatur',
     kapsel: 'IR > Flexion > Abduktion',
     kapselNote: 'Ek bilgi (folyoda yok)',
     // Folie 99 – haupt = fett gedruckt (Hauptmuskeln)

@@ -233,7 +233,7 @@ export const LESSONS = [
    },
    {
     "q": "Nennen Sie das Lernmodell für Gelenke (mindestens fünf Punkte).",
-    "a": "Für ein Gelenk lernt man die Lage, die Gelenkpartner, die Art des Gelenkes, die Freiheitsgrade, die ROM-Normwerte, den Kapsel-Band-Apparat und Sonstiges. Freiheitsgrade: Im Lehrbuch entspricht die Zahl der Freiheitsgrade der Zahl der Bewegungsachsen; in Anatomie I zählt man pro Achse 2 Freiheitsgrade (z. B. Ellbogen 1 BA / 2 FG).",
+    "a": "Für ein Gelenk lernt man die Lage, die Gelenkpartner, die Art des Gelenkes, die Freiheitsgrade, die ROM-Normwerte, den Kapsel-Band-Apparat und Sonstiges. Die Zahl der Freiheitsgrade entspricht der Zahl der Bewegungsachsen, z. B. Ellbogengelenk 1, Schultergelenk 3.",
     "kw": [
      "Lage",
      "Gelenkpartner",
@@ -371,12 +371,12 @@ export const LESSONS = [
     "tr": "Gerçek eklemlerde (diartroz) her zaman sinovyalı eklem aralığı, kapsül ve kıkırdak bulunur; hareket mümkündür."
    },
    {
-    "de": "Im Unterricht gilt: 1 Bewegungsachse entspricht 2 Freiheitsgraden.",
-    "tr": "Bu derste 1 hareket ekseni = 2 serbestlik derecesi (her eksende iki yön). Dirsek 1 BA/2 FG, omuz 3 BA/6 FG."
+    "de": "Die Zahl der Freiheitsgrade entspricht der Zahl der Bewegungsachsen (Lehrbuch): Ellbogengelenk (Humeroulnargelenk) 1, Schultergelenk 3.",
+    "tr": "Serbestlik derecesi = hareket ekseni sayısı (ders kitabı): dirsek (humeroulnar) 1, omuz 3. Not: Anatomie I dersinde her eksen 2 FG sayıldı; bu ders kitabıyla uyuşmuyor, doğrusu eksen sayısıdır."
    },
    {
-    "de": "Das Kugelgelenk (z. B. Hüfte, Schulter) hat 3 Bewegungsachsen; nach der Zählung in Anatomie I (1 BA = 2 FG) sind das 6 Freiheitsgrade, im Lehrbuch und in PT Befund 3 Freiheitsgrade.",
-    "tr": "Küresel eklem (kalça, omuz) 3 eksenlidir: Anatomie I sayımıyla 6 serbestlik derecesi, ders kitabında ve PT Befund'da 3 serbestlik derecesi."
+    "de": "Das Kugelgelenk (z. B. Hüfte, Schulter) hat 3 Bewegungsachsen und damit 3 Freiheitsgrade mit 6 Bewegungsrichtungen.",
+    "tr": "Küresel eklem (kalça, omuz) 3 eksenlidir, yani 3 serbestlik derecesi ve 6 hareket yönü vardır."
    },
    {
     "de": "Knochenvorsprünge wie Tuberositas, Trochanter oder Spina sind meist Ursprung oder Ansatz von Muskeln und oft tastbar.",
@@ -396,12 +396,12 @@ export const LESSONS = [
     "id": "L:anatomie-i-1:0",
     "q": "Welche Gelenkform hat das Hüftgelenk (Art. coxae)?",
     "o": [
-     "Kugelgelenk, 3 BA / 6 FG",
-     "Eigelenk, 2 BA / 4 FG",
-     "Sattelgelenk, 2 BA / 4 FG",
-     "Scharniergelenk, 1 BA / 2 FG"
+     "Kugelgelenk, 3 BA / 3 FG",
+     "Eigelenk, 2 BA / 2 FG",
+     "Sattelgelenk, 2 BA / 2 FG",
+     "Scharniergelenk, 1 BA / 1 FG"
     ],
-    "x": "Kalça küresel eklemdir (Art. spheroidea): 3 hareket ekseni, derste anlatılana göre 6 serbestlik derecesi. Eigelenk ve Sattelgelenk sadece 2 eksenlidir (el bileği, başparmak)."
+    "x": "Kalça küresel eklemdir (Art. spheroidea): 3 hareket ekseni = 3 serbestlik derecesi (6 hareket yönü). Eigelenk ve Sattelgelenk 2 eksenlidir (el bileği, başparmak), Scharniergelenk 1 eksenlidir."
    },
    {
     "id": "L:anatomie-i-1:1",
@@ -440,12 +440,12 @@ export const LESSONS = [
     "id": "L:anatomie-i-1:4",
     "q": "Welche Gelenkform und wie viele BA/FG hat das Daumensattelgelenk?",
     "o": [
-     "Sattelgelenk, 2 BA / 4 FG",
-     "Sattelgelenk, 3 BA / 6 FG",
-     "Sattelgelenk, 1 BA / 2 FG",
-     "Eigelenk, 2 BA / 4 FG"
+     "Sattelgelenk, 2 BA / 2 FG",
+     "Sattelgelenk, 3 BA / 3 FG",
+     "Sattelgelenk, 1 BA / 1 FG",
+     "Eigelenk, 2 BA / 2 FG"
     ],
-    "x": "Başparmak eyer eklemi Art. sellaris'tir: 2 eksen, 4 FG (Fleks/Ekst + Abd/Add). 3 BA / 6 FG sadece küresel eklemdir; Eigelenk de 2/4'tür ama örneği radiokarpal eklemdir."
+    "x": "Başparmak eyer eklemi Art. sellaris'tir: 2 eksen = 2 serbestlik derecesi (Fleks/Ekst + Abd/Add). 3 eksen sadece küresel eklemdedir; Eigelenk de 2 eksenlidir ama örneği radiokarpal eklemdir."
    },
    {
     "id": "L:anatomie-i-1:5",
@@ -541,14 +541,14 @@ export const LESSONS = [
    {
     "id": "L:anatomie-i-1:n4",
     "typ": "zahlen",
-    "q": "Wie viele Bewegungsachsen (BA) und Freiheitsgrade (FG) hat das Ellbogengelenk laut Unterricht?",
+    "q": "Wie viele Bewegungsachsen (BA) und Freiheitsgrade (FG) hat das Humeroulnargelenk (Scharniergelenk des Ellbogens)?",
     "o": [
-     "1 BA / 2 FG",
      "1 BA / 1 FG",
-     "2 BA / 4 FG",
-     "2 BA / 2 FG"
+     "1 BA / 2 FG",
+     "2 BA / 2 FG",
+     "3 BA / 3 FG"
     ],
-    "x": "derste anlatılana göre 1 eksen = 2 FG, çünkü her eksende iki yöne hareket edilir (Fleks/Ekst). '1 BA / 1 FG' genel anatomideki sayımdır; bu derste BA/FG sayımı geçerlidir."
+    "x": "Menteşe eklem tek eksenlidir: 1 eksen = 1 serbestlik derecesi (Fleks/Ekst, iki yön). '1 BA / 2 FG' Anatomie I'deki sayımdı ama ders kitabına göre serbestlik derecesi eksen sayısına eşittir."
    },
    {
     "id": "L:anatomie-i-1:n5",
@@ -1735,14 +1735,14 @@ export const LESSONS = [
    },
    {
     "id": "L:physiologie-3:9",
-    "q": "Welche Neurotransmitter wirken laut Unterricht hemmend (inhibitorisch)?",
+    "q": "Welche Neurotransmitter sind die klassischen hemmenden (inhibitorischen) Transmitter?",
     "o": [
      "GABA und Glycin",
      "Glutamat und Acetylcholin",
      "Dopamin und Serotonin",
      "Glycin und Glutamat"
     ],
-    "x": "Derste inhibitör örnekler GABA ve glisindir. Glutamat, asetilkolin, dopamin ve serotonin uyarıcı listededir; „Glycin und Glutamat“ bir baskılayıcıyı bir uyarıcıyla karıştırır."
+    "x": "Klasik inhibitör nörotransmitterler GABA ve glisindir. Glutamat ve asetilkolin (kasta) uyarıcıdır; dopamin ve serotonin ise reseptöre göre uyarıcı ya da baskılayıcı olabilir, bu yüzden klasik inhibitör örnek değildir. „Glycin und Glutamat“ bir baskılayıcıyı bir uyarıcıyla karıştırır."
    },
    {
     "id": "L:physiologie-3:n1",
@@ -3517,7 +3517,7 @@ export const LESSONS = [
    },
    {
     "de": "Das Hüftgelenk hat 3 Freiheitsgrade mit 6 Bewegungsrichtungen um 3 Achsen.",
-    "tr": "Kalçanın 3 serbestlik derecesi vardır: 3 eksen etrafında 6 hareket yönü. (Anatomie I dersinde aynı şey 3 eksen / 6 serbestlik derecesi olarak sayılır.)"
+    "tr": "Kalçanın 3 serbestlik derecesi vardır: 3 eksen etrafında 6 hareket yönü."
    },
    {
     "de": "Neutral-Null laut Folie: Flexion/Extension 130–0–10, Abduktion/Adduktion 45–0–30, Außen-/Innenrotation 50–0–30.",
@@ -3966,8 +3966,8 @@ export const LESSONS = [
     "tr": "-ose = yıpranma/yeniden yapılanma süreci (fizyolojik olabilir), -itis = iltihap."
    },
    {
-    "de": "Arthrose ist ein physiologischer degenerativer Prozess, der den Abbauvorgang der Knorpelstrukturen in einem Gelenk bezeichnet.",
-    "tr": "Artroz, eklemdeki kıkırdak yapıların yıkımını anlatan fizyolojik dejeneratif bir süreçtir."
+    "de": "Arthrose ist eine degenerative Gelenkerkrankung, bei der die Knorpelstrukturen in einem Gelenk abgebaut werden.",
+    "tr": "Artroz, eklemdeki kıkırdak yapıların yıkıldığı dejeneratif bir eklem hastalığıdır (fizyolojik bir süreç değildir)."
    },
    {
     "de": "Chondrozyten haben eine Turn-over-Rate von 75–100 Jahren, daher ist die Regeneration des Knorpels limitiert und irreversibel.",
@@ -4127,7 +4127,7 @@ export const LESSONS = [
     "q": "Welche Aussage zur Arthrose ist FALSCH?",
     "o": [
      "Knorpelschäden regenerieren sich vollständig.",
-     "Arthrose ist ein physiologischer Abbauprozess.",
+     "Arthrose ist eine degenerative Gelenkerkrankung.",
      "Arthrose ist anfangs oft symptomarm bis symptomfrei.",
      "Bei aktivierter Arthrose zeigen sich -itis-Zeichen."
     ],
@@ -5663,14 +5663,14 @@ export const LESSONS = [
    },
    {
     "id": "L:trainingslehre-3:n6",
-    "q": "Welche Gruppe nennt laut Folie Einflussfaktoren körperlicher Anpassungsvorgänge?",
+    "q": "Welche Gruppe nennt Einflussfaktoren körperlicher Anpassungsvorgänge?",
     "o": [
      "Alter, Geschlecht, Trainingszustand, Belastung, Ernährung, Regeneration",
      "Objektivität, Reliabilität, Validität, Ökonomie, Normierung, Utilität",
      "Trainingseinheit, Mikrozyklus, Mesozyklus, Makrozyklus, Periodisierung",
      "Trainingsziele, Trainingsinhalte, Trainingsmethoden, Trainingsmittel"
     ],
-    "x": "Uyumu etkileyen faktörler: yaş, cinsiyet (testosteron), antrenman durumu; yükün niteliği/niceliği, beslenme, toparlanma önlemleri. Folyoda bunlar exogen/endogen diye ikiye ayrılıyor ama atama büyük ihtimalle ters (endo = iç); sınavdan önce hangi versiyonun istendiğini sor. Diğer seçenekler kalite ölçütleri, periyodizasyon ve antrenman süreci terimleridir."
+    "x": "Uyumu etkileyen faktörler: iç (endogen) faktörler yaş, cinsiyet (testosteron) ve antrenman durumu; dış (exogen) faktörler yükün niteliği/niceliği, beslenme ve toparlanma önlemleridir. (Folyoda bu atama ters yazılmıştı; doğrusu endo = iç, exo = dış.) Diğer seçenekler kalite ölçütleri, periyodizasyon ve antrenman süreci terimleridir."
    }
   ],
   "open": [
@@ -6313,8 +6313,8 @@ export const LESSONS = [
     "tr": "Quellung hamur gibidir ve iz bırakmaz (masaj yapılmaz); Schwellung (ödem) parmak/çorap izi bırakır."
    },
    {
-    "de": "Die Haut besteht aus Oberhaut (Epidermis, gefäßlos), Lederhaut (Cutis) und Unterhaut (Subcutis).",
-    "tr": "Deri üç katmandır: üst deri (epidermis, damarsız), orta katman/dermis (Lederhaut) ve deri altı (subcutis, yağ dokusu)."
+    "de": "Die Haut besteht aus Oberhaut (Epidermis, gefäßlos), Lederhaut (Dermis, Corium) und Unterhaut (Subcutis); Epidermis und Dermis zusammen heißen Cutis.",
+    "tr": "Deri üç katmandır: üst deri (epidermis, damarsız), orta katman/dermis (Lederhaut, corium) ve deri altı (subcutis, yağ dokusu). Epidermis + dermis birlikte \"Cutis\" diye adlandırılır."
    }
   ],
   "mcq": [
@@ -6411,11 +6411,11 @@ export const LESSONS = [
     "q": "Welche Hautschicht ist gefäßlos?",
     "o": [
      "Oberhaut (Epidermis)",
-     "Lederhaut (Cutis)",
+     "Lederhaut (Dermis)",
      "Unterhaut (Subcutis)",
      "Unterhautfettgewebe"
     ],
-    "x": "Epidermis damarsızdır; iğne sadece epidermise girerse kanama olmaz. Lederhaut (Cutis) ve Unterhaut (Subcutis) damar içerir."
+    "x": "Epidermis damarsızdır; iğne sadece epidermise girerse kanama olmaz. Lederhaut (Dermis) ve Unterhaut (Subcutis) damar içerir."
    },
    {
     "id": "L:kmt-2:9",
