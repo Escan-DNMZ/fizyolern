@@ -5,7 +5,7 @@
 //  • Keine Seiten-IDs im öffentlichen Code: Seiten werden per Suche gefunden – die Integration
 //    sieht nur, was in Notion ausdrücklich mit ihr geteilt wurde.
 //  • Die Content-Security-Policy in index.html erlaubt Verbindungen nur zu 'self' und api.notion.com.
-import { setPrivate, getPrivate, cleanSegments, cleanText } from './private.js';
+import { setPrivate, getPrivate, cleanSegments, cleanText, cardFront } from './private.js';
 
 const API = 'https://api.notion.com/v1';
 const NOTION_VERSION = '2022-06-28';
@@ -177,15 +177,8 @@ async function mistakeCard(rt, fach) {
   seg[0] = { ...seg[0], t: seg[0].t.replace(/^\s*(✗|½)\s*/, '') };
   const clean = (s) => s.replace(/\(\s*\d+\.\s*Tur[^)]*\)/gi, '').replace(/\s+/g, ' ').trim();
   const full = clean(seg.map((s) => s.t).join(''));
-  let q;
-  if (seg.some((s) => s.b && s.t.trim().length > 1)) {
-    q = clean(seg.map((s) => (s.b && s.t.trim().length > 1 ? ' ＿＿＿ ' : s.t)).join(''));
-  } else {
-    const parts = full.split(/\s(?:=|→)\s/);
-    q = parts.length > 1 ? parts[0] + ' = ?' : 'Hatırla: ' + full.slice(0, 60) + (full.length > 60 ? '…' : '');
-  }
   // ID wie bisher aus „full“ (nur ohne „(n. Tur …)“) – so bleibt der Lernfortschritt alter Karten erhalten
-  return { id: 'fx:' + (await sha16(full)), fach: fach || '', q: cleanText(q), seg: cleanSegments(seg) };
+  return { id: 'fx:' + (await sha16(full)), fach: fach || '', q: cardFront(seg), seg: cleanSegments(seg) };
 }
 
 // ───── Grundwortschatz-Datenbank ─────

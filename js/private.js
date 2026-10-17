@@ -38,7 +38,10 @@ export async function loadLocalDevFile() {
 
 // Notion-interne Notizen aus Fehlerkarten entfernen: „(2. Tur ✅)“, „(3. Tur ✅ 15.10)“, Status-Emojis.
 // Funktioniert auch, wenn eine Notiz über mehrere fett/normal formatierte Segmente verteilt ist.
-const NOTE_RE = /\s*\(\s*\d+\.\s*Tur[^)]*\)|\s*\((?:\s*[✅❌✓]\s*)+\)|[✅❌]/g;
+// auch „(15.10 wieder ½ → 3. Tur)“ – jede Klammer, in der „Tur“ (Wiederholungsrunde) steht
+const NOTE_RE = /\s*\([^()]*\bTur\b[^()]*\)|\s*\((?:\s*[✅❌✓]\s*)+\)|[✅❌]/g;
+// Meta-Hinweis am Kartenanfang: „(FizyoLern 17.10)“, „(14.10 Heimweg)“, „(2×)“, „(Ek bilgi)“
+const META_RE = /^\s*\((?:[^()]*\b\d{1,2}\.\d{1,2}\b[^()]*|\d+\s*×|Bonus|Ek bilgi)\)\s*/i;
 export const cleanText = (s) => String(s || '').replace(NOTE_RE, '').replace(/\s{2,}/g, ' ').trim();
 export function cleanSegments(seg) {
   if (!seg || !seg.length) return seg;
@@ -52,8 +55,28 @@ export function cleanSegments(seg) {
     pos += x.t.length;
     return { ...x, t: t.replace(/\s{2,}/g, ' ') };
   }).filter((x) => x.t.length);
-  if (out.length) { out[0].t = out[0].t.replace(/^\s+/, ''); out[out.length - 1].t = out[out.length - 1].t.replace(/\s+$/, ''); }
-  return out;
+  if (out.length) { out[0].t = out[0].t.replace(META_RE, '').replace(/^\s+/, ''); out[out.length - 1].t = out[out.length - 1].t.replace(/\s+$/, ''); }
+  return out.filter((x) => x.t.length);
+}
+
+// Vorderseite einer Notion-Fehlerkarte: fett gedruckte Teile werden zu Lücken.
+// Ohne Fettdruck: Frage bis zur ersten Trennstelle außerhalb von Klammern/Anführungszeichen („10 Körpersysteme: ?“),
+// damit die Antwort nie schon vorne steht.
+export function cardFront(seg) {
+  const s = cleanSegments(seg) || [];
+  const gap = (x) => x.b && x.t.trim().length > 1;
+  if (s.some(gap)) return cleanText(s.map((x) => (gap(x) ? ' ＿＿＿ ' : x.t)).join(''));
+  const full = cleanText(s.map((x) => x.t).join(''));
+  let depth = 0;
+  for (let i = 0; i < full.length; i++) {
+    const c = full[i];
+    if (c === '(' || c === '„') depth++;
+    else if (c === ')' || c === '“') depth = Math.max(0, depth - 1);
+    else if (!depth) {
+      for (const sep of [' = ', ' → ', ': ']) if (full.startsWith(sep, i) && i > 3) return full.slice(0, i) + (sep === ': ' ? ': ?' : ' = ?');
+    }
+  }
+  return 'Hatırla: ' + (full.length > 60 ? full.slice(0, 60) + '…' : full);
 }
 
 // Notion-✗-Liste: echte Fehler und Hausaufgaben („Ezber kartları“) getrennt

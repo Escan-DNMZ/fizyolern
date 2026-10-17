@@ -34,6 +34,15 @@ const kw = [
   ['Ansatz am Trochnter majr', 'Trochanter major', true],
   ['Na-K-Pumpe hält das Ruhepotenzial', 'Ruhepotential', true],
   ['nur der Sensor', 'Regelzentrum', false],
+  ['Echte Gelenke (Diarthrosen) haben einen Gelenkspalt', 'Diarthrose', true],   // Klammerinhalt zählt
+  ['Die Belastbarkeit wird gesteigert', 'steigern', true],                          // Wortstamm
+  ['Aus Angst bewegt sich der Mensch weniger', 'weniger Bewegung', true],           // andere Reihenfolge
+  ['T-Score ab −2,5', '−2,5', true],
+  ['Der Muskel macht Adduktion', 'Abduktion', false],                               // Gegenteil, nur 1 Buchstabe anders
+  ['Der Parasympathikus bremst', 'Sympathikus', false],
+  ['eher unspezifisch', 'spezifisch', false],
+  ['Hypotonie', 'Hypertonie', false],
+  ['Wirbelkörperbrüchen', 'Brüche', true],
 ];
 
 let fail = 0;

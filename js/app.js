@@ -3,7 +3,7 @@ import { MUSCLES, BONES, JOINTS, ALL_STRUCTURES, findStructure } from './data/an
 import { GRUNDWORTSCHATZ, BASE_VOCAB } from './data/vocab.js';
 import { OPEN } from './data/questions.js';
 import { LESSONS, FAECHER, refreshLessons } from './lessons.js';
-import { cleanSegments, cleanText } from './private.js';
+import { cleanSegments, cleanText, cardFront } from './private.js';
 import { getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, odevList, notionLink, week, todayPlan, tomorrowPlan } from './private.js';
 import { getToken, setToken, clearToken, looksLikeToken, syncFromNotion } from './notion.js';
 import { renderReport } from './report.js';
@@ -82,7 +82,7 @@ function deckCards(deck) {
     const only = deck.startsWith('fehler:') ? deck.slice(7).split(',').filter(Boolean) : null;
     // Hausaufgaben („Ezber kartları“ in Notion) sind eigene Karten, keine Fehler
     return (deck === 'odev' ? odevList() : fehlerList()).filter((f) => !only || only.includes(f.fach)).map((f) => ({
-      id: f.id, tag: f.odev ? '📌 ' + f.odev : '✗ ' + f.fach, front: cleanText(f.q),
+      id: f.id, tag: f.odev ? '📌 ' + f.odev : '✗ ' + f.fach, front: f.seg ? cardFront(f.seg) : cleanText(f.q),
       // Aus Notion: Lückentext-Segmente (fett = Antwort); aus Datei: Frage/Antwort/Türkçe
       back: f.seg
         ? `<div class="detail" style="font-size:15px">${cleanSegments(f.seg).map((x) => (x.b ? `<b style="color:var(--accent)">${esc(x.t)}</b>` : esc(x.t))).join('')}</div>`
@@ -192,11 +192,13 @@ function renderToday() {
 
   const plan = todayPlan();
   const fehlerCards = deckCards('fehler');
-  const fehlerOpen = fehlerCards.filter((c) => store.isNew(c.id) || store.isDue(c.id)).length;
+  // höchstens 20 Fehlerkarten pro Tag (wie in der Kartensitzung)
+  const fehlerOpen = Math.min(fehlerCards.filter((c) => store.isNew(c.id) || store.isDue(c.id)).length, Math.max(0, FEHLER_PER_DAY - (d.fehlerSeen || []).length));
   const odevOpen = deckCards('odev').filter((c) => store.isNew(c.id) || store.isDue(c.id)).length;
   const tasks = [
-    ...(odevOpen || deckCards('odev').length && d.cards ? [{ done: !odevOpen, label: `📌 Ödev: <b>${esc([...new Set(odevList().map((f) => f.odev))].join(', '))}</b> <span class="muted">(${odevOpen} kart)</span>`, href: '#/oturum/odev' }] : []),
-    ...(fehlerOpen || d.fehler ? [{ done: !fehlerOpen, label: `✗ Hatalarımı tekrar et <span class="muted">(${fehlerOpen} kart)</span>`, href: '#/oturum/fehler' }] : []),
+    ...(deckCards('odev').length ? [{ done: !odevOpen, label: `📌 Ödev: <b>${esc([...new Set(odevList().map((f) => f.odev))].join(', '))}</b> <span class="muted">(${odevOpen} kart)</span>`, href: '#/oturum/odev' }] : []),
+    // erledigte Aufgabe bleibt (abgehakt) stehen, statt zu verschwinden
+    ...(fehlerOpen || (d.fehlerSeen || []).length ? [{ done: !fehlerOpen, label: `✗ Hatalarımı tekrar et <span class="muted">(${fehlerOpen} kart)</span>`, href: '#/oturum/fehler' }] : []),
     ...(plan && plan.test.length && FAECHER.some((f) => plan.test.includes(f))
       ? [{ done: !!d.morning, label: `Sabah testi: <b>${esc(plan.test.join(' + '))}</b>`, href: `#/test?kat=${encodeURIComponent('Ders: ' + plan.test.join(','))}` }] : []),
     { done: !!d.wordsMorning, label: `Sabah kelimeleri (${WORDS_PER_DAY})${d.wordsMorning ? ` <span class="muted">${d.wordsMorning.r}/${d.wordsMorning.n}</span>` : ''}`, href: '#/kelime/sabah' },
@@ -568,7 +570,10 @@ const GROUP_NAMES = [
   [/rotatorenmanschette/, ['supraspinatus', 'infraspinatus', 'teres_minor', 'subscapularis']],
   [/adduktoren|\bmm\.\s*adductores\b/, ['pectineus', 'adductor_longus', 'adductor_brevis', 'adductor_magnus', 'gracilis']],
   [/tiefen? (hüft)?außenrotatoren|pelvitrochant/, ['piriformis', 'gemellus_superior', 'obturatorius_internus', 'gemellus_inferior', 'obturatorius_externus', 'quadratus_femoris']],
-  [/\bmm\.\s*glutei\b|gesäßmuskeln|glutealmuskulatur/, ['gluteus_maximus', 'gluteus_medius', 'gluteus_minimus']],
+  // „Mm. glutaei medius et minimus“, „Gluteus medius/minimus“, „Glutaei med. et min.“
+  [/glut(a)?e(i|us)\s+med(ius)?\.?\s*(et|\/|und|\+)\s*min(imus)?/, ['gluteus_medius', 'gluteus_minimus']],
+  [/\bmm\.\s*glut(a)?ei\b(?!\s+med)|gesäßmuskeln|glutealmuskulatur/, ['gluteus_maximus', 'gluteus_medius', 'gluteus_minimus']],
+  [/bauchmuskel/, ['rectus_abdominis', 'obliquus_externus', 'transversus_abdominis']],
 ];
 const LETTERS = 'a-zäöüß';
 let nameIndex = null;
@@ -666,11 +671,14 @@ function donusInfo() {
   const st = d.donus || {};
   const wrong = (d.wrong || []).length;
   const fehlerCards = deckCards('fehler:' + fs.join(',')).filter((c) => store.isNew(c.id) || store.isDue(c.id)).length;
+  const odevOpen = deckCards('odev').filter((c) => store.isNew(c.id) || store.isDue(c.id)).length;
   const lessons = readingLessons(fs);
   const kern = lessons.reduce((n, l) => n + l.kern.length, 0);
   const steps = [
-    { key: 'hatalar', icon: '❌', title: 'Bugünün hataları', sub: wrong ? `${wrong} yanlış soru (sabah testi)` : 'Bugün yanlış soru yok', min: Math.ceil(wrong * 1.5), href: '#/test?kat=' + encodeURIComponent('Hatalar: bugün'), empty: !wrong },
+    // Test „Hatalar: bugün“ fragt höchstens 30 Fragen
+    { key: 'hatalar', icon: '❌', title: 'Bugünün hataları', sub: wrong ? `Bugün yanlış yaptığın ${wrong} soru${wrong > 30 ? ' · en fazla 30 tanesi sorulur' : ''}` : 'Bugün yanlış soru yok', min: Math.ceil(Math.min(wrong, 30) * 1.5), href: '#/test?kat=' + encodeURIComponent('Hatalar: bugün'), empty: !wrong },
     { key: 'fehler', icon: '✗', title: 'Notion ✗ kartları', sub: fs.length ? `${fehlerCards} kart · ${fs.join(' + ')}` : 'Bugün ders yok', min: fehlerCards, href: '#/oturum/' + encodeURIComponent('fehler:' + fs.join(',')), empty: !fehlerCards },
+    ...(odevOpen ? [{ key: 'odev', icon: '📌', title: 'Ödev kartları', sub: `${odevOpen} kart · ${[...new Set(odevList().map((f) => f.odev))].join(', ')}`, min: Math.ceil(Math.min(odevOpen, 20) * 0.75), href: '#/oturum/odev' }] : []),
     { key: 'kelime', icon: '🔤', title: 'Dönüş kelimeleri', sub: `${WORDS_PER_DAY} kelime, başka soru tipiyle`, min: 8, href: '#/kelime/donus', done: !!d.wordsReturn },
     { key: 'notlar', icon: '📖', title: 'Bugünün ders notları', sub: lessons.length ? `${lessons.length} ders · ${kern} cümle + 5 soruluk mini test` : 'Bugünün dersi için not yok', min: lessons.length ? Math.ceil(kern * 0.75) + 6 : 0, href: '#/oku', empty: !lessons.length },
   ];
@@ -945,6 +953,7 @@ function renderCardSession([deckId]) {
   const card = session.queue[0];
   if (!card) {
     if (deckId.startsWith('fehler:')) markDonus('fehler');
+    if (deckId === 'odev') markDonus('odev');
     view.innerHTML = `
       <div class="empty"><div style="font-size:48px">🎉</div><h2>Bu deste için bugünlük bitti!</h2>
       <p>${session.done} kart tekrar edildi.</p>${session.later ? `<p class="muted">Kalan ${session.later} hata kartı yarın gelecek (günde en fazla ${FEHLER_PER_DAY}).</p>` : ''}</div>

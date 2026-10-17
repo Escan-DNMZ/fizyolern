@@ -36,12 +36,20 @@ function mk(id, cat, q, correct, pool, x, key = (v) => v) {
 // Muskel-Fragen: Ablenker zuerst aus derselben Körperregion (sonst sind sie zu leicht auszuschließen),
 // in der Erklärung steht, zu welchem Muskel jede falsche Antwort gehört
 const short = (s, n = 55) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
+// Kern einer Angabe für den Vergleich: „Fossa trochanterica (gemeinsam …)“ → „fossa trochanterica“
+const core = (v) => String(v).toLowerCase().replace(/\s*\(.*?\)/g, '').split(/[;,]/)[0].trim();
+// Zwei Angaben überschneiden sich, wenn ihr Kern gleich ist oder einer im anderen steckt –
+// dann wären zwei Optionen richtig (z. B. „Tuber ischiadicum“ / „Lateraler Rand des Tuber ischiadicum“)
+const overlap = (a, b) => { const x = core(a), y = core(b); return x === y || (x.length > 5 && y.includes(x)) || (y.length > 5 && x.includes(y)); };
 function mkMuscle(id, q, m, field, xBase, key = (v) => v) {
   const others = MUSCLES.filter((o) => o.id !== m.id);
-  const ordered = [...shuffle(others.filter((o) => o.region === m.region)), ...shuffle(others.filter((o) => o.region !== m.region))];
+  // gleiche Region zuerst; innerhalb davon Antworten ähnlicher Länge (sonst verrät die längste Option die Lösung)
+  const len = (o) => Math.abs(Math.log((String(o[field]).length + 10) / (String(m[field]).length + 10)));
+  const byLen = (list) => shuffle(list).sort((a, b) => len(a) - len(b) + (Math.random() - 0.5) * 0.3);
+  const ordered = [...byLen(others.filter((o) => o.region === m.region)), ...byLen(others.filter((o) => o.region !== m.region))];
   const picks = [];
   for (const o of ordered) {
-    if (key(o[field]) === key(m[field]) || picks.some((p) => key(p[field]) === key(o[field]))) continue;
+    if (key(o[field]) === key(m[field]) || overlap(o[field], m[field]) || picks.some((p) => key(p[field]) === key(o[field]) || overlap(p[field], o[field]))) continue;
     picks.push(o);
     if (picks.length === 3) break;
   }
@@ -92,7 +100,7 @@ export function exerciseQuestions() {
   for (const [mid, list] of Object.entries(UEBUNGEN)) {
     for (const u of list) (byEx[u.n] = byEx[u.n] || { ...u, muscles: [] }).muscles.push(mid);
   }
-  const mName = (id) => (MUSCLES.find((m) => m.id === id) || {}).la || id;
+  const mName = (id) => ((MUSCLES.find((m) => m.id === id) || {}).la || id).replace(/\s*\(.*\)$/, '');
   const moves = (id) => (UEBUNGEN[id] || []).map((u) => u.b);
   const qs = [];
   for (const ex of Object.values(byEx)) {

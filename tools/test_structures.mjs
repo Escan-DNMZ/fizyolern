@@ -21,6 +21,9 @@ const cases = [
   ['Die ischiocrurale Muskulatur', 'biceps_femoris,semitendinosus,semimembranosus'],
   ['Kräftigung der Rotatorenmanschette', 'supraspinatus,infraspinatus,teres_minor,subscapularis'],
   ['Ansatz am Trochanter major und Trochanter minor', 'trochanter_major,trochanter_minor'],
+  ['Abduktoren: Mm. glutaei medius et minimus + M. tensor fasciae latae', 'gluteus_medius,gluteus_minimus,tensor_fasciae_latae'],
+  ['Trochanter major → Ansatz Gluteus medius/minimus', 'trochanter_major,gluteus_medius,gluteus_minimus'],
+  ['Crista iliaca → Ansatz der Bauchmuskeln', 'crista_iliaca,rectus_abdominis,obliquus_externus,transversus_abdominis'],
   ['Heute lernen wir Vokabeln', ''],
 ];
 let fail = 0;
