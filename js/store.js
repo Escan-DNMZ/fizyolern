@@ -6,6 +6,7 @@ const DEFAULT = () => ({
   quiz: {},         // frageId -> { r, w, last }
   open: {},         // frageId -> { score, last }
   days: {},         // 'YYYY-MM-DD' -> { cards, quiz, quizRight, open, lesson, lesson2, muscleId, boneId }
+  start: null,      // erster Nutzungstag 'YYYY-MM-DD' (für den Bericht)
   learned: {},      // strukturId -> datum
   customVocab: [],  // eigene Vokabeln
   words: {},        // Grundwortschatz-Leitner: wortId -> { box, due, r, w, last, known }
@@ -52,9 +53,28 @@ export function day(date = today()) {
   return state.days[date];
 }
 
+// Ein Tag zählt als aktiv, wenn irgendeine Aktivität stattgefunden hat
+export const isActive = (d) => !!(d && (d.cards > 0 || d.quiz > 0 || d.open > 0 || d.lesson || d.lesson2 || d.wordsMorning || d.wordsReturn));
+
+// Erster Nutzungstag (YYYY-MM-DD). Ältere Daten: frühester Tag mit Aktivität; danach fest gespeichert.
+export function startDate() {
+  if (!state.start) {
+    const used = Object.keys(state.days).filter((k) => isActive(state.days[k])).sort();
+    if (!used[0]) return today(); // noch nichts gelernt → erst der erste aktive Tag wird gespeichert
+    state.start = used[0];
+    save();
+  }
+  return state.start;
+}
+
+// Wievielter Tag seit dem ersten Nutzungstag (erster Tag = 1)
+export function dayNumber(date = today()) {
+  const [a, b] = [startDate(), date].map((x) => Date.UTC(+x.slice(0, 4), +x.slice(5, 7) - 1, +x.slice(8, 10)));
+  return Math.round((b - a) / 86400000) + 1;
+}
+
 export function streak() {
-  // Ein Tag zählt, wenn irgendeine Aktivität stattgefunden hat
-  const active = (d) => d && (d.cards > 0 || d.quiz > 0 || d.open > 0 || d.lesson || d.lesson2 || d.wordsMorning || d.wordsReturn);
+  const active = isActive;
   let n = 0;
   let off = active(state.days[today()]) ? 0 : -1;
   while (active(state.days[today(off)])) { n++; off--; }

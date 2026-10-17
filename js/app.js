@@ -4,7 +4,7 @@ import { GRUNDWORTSCHATZ, BASE_VOCAB } from './data/vocab.js';
 import { OPEN } from './data/questions.js';
 import { LESSONS, FAECHER, refreshLessons } from './lessons.js';
 import { cleanSegments, cleanText } from './private.js';
-import { getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, notionLink, week, todayPlan, tomorrowPlan } from './private.js';
+import { getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, odevList, notionLink, week, todayPlan, tomorrowPlan } from './private.js';
 import { getToken, setToken, clearToken, looksLikeToken, syncFromNotion } from './notion.js';
 import { renderReport } from './report.js';
 import { containsFuzzy } from './fuzzy.js';
@@ -78,10 +78,11 @@ function deckCards(deck) {
       back: `<div class="big">${esc(rev ? v.de : v.tr)}</div>${v.ex ? `<div class="sub">„${esc(v.ex)}“</div>` : ''}`,
     }));
   }
-  if (deck === 'fehler' || deck.startsWith('fehler:')) {
+  if (deck === 'fehler' || deck.startsWith('fehler:') || deck === 'odev') {
     const only = deck.startsWith('fehler:') ? deck.slice(7).split(',').filter(Boolean) : null;
-    return fehlerList().filter((f) => !only || only.includes(f.fach)).map((f) => ({
-      id: f.id, tag: '✗ ' + f.fach, front: cleanText(f.q),
+    // Hausaufgaben („Ezber kartları“ in Notion) sind eigene Karten, keine Fehler
+    return (deck === 'odev' ? odevList() : fehlerList()).filter((f) => !only || only.includes(f.fach)).map((f) => ({
+      id: f.id, tag: f.odev ? '📌 ' + f.odev : '✗ ' + f.fach, front: cleanText(f.q),
       // Aus Notion: Lückentext-Segmente (fett = Antwort); aus Datei: Frage/Antwort/Türkçe
       back: f.seg
         ? `<div class="detail" style="font-size:15px">${cleanSegments(f.seg).map((x) => (x.b ? `<b style="color:var(--accent)">${esc(x.t)}</b>` : esc(x.t))).join('')}</div>`
@@ -119,6 +120,7 @@ function deckCards(deck) {
 }
 
 const DECKS = () => [
+  ...(odevList().length ? [{ id: 'odev', name: '📌 Ödevlerim', sub: 'Ezberlemem gerekenler: ' + [...new Set(odevList().map((f) => f.odev))].join(', ') }] : []),
   ...(fehlerList().length ? [{ id: 'fehler', name: '✗ Hatalarım', sub: 'Notion testlerinde yanlış yaptıkların (öncelikli)' }] : []),
   ...FAECHER.map((f) => ({ id: 'ders:' + f, name: 'Ders: ' + f, sub: 'Ders notlarındaki terimler' })),
   { id: 'vocab', name: 'Tüm kelimeler', sub: `${allVocab().length} kelime` },
@@ -191,7 +193,9 @@ function renderToday() {
   const plan = todayPlan();
   const fehlerCards = deckCards('fehler');
   const fehlerOpen = fehlerCards.filter((c) => store.isNew(c.id) || store.isDue(c.id)).length;
+  const odevOpen = deckCards('odev').filter((c) => store.isNew(c.id) || store.isDue(c.id)).length;
   const tasks = [
+    ...(odevOpen || deckCards('odev').length && d.cards ? [{ done: !odevOpen, label: `📌 Ödev: <b>${esc([...new Set(odevList().map((f) => f.odev))].join(', '))}</b> <span class="muted">(${odevOpen} kart)</span>`, href: '#/oturum/odev' }] : []),
     ...(fehlerOpen || d.fehler ? [{ done: !fehlerOpen, label: `✗ Hatalarımı tekrar et <span class="muted">(${fehlerOpen} kart)</span>`, href: '#/oturum/fehler' }] : []),
     ...(plan && plan.test.length && FAECHER.some((f) => plan.test.includes(f))
       ? [{ done: !!d.morning, label: `Sabah testi: <b>${esc(plan.test.join(' + '))}</b>`, href: `#/test?kat=${encodeURIComponent('Ders: ' + plan.test.join(','))}` }] : []),
@@ -920,7 +924,7 @@ const FEHLER_PER_DAY = 20;
 function renderCardSession([deckId]) {
   if (!session || session.deck !== deckId) {
     const cards = deckCards(deckId);
-    let queue = store.buildSession(cards, { noNewLimit: deckId.startsWith('fehler') });
+    let queue = store.buildSession(cards, { noNewLimit: deckId.startsWith('fehler') || deckId === 'odev' });
     let later = 0;
     if (deckId.startsWith('fehler')) {
       // Höchstens 20 Fehlerkarten pro Tag: heutige Fächer zuerst, dann fällige, dann die am häufigsten vergessenen
@@ -953,7 +957,7 @@ function renderCardSession([deckId]) {
   const isNewCard = c.reps === 0;
   const ivl = (r) => store.nextInterval(c, r).label;
   view.innerHTML = `
-    <div class="row"><span class="muted small">Kalan: ${session.queue.length}</span><span class="spacer"></span>${deckId.startsWith('fehler') ? '<span class="badge bad">✗ hata</span>' : isNewCard ? '<span class="badge good">yeni</span>' : ''}</div>
+    <div class="row"><span class="muted small">Kalan: ${session.queue.length}</span><span class="spacer"></span>${deckId.startsWith('fehler') ? '<span class="badge bad">✗ hata</span>' : deckId === 'odev' ? '<span class="badge warn">📌 ödev</span>' : isNewCard ? '<span class="badge good">yeni</span>' : ''}</div>
     <div class="flash ${session.flipped ? 'flipped' : ''}" id="flash">
       <div class="flash-inner">
         <div class="face front"><span class="badge tag">${esc(card.tag)}</span><div class="big">${escGap(card.front)}</div>${card.frontSub ? `<div class="sub">${esc(card.frontSub)}</div>` : ''}<div class="sub" style="margin-top:24px">Çevirmek için dokun</div></div>
@@ -1300,7 +1304,7 @@ function renderSettings() {
     </div>
     <div class="section-title">Özel veriler</div>
     <p class="muted small" style="padding:0 4px">Haftalık program, hata listen ve Notion linklerin herkese açık uygulamada yok. <b>fizyolern-ozel.json</b> dosyasını buradan yükle; sadece bu telefonda saklanır.</p>
-    <div class="card small" style="margin-top:0">${getPrivate() ? `✅ Yüklü: KW ${esc(week()?.kw ?? '–')} · ${fehlerList().length} hata kartı` : '⚠️ Henüz yüklenmedi'}</div>
+    <div class="card small" style="margin-top:0">${getPrivate() ? `✅ Yüklü: KW ${esc(week()?.kw ?? '–')} · ${fehlerList().length} hata kartı${odevList().length ? ` · ${odevList().length} ödev kartı` : ''}` : '⚠️ Henüz yüklenmedi'}</div>
     <div class="grid2">
       <label class="btn ghost">Özel verileri yükle<input type="file" id="privFile" accept="application/json,.json" hidden></label>
       <button class="btn plain" id="privClear" ${getPrivate() ? '' : 'disabled'}>Kaldır</button>

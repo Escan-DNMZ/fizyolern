@@ -56,7 +56,9 @@ export function cleanSegments(seg) {
   return out;
 }
 
-export const fehlerList = () => (data && data.fehler) || [];
+// Notion-✗-Liste: echte Fehler und Hausaufgaben („Ezber kartları“) getrennt
+export const fehlerList = () => ((data && data.fehler) || []).filter((f) => !f.odev);
+export const odevList = () => ((data && data.fehler) || []).filter((f) => f.odev);
 export const notionLink = (lessonId) => data && data.notion && data.notion[lessonId];
 const isoDate = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 

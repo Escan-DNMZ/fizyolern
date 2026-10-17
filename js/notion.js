@@ -103,6 +103,7 @@ export async function parsePlanPage(blocks, faecher, loadChildren) {
   const fehler = [];
   let fach = null;
   let inMistakes = false;
+  let odev = null; // „✗ Ezber kartları – …“ = Hausaufgabe zum Auswendiglernen, keine Fehler
 
   for (const b of blocks) {
     const type = b.type;
@@ -139,14 +140,25 @@ export async function parsePlanPage(blocks, faecher, loadChildren) {
     }
     if (type.startsWith('heading')) {
       inMistakes = false;
+      odev = null;
       if (type === 'heading_3') fach = faecherIn(text, faecher)[0] || text.split(/[(·]/)[0].trim();
     }
-    if (type === 'paragraph' && /^\s*✗/.test(text)) inMistakes = true;
+    if (type === 'paragraph' && /^\s*✗/.test(text)) {
+      inMistakes = true;
+      odev = /ezber|ödev|hausaufgabe|auswendig/i.test(text) ? odevTitle(text) : null;
+    }
     if (type === 'bulleted_list_item' && inMistakes && /^\s*(✗|½)/.test(text)) {
-      fehler.push(await mistakeCard(rt, fach));
+      const card = await mistakeCard(rt, fach);
+      fehler.push(odev ? { ...card, odev } : card);
     }
   }
   return { week: pickWeek(weeks), weeks: weeks.filter((w) => w.from && Object.keys(w.days).length), fehler };
+}
+
+// „✗ Ezber kartları – Becken & Hüft-ROM (Cumartesi 17.10 odak, …): · @Seite“ → „Becken & Hüft-ROM“
+export function odevTitle(text) {
+  const t = text.replace(/^\s*✗\s*/, '').replace(/\s*[(:].*$/s, '').replace(/^(ezber\s*kartları|ödev(ler)?|hausaufgabe)\s*[–—-]?\s*/i, '').trim();
+  return t || 'Ödev';
 }
 
 // Woche, die das Datum enthält; sonst die nächste zukünftige; sonst die letzte
