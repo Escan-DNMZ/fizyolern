@@ -8,6 +8,12 @@ The subject matter is in **German and Latin**, as it is taught and examined at s
 
 > The app's interface language is Turkish. This README explains in English what it does and how to use it.
 
+<p align="center">
+  <img src="docs/screenshots/today.png" width="230" alt="Today screen with the daily plan">
+  <img src="docs/screenshots/test.png" width="230" alt="Test question with explanation and 3D button">
+  <img src="docs/screenshots/3d-muscle-focus.png" width="230" alt="3D focus mode: origin and insertion of a muscle">
+</p>
+
 ---
 
 ## Why it is useful
@@ -64,6 +70,10 @@ FizyoLern helps with the parts that are hardest to do alone:
 - About 100 essay-style questions, as in the written exams.
 - You type your answer in German. The app checks it for the required key terms, in any order and with tolerance for word forms (*gesteigert* counts for *steigern*). It then shows the model answer, and you rate yourself.
 
+<p align="center">
+  <img src="docs/screenshots/open-question.png" width="230" alt="Open question: key terms found and missing, model answer">
+</p>
+
 ### Flash cards (*Kartlar*)
 - Spaced repetition with learning steps: *Again* returns in 1 minute and *Hard* in 10 minutes. After that *Hard* < *Good* < *Easy* always.
 - Decks:
@@ -91,6 +101,11 @@ FizyoLern helps with the parts that are hardest to do alone:
 - **Joint axes:** transverse, sagittal and longitudinal axes drawn through a joint, with the movement around each one.
 - **Step-by-step viewer:** a question that mentions several structures (e.g. *Wirbelsäule* → cervical, thoracic, lumbar spine and sacrum) opens them one after another, then all together in different colours.
 
+<p align="center">
+  <img src="docs/screenshots/3d-step-by-step.png" width="230" alt="Step-by-step viewer: the spine in four colours">
+  <img src="docs/screenshots/3d-joint-axes.png" width="230" alt="Hip joint with its three movement axes">
+</p>
+
 ### Lesson notes (*Ders notları*)
 - 21 lessons across Anatomy, Physiology, PT basics, PT assessment, orthopaedics/surgery, training theory, massage, hygiene and psychology.
 - Each lesson has key sentences (German + Turkish), a test, open questions and vocabulary, plus a link back to the original Notion page.
@@ -113,6 +128,11 @@ Much of the first year is pure memorisation homework: *"learn the pelvic landmar
    - The daily report has its own homework section ("Becken & Hüft-ROM: 29 cards · 12 learned · 9 in progress · 8 not seen yet"), so homework is never confused with mistakes.
    - Exams and homework deadlines from the Notion page *Sınav & Ödev Takibi* show up as a countdown.
    - Subjects with an exam in the next 7 days get priority in tests, cards and the way-home review.
+
+<p align="center">
+  <img src="docs/screenshots/homework-card.png" width="230" alt="Homework card: bold parts are the answer, with a 3D button">
+  <img src="docs/screenshots/3d-find-the-point.png" width="230" alt="Find-the-point drill on the pelvis">
+</p>
 
 Mistakes from tests at school work the same way: write a line under a `✗ Test 14.10 …` heading with the correct answer in bold. It becomes a mistake card, and at most 20 come per day, today's subjects first.
 
