@@ -549,6 +549,138 @@ export const LESSONS = [
      "2 BA / 2 FG"
     ],
     "x": "derste anlatılana göre 1 eksen = 2 FG, çünkü her eksende iki yöne hareket edilir (Fleks/Ekst). '1 BA / 1 FG' genel anatomideki sayımdır; bu derste BA/FG sayımı geçerlidir."
+   },
+   {
+    "id": "L:anatomie-i-1:n5",
+    "q": "Welche Aufzählung nennt die Bestandteile eines echten Gelenks vollständig?",
+    "o": [
+     "Gelenkpartner, Gelenkknorpel, Gelenkspalt mit Synovia, Gelenkkapsel, Bänder, ggf. Menisken/Disci/Bursae",
+     "Gelenkpartner, Gelenkknorpel, Gelenkkapsel, Sehnen, Muskeln, ggf. Menisken/Disci/Bursae",
+     "Gelenkpartner, Bindegewebe, Gelenkspalt ohne Synovia, Gelenkkapsel, Bänder, ggf. Menisken",
+     "Gelenkpartner, Gelenkknorpel, Gelenkspalt mit Synovia, Muskeln, Sehnen, ggf. Faszien/Bursae"
+    ],
+    "x": "„Peter Kocht Suppe Kalt Bitte“: Partner, Knorpel, Spalt (sinovyalı), Kapsel, Bänder; gerekirse menisküs, disk, bursa. Kas ve tendon eklemin bileşeni değildir; sinovyasız aralık ve kapsül/bağ eksik listeler yanlıştır."
+   },
+   {
+    "id": "L:anatomie-i-1:n6",
+    "q": "Was bedeutet „Crista“ als Knochen-Fachbegriff?",
+    "o": [
+     "Kamm, Leiste",
+     "Grube, Vertiefung",
+     "Dorn, Stachel",
+     "Loch, Öffnung"
+    ],
+    "x": "Crista = kemik sırtı/ibik (Crista iliaca = Darmbeinkamm). Grube = Fossa, Dorn/Stachel = Spina, Loch/Öffnung = Foramen."
+   },
+   {
+    "id": "L:anatomie-i-1:n7",
+    "q": "Welche Zuordnung der Knochen-Fachbegriffe ist richtig?",
+    "o": [
+     "Spina = Dorn, Processus = Fortsatz, Fossa = Grube",
+     "Spina = Fortsatz, Processus = Dorn, Fossa = Grube",
+     "Spina = Dorn, Processus = Kamm, Fossa = Loch",
+     "Spina = Grube, Processus = Fortsatz, Fossa = Dorn"
+    ],
+    "x": "Spina = diken/sivri çıkıntı (SIAS), Processus = çıkıntı (Processus spinosus), Fossa = çukur (Fossa iliaca). Kamm = Crista, Loch = Foramen; diğer seçeneklerde terimler yer değiştirmiş."
+   },
+   {
+    "id": "L:anatomie-i-1:n8",
+    "q": "Welche Muskeln setzen laut Unterricht an der Crista iliaca (Darmbeinkamm) an?",
+    "o": [
+     "Die Bauchmuskeln (Obliqui)",
+     "Die ischiocruralen Muskeln",
+     "Der M. sartorius und der TFL",
+     "Die Mm. glutaei medius et minimus"
+    ],
+    "x": "Crista iliaca'ya karın kasları (oblikler) yapışır. Hamstringler Tuber ischiadicum'dan, Sartorius ve TFL SIAS'tan çıkar; Gluteus medius/minimus Trochanter major'a yapışır."
+   },
+   {
+    "id": "L:anatomie-i-1:n9",
+    "q": "Welche Muskeln entspringen an der Spina iliaca anterior superior (SIAS)?",
+    "o": [
+     "M. sartorius und M. tensor fasciae latae",
+     "M. rectus femoris und M. iliopsoas",
+     "M. gluteus medius und M. gluteus minimus",
+     "M. semitendinosus und M. biceps femoris"
+    ],
+    "x": "SIAS'tan Sartorius ve TFL çıkar. Rectus femoris SIAI'den çıkar, iliopsoas Trochanter minor'a yapışır; gluteus medius/minimus Trochanter major'a yapışır; hamstringler Tuber ischiadicum'dan çıkar."
+   },
+   {
+    "id": "L:anatomie-i-1:n10",
+    "q": "Welche Strukturen entspringen an der Spina iliaca anterior inferior (SIAI)?",
+    "o": [
+     "M. rectus femoris und Lig. iliofemorale",
+     "M. sartorius und Lig. ischiofemorale",
+     "M. gemellus superior und Lig. pubofemorale",
+     "M. pectineus und Lig. capitis femoris"
+    ],
+    "x": "SIAI'den Rectus femoris ve Lig. iliofemorale çıkar. Sartorius SIAS'tan, Gemellus superior Spina ischiadica'dan çıkar; diğer bağlar SIAI'den başlamaz."
+   },
+   {
+    "id": "L:anatomie-i-1:n11",
+    "q": "Was entspringt am Tuber ischiadicum (Sitzbeinhöcker)?",
+    "o": [
+     "Die ischiocrurale Muskulatur",
+     "Der M. gemellus superior",
+     "Der M. tensor fasciae latae",
+     "Der M. iliopsoas"
+    ],
+    "x": "Sitzbeinhöcker'den hamstringler (Biceps femoris caput longum, Semitendinosus, Semimembranosus) çıkar. Gemellus superior Spina ischiadica'dan, TFL SIAS'tan çıkar; iliopsoas Trochanter minor'a yapışır."
+   },
+   {
+    "id": "L:anatomie-i-1:n12",
+    "q": "Welche Zuordnung Knochenpunkt → Struktur ist richtig?",
+    "o": [
+     "Spina ischiadica → M. gemellus superior",
+     "Trochanter minor → M. gluteus medius",
+     "Crista iliaca → M. rectus femoris",
+     "Tuber ischiadicum → M. sartorius"
+    ],
+    "x": "Spina ischiadica (Sitzbeinstachel) Gemellus superior'un çıkış yeridir. Trochanter minor'a iliopsoas yapışır (gluteus medius Trochanter major'a), Rectus femoris SIAI'den, Sartorius SIAS'tan çıkar."
+   },
+   {
+    "id": "L:anatomie-i-1:n13",
+    "q": "Wodurch ist das Foramen obturatum verschlossen?",
+    "o": [
+     "Durch die Membrana obturatoria",
+     "Durch die Symphysis pubica",
+     "Durch das Lig. iliofemorale",
+     "Durch die Facies lunata"
+    ],
+    "x": "Foramen obturatum kalça kemiğindeki en büyük deliktir ve Membrana obturatoria ile kapanır. Symphysis pubica iki pubisi birleştiren eklemdir, Lig. iliofemorale kapsül bağıdır, Facies lunata asetabulumdaki yük taşıyan yüzeydir."
+   },
+   {
+    "id": "L:anatomie-i-1:n14",
+    "q": "Welche Aussage zum Becken ist richtig?",
+    "o": [
+     "Die Facies auricularis bildet mit dem Os sacrum das ISG",
+     "Die Symphysis pubica besteht aus hyalinem Knorpel",
+     "Die Fossa acetabuli ist die tragende Gelenkfläche",
+     "Das Foramen obturatum liegt im Os sacrum"
+    ],
+    "x": "Facies auricularis kulak şeklinde eklem yüzeyidir ve sakrumla ISG'yi oluşturur. Symphyse lifli kıkırdaktır (Faserknorpel), yük taşıyan yüzey Facies lunata'dır (Fossa acetabuli yük taşımaz), Foramen obturatum kalça kemiğindedir."
+   },
+   {
+    "id": "L:anatomie-i-1:n15",
+    "q": "Welche fünf Punkte palpiert man laut Unterricht am Becken?",
+    "o": [
+     "Crista iliaca, SIAS, SIPS, Tuber ischiadicum, Symphyse",
+     "Crista iliaca, SIAS, Promontorium, Fossa iliaca, Symphyse",
+     "Linea arcuata, SIAS, SIPS, Tuber ischiadicum, Acetabulum",
+     "Crista iliaca, Facies lunata, SIPS, Foramen obturatum, Symphyse"
+    ],
+    "x": "Palpasyon noktaları: Crista iliaca, SIAS, SIPS, Tuber ischiadicum, Symphyse. Promontorium, Fossa iliaca, Linea arcuata, Acetabulum ve Facies lunata pelvisin içinde/derinde kalır, dışarıdan palpe edilemez."
+   },
+   {
+    "id": "L:anatomie-i-1:n16",
+    "q": "Woraus besteht das Becken (Pelvis)?",
+    "o": [
+     "2 × Os coxae + Os sacrum (+ Os coccygis)",
+     "Os ilium + Os ischii + Os pubis",
+     "2 × Os coxae + 2 × Femur",
+     "1 × Os coxae + Os sacrum + Lendenwirbel"
+    ],
+    "x": "Pelvis = iki kalça kemiği (Os coxae) + sakrum (+ koksiks). Ilium + Ischium + Pubis tek bir Os coxae'yi oluşturur, pelvisin tamamını değil; femur ve bel omurları pelvise ait değildir."
    }
   ],
   "open": [
@@ -585,6 +717,19 @@ export const LESSONS = [
      "Vorsprung|Knochenvorsprung",
      "nicht Teil",
      "Muskelursprung|Ursprung"
+    ]
+   },
+   {
+    "q": "Nennen Sie die Bestandteile eines echten Gelenks (Diarthrose) und die Funktion des Gelenkknorpels.",
+    "a": "Ein echtes Gelenk besteht aus den Gelenkpartnern, dem Gelenkknorpel, dem Gelenkspalt mit Synovia, der Gelenkkapsel und den Bändern. Gegebenenfalls kommen Menisken, Disci und Bursae hinzu. Der Gelenkknorpel ist Stoßdämpfer und Druckverteiler und schützt den Knochen vor Abnutzung. Er hat keine Blutgefäße und wird durch Bewegung über die Synovia ernährt.",
+    "kw": [
+     "Gelenkpartner",
+     "Gelenkknorpel|Knorpel",
+     "Gelenkspalt",
+     "Synovia",
+     "Gelenkkapsel|Kapsel",
+     "Bänder",
+     "Menisken|Bursae"
     ]
    }
   ],
@@ -940,6 +1085,18 @@ export const LESSONS = [
      "Muskelaufbau",
      "Hämoglobin"
     ]
+   },
+   {
+    "q": "Nennen Sie die vier Fragen des Denkankers und wenden Sie sie auf das schnelle Aufstehen aus dem Bett an.",
+    "a": "Der Denkanker fragt: Was wird gemessen? Wie wird es weitergeleitet? Wer oder was reagiert? Was ändert sich funktionell? Beim schnellen Aufstehen sinkt der Blutdruck; Barorezeptoren messen den Abfall. Die Information wird über Nerven zum Gehirn weitergeleitet. Das Herz schlägt schneller und die Gefäße verengen sich. Funktionell normalisiert sich der Blutdruck, der kurze Schwindel verschwindet.",
+    "kw": [
+     "gemessen",
+     "weitergeleitet",
+     "reagiert",
+     "funktionell",
+     "Barorezeptoren|Blutdruck",
+     "Nerven|Nerv"
+    ]
    }
   ],
   "vocab": [
@@ -1258,6 +1415,28 @@ export const LESSONS = [
      "Ruhepotenzial wird stabiler, weil K⁺ nicht mehr ausströmt"
     ],
     "x": "ATP olmadan Na⁺/K⁺ pompası çalışamaz; iyon farkı zamanla eşitlenir, dinlenme potansiyeli ve uyarılabilirlik kaybolur. Difüzyon ve osmoz pasif olduğu için ATP'ye bağlı değildir."
+   },
+   {
+    "id": "L:physiologie-2:n5",
+    "q": "Welches Merkmal haben Pflanzenzellen laut Folie zusätzlich?",
+    "o": [
+     "Zellwand und Chloroplasten (Fotosynthese)",
+     "Kein Zellkern, wie bei Bakterien",
+     "Besonders viele Mitochondrien",
+     "Mikrovilli zur Oberflächenvergrößerung"
+    ],
+    "x": "Folyoya göre 3 hücre türü: prokaryot (çekirdeksiz, bakteri), ökaryot (çekirdekli), bitki hücresi (ek olarak hücre duvarı + kloroplast, fotosentez). Çekirdeksizlik prokaryotlara aittir; mitokondri ve mikrovilli bitki hücresinin ayırt edici özelliği değildir."
+   },
+   {
+    "id": "L:physiologie-2:n6",
+    "q": "Wofür nutzt die Zelle laut Folie die Energie aus ATP?",
+    "o": [
+     "Muskelarbeit, aktiver Transport, Nervenleitung, Aufbau neuer Stoffe",
+     "Einfache Diffusion, Osmose, Nervenleitung, Aufbau neuer Stoffe",
+     "Muskelarbeit, erleichterte Diffusion, Osmose, Fotosynthese",
+     "Aktiver Transport, einfache Diffusion, Osmose, Zellteilung"
+    ],
+    "x": "ATP enerjisi: kas çalışması, aktif taşıma, sinir iletimi, yeni madde yapımı. Basit/kolaylaştırılmış difüzyon ve osmoz pasif taşımadır, ATP gerektirmez; bu yüzden bunları içeren seçenekler yanlıştır."
    }
   ],
   "open": [
@@ -1612,6 +1791,50 @@ export const LESSONS = [
      "K⁺-Kanäle schließen, die Zelle wird erregt"
     ],
     "x": "Baskılayıcı sinapsta Cl⁻ kanalları açılır, Cl⁻ içeri girer ve zar hiperpolarize olur; hücre daha zor uyarılır. Na⁺ girişi uyarıcı sinapsa, Ca²⁺ girişi presinapstaki salınıma aittir."
+   },
+   {
+    "id": "L:physiologie-3:n5",
+    "q": "Wie ist eine chemische Synapse aufgebaut (von der sendenden zur empfangenden Zelle)?",
+    "o": [
+     "Präsynapse – synaptischer Spalt – Postsynapse",
+     "Postsynapse – synaptischer Spalt – Präsynapse",
+     "Präsynapse – Ranvier-Schnürring – Postsynapse",
+     "Dendrit – synaptischer Spalt – Myelinscheide"
+    ],
+    "x": "Sinaps: Präsynapse (gönderen hücrenin uç düğmesi, nörotransmitter kesecikleri) → sinaptik boşluk → Postsynapse (reseptörlü alıcı zar). Ters sıra yanlıştır; Ranvier boğumu ve miyelin kılıfı aksona aittir, sinapsa değil."
+   },
+   {
+    "id": "L:physiologie-3:n6",
+    "q": "Wo befinden sich die Rezeptoren für die Neurotransmitter?",
+    "o": [
+     "In der Membran der Postsynapse",
+     "In den Vesikeln der Präsynapse",
+     "Frei schwimmend im synaptischen Spalt",
+     "In der Myelinscheide des Axons"
+    ],
+    "x": "Reseptörler alıcı hücrenin zarında, yani Postsynapse'tadır. Präsynapse'taki keseciklerde nörotransmitter depolanır; sinaptik boşluk sadece aradaki küçük alandır; miyelin kılıfı yalıtım yapar."
+   },
+   {
+    "id": "L:physiologie-3:n7",
+    "q": "Was ist ein Aktionspotenzial laut Folie?",
+    "o": [
+     "Ein kurzer Ionen-Stromstoß als Startsignal",
+     "Ein Dauerstrom entlang des ganzen Axons",
+     "Die Kontraktion der Muskelfaser selbst",
+     "Die Ruhespannung von etwa −70 mV"
+    ],
+    "x": "AP çok kısa, kontrollü bir iyon akımıdır: 'Jetzt geht es los!' sinyali. Sürekli akım değildir, kasılmanın kendisi değildir; −70 mV dinlenme potansiyelidir."
+   },
+   {
+    "id": "L:physiologie-3:n8",
+    "q": "Warum ist die Erregungsleitung bei Multipler Sklerose gestört?",
+    "o": [
+     "Das Myelin ist geschädigt, die Leitung wird langsam",
+     "Die Na⁺/K⁺-Pumpe arbeitet ohne ATP doppelt so schnell",
+     "Die Axone werden dicker und leiten dadurch schlechter",
+     "Die Synapsen schütten zu viel GABA in den Spalt aus"
+    ],
+    "x": "MS'te miyelin hasar görür → saltatorik iletim bozulur, iletim yavaşlar/bozulur. Kalın akson aslında daha hızlı iletir; pompa ATP'siz çalışamaz; GABA fazlalığı notta MS ile ilişkilendirilmez."
    }
   ],
   "open": [
@@ -1766,6 +1989,218 @@ export const LESSONS = [
    }
   ],
   "nh": "e923ccc0675ccb3d"
+ },
+ {
+  "id": "physiologie-4-muskel",
+  "fach": "Physiologie",
+  "title": "Modul 4 Muskelphysiologie: Muskelgewebe und 3 Muskeltypen",
+  "kern": [
+   {
+    "de": "Muskelgewebe ist ein spezialisiertes Gewebe, das sich zusammenziehen (kontrahieren) kann; dadurch entstehen Bewegung, Kraft und Transport im Körper.",
+    "tr": "Kas dokusu kasılabilen özel bir dokudur; kasılma vücutta hareket, kuvvet ve taşıma sağlar."
+   },
+   {
+    "de": "Das Prinzip lautet: Reiz → Kontraktion → Kraft/Bewegung; der Reiz ist das Aktionspotenzial, das über die Synapse (Acetylcholin) zum Muskel kommt.",
+    "tr": "İlke: uyaran → kasılma → kuvvet/hareket. Uyaran, sinapstan (asetilkolin) kasa gelen aksiyon potansiyelidir."
+   },
+   {
+    "de": "Skelettmuskulatur ist quergestreift, hat lange Fasern mit mehreren Zellkernen, ist an Knochen befestigt und willkürlich steuerbar; sie sorgt für Bewegung, Haltung & Stabilität und Wärmeproduktion.",
+    "tr": "İskelet kası çizgili, uzun ve çok çekirdekli liflerden oluşur, kemiğe yapışır ve istemlidir; hareket, duruş/stabilite ve ısı üretimi sağlar (üşüyünce titreme)."
+   },
+   {
+    "de": "Herzmuskulatur ist quergestreift, verzweigt und hat einen Zellkern; sie arbeitet unwillkürlich, rhythmisch und automatisch, ermüdet nicht und hat eigene Schrittmacherzellen.",
+    "tr": "Kalp kası çizgili, dallı ve tek çekirdeklidir; istemsiz, ritmik ve otomatik çalışır, yorulmaz, kendi pil hücreleri (Schrittmacherzellen) vardır; sadece kalpte bulunur."
+   },
+   {
+    "de": "Glatte Muskulatur ist nicht quergestreift, spindelförmig, hat einen Zellkern und kleidet die Wand innerer Organe aus, z. B. Darm, Blutgefäße, Gebärmutter und Bronchien.",
+    "tr": "Düz kas çizgisiz, iğ şeklinde ve tek çekirdeklidir; iç organların duvarını kaplar (bağırsak, damarlar, rahim, bronşlar). Yavaş ama çok dayanıklıdır, gerimi uzun süre tutar."
+   },
+   {
+    "de": "Eselsbrücke: Nur der Skelettmuskel ist willkürlich und hat mehrere Kerne, nur der glatte Muskel ist nicht gestreift, nur der Herzmuskel ist verzweigt.",
+    "tr": "Kanca: Tek istemli = iskelet (çok çekirdek) · tek çizgisiz = düz · tek dallı = kalp."
+   }
+  ],
+  "mcq": [
+   {
+    "id": "L:physiologie-4-muskel:0",
+    "q": "Welche Muskulatur ist willkürlich steuerbar?",
+    "o": [
+     "Skelettmuskulatur",
+     "Herzmuskulatur",
+     "Glatte Muskulatur",
+     "Gefäßmuskulatur"
+    ],
+    "x": "Sadece iskelet kası sinir sistemiyle istemli kontrol edilir. Kalp kası ve düz kas (damar kası da düz kastır) istemsizdir."
+   },
+   {
+    "id": "L:physiologie-4-muskel:1",
+    "q": "Welche drei Funktionen hat die Skelettmuskulatur laut Folie?",
+    "o": [
+     "Bewegung, Haltung & Stabilität, Wärmeproduktion",
+     "Bewegung, Blut pumpen, Wärmeproduktion",
+     "Haltung & Stabilität, Regulation des Gefäßdurchmessers, Bewegung",
+     "Bewegung von Hohlorganen, Haltung, Wärmeproduktion"
+    ],
+    "x": "İskelet kası: hareket, duruş ve stabilite, ısı üretimi. Kan pompalamak kalp kasının, damar çapını düzenlemek ve içi boş organları hareket ettirmek düz kasın görevidir."
+   },
+   {
+    "id": "L:physiologie-4-muskel:2",
+    "q": "Welche Muskulatur ist NICHT quergestreift?",
+    "o": [
+     "Glatte Muskulatur",
+     "Skelettmuskulatur",
+     "Herzmuskulatur",
+     "Quadrizepsmuskulatur"
+    ],
+    "x": "Sadece düz kas çizgisizdir. İskelet kası (ör. quadriceps) ve kalp kası enine çizgilidir."
+   },
+   {
+    "id": "L:physiologie-4-muskel:3",
+    "q": "Welche Form haben die Zellen der glatten Muskulatur?",
+    "o": [
+     "spindelförmig",
+     "verzweigt",
+     "lang und tubulär",
+     "kugelförmig"
+    ],
+    "x": "Düz kas hücreleri iğ şeklindedir. Dallı yapı kalp kasına, uzun-tübüler lifler iskelet kasına aittir; küresel şekil tabloda yoktur."
+   },
+   {
+    "id": "L:physiologie-4-muskel:4",
+    "q": "Welche Besonderheit hat die Herzmuskulatur?",
+    "o": [
+     "Sie arbeitet automatisch und ermüdet nicht",
+     "Sie ist willkürlich über das Nervensystem steuerbar",
+     "Sie hat mehrere Zellkerne pro Muskelfaser",
+     "Sie ist nicht gestreift und spindelförmig"
+    ],
+    "x": "Kalp kası ritmik ve otomatik çalışır, yorulmaz, kendi uyarı üretimi (pil hücreleri) vardır. İstemli ve çok çekirdekli olan iskelet kası, çizgisiz ve iğ şeklinde olan düz kastır."
+   },
+   {
+    "id": "L:physiologie-4-muskel:5",
+    "q": "Welches Beispiel enthält glatte Muskulatur?",
+    "o": [
+     "Die Bronchien",
+     "Der M. quadriceps femoris",
+     "Die Herzwand",
+     "Der M. biceps brachii"
+    ],
+    "x": "Düz kas örnekleri: bağırsak, kan damarları, rahim, bronşlar. Quadriceps ve biceps iskelet kası, kalp duvarı kalp kasıdır."
+   },
+   {
+    "id": "L:physiologie-4-muskel:6",
+    "q": "Welches Prinzip der Muskeltätigkeit nennt die Folie?",
+    "o": [
+     "Reiz → Kontraktion → Kraft/Bewegung",
+     "Kontraktion → Reiz → Kraft/Bewegung",
+     "Kraft → Reiz → Kontraktion",
+     "Reiz → Kraft → Kontraktion"
+    ],
+    "x": "Önce uyaran (AP) gelir, sonra kasılma olur ve bundan kuvvet/hareket doğar. Diğer sıralamalar neden-sonuç ilişkisini ters çevirir."
+   },
+   {
+    "id": "L:physiologie-4-muskel:7",
+    "q": "Welche Zuordnung aus der Vergleichstabelle ist richtig?",
+    "o": [
+     "Skelettmuskel: mehrere Kerne, Herzmuskel: verzweigt, glatter Muskel: spindelförmig",
+     "Skelettmuskel: ein Kern, Herzmuskel: spindelförmig, glatter Muskel: verzweigt",
+     "Skelettmuskel: verzweigt, Herzmuskel: mehrere Kerne, glatter Muskel: tubulär",
+     "Skelettmuskel: spindelförmig, Herzmuskel: ein Kern, glatter Muskel: mehrere Kerne"
+    ],
+    "x": "Tablo: iskelet = çok çekirdek, uzun/tübüler · kalp = dallı, tek çekirdek · düz = iğ şeklinde, tek çekirdek. Diğer seçeneklerde özellikler yer değiştirmiştir."
+   },
+   {
+    "id": "L:physiologie-4-muskel:8",
+    "q": "Was ist der „Reiz“, der zur Kontraktion des Skelettmuskels führt?",
+    "o": [
+     "Ein Aktionspotenzial, das über die Synapse (Acetylcholin) ankommt",
+     "Ein Signal der Schrittmacherzellen im Muskel selbst",
+     "Ein Dauerstrom, der ständig durch die Muskelfaser fließt",
+     "Ein Hormon, das über das Blut zum Skelettmuskel gelangt"
+    ],
+    "x": "Modül 3 ile bağlantı: iskelet kasını uyaran, sinapstan asetilkolin aracılığıyla gelen aksiyon potansiyelidir. Pil hücreleri kalp kasına aittir; AP sürekli akım değildir."
+   },
+   {
+    "id": "L:physiologie-4-muskel:9",
+    "q": "Ihnen ist kalt und Sie fangen an zu zittern. Welche Funktion der Skelettmuskulatur zeigt sich?",
+    "o": [
+     "Wärmeproduktion",
+     "Haltung & Stabilität",
+     "Regulation von Druck",
+     "Bewegung von Hohlorganen"
+    ],
+    "x": "Titreme iskelet kasının ısı üretimidir. Duruş/stabilite de iskelet kası görevidir ama titremenin amacı değildir; basınç düzenleme ve içi boş organların hareketi düz kasa aittir."
+   }
+  ],
+  "open": [
+   {
+    "q": "Vergleichen Sie Skelett-, Herz- und glatte Muskulatur (Streifung, Form, Zellkerne, Steuerung, Vorkommen).",
+    "a": "Die Skelettmuskulatur ist quergestreift, lang und tubulär, hat mehrere Zellkerne, ist willkürlich steuerbar und am Skelett befestigt; sie kontrahiert schnell und kräftig. Die Herzmuskulatur ist ebenfalls quergestreift, aber verzweigt, hat einen Zellkern, ist unwillkürlich und kommt nur in der Herzwand vor; sie arbeitet automatisch und ermüdet nicht. Die glatte Muskulatur ist nicht gestreift, spindelförmig, hat einen Zellkern, ist unwillkürlich und liegt in der Wand innerer Organe; sie kontrahiert langsam und ausdauernd.",
+    "kw": [
+     "quergestreift",
+     "mehrere Zellkerne",
+     "willkürlich",
+     "verzweigt",
+     "spindelförmig",
+     "unwillkürlich",
+     "innerer Organe|Organe"
+    ]
+   },
+   {
+    "q": "Definieren Sie Muskelgewebe, nennen Sie das Prinzip und drei Beispiele für glatte Muskulatur.",
+    "a": "Muskelgewebe ist ein spezialisiertes Gewebe, das sich zusammenziehen, also kontrahieren kann. Durch die Kontraktion entstehen Bewegung, Kraft und Transport im Körper. Das Prinzip lautet: Reiz, Kontraktion, Kraft bzw. Bewegung. Glatte Muskulatur findet man z. B. im Darm, in den Blutgefäßen, in der Gebärmutter und in den Bronchien.",
+    "kw": [
+     "spezialisiert",
+     "kontrahieren|zusammenziehen",
+     "Reiz",
+     "Kontraktion",
+     "Darm|Blutgefäße|Gebärmutter|Bronchien"
+    ]
+   }
+  ],
+  "vocab": [
+   {
+    "de": "das Gewebe",
+    "tr": "doku"
+   },
+   {
+    "de": "sich zusammenziehen / kontrahieren",
+    "tr": "kasılmak"
+   },
+   {
+    "de": "quergestreift",
+    "tr": "enine çizgili"
+   },
+   {
+    "de": "willkürlich / unwillkürlich",
+    "tr": "istemli / istemsiz"
+   },
+   {
+    "de": "spindelförmig",
+    "tr": "iğ şeklinde"
+   },
+   {
+    "de": "verzweigt",
+    "tr": "dallı"
+   },
+   {
+    "de": "der Zellkern",
+    "tr": "hücre çekirdeği"
+   },
+   {
+    "de": "das Hohlorgan",
+    "tr": "içi boş organ"
+   },
+   {
+    "de": "die Schrittmacherzelle",
+    "tr": "kalp pili hücresi"
+   },
+   {
+    "de": "auskleiden",
+    "tr": "içini kaplamak"
+   }
+  ],
+  "nh": "07891da3d3b3cea0"
  },
  {
   "id": "zelle-organellen",
@@ -2320,6 +2755,72 @@ export const LESSONS = [
      "Arthrokinematik: das Gelenkspiel im Knie wird verbessert"
     ],
     "x": "Ovmak, kalın liflerle iletilen bir dokunma/basınç uyaranıdır; arka boynuzda ağrı kapısını kapatır. İnce lifler ağrıyı taşır, kapıyı kapatmaz; kas-ven pompası ise tromboz profilaksisiyle ilgilidir."
+   },
+   {
+    "id": "L:pt-grundlagen-1:n5",
+    "q": "Was kennzeichnet einen Dekubitus im Stadium III (nach Seiler)?",
+    "o": [
+     "Alle Hautschichten sind zerstört, bis in die Subkutis",
+     "Rötung bei intakter Haut, nicht wegdrückbar",
+     "Oberflächlicher Hautdefekt oder eine Blase",
+     "Muskeln, Sehnen oder Knochen liegen frei"
+    ],
+    "x": "Evre I: deri sağlam, bastırınca geçmeyen kızarıklık · II: yüzeysel defekt/kabarcık · III: tüm deri katmanları subkutise kadar harap · IV: kas, tendon, kemik açıkta."
+   },
+   {
+    "id": "L:pt-grundlagen-1:n6",
+    "q": "Was beschreibt die Bewegungsform „assistiv“?",
+    "o": [
+     "Der Patient hilft ein wenig mit, der Therapeut führt die Bewegung",
+     "Der Patient bewegt selbstständig, ganz ohne jede Hilfe",
+     "Der Patient bewegt gegen einen Widerstand des Therapeuten",
+     "Der Patient lässt komplett locker, der Therapeut bewegt"
+    ],
+    "x": "Asistif: hasta biraz yardım eder ve buna yönlendirilir. Tamamen kendisi hareket ederse aktif, dirence karşı resistif, tamamen gevşek ve terapist hareket ettiriyorsa pasiftir."
+   },
+   {
+    "id": "L:pt-grundlagen-1:n7",
+    "q": "Was versteht man unter einer Indikation?",
+    "o": [
+     "Den Grund, warum oder wann eine Maßnahme angewendet wird",
+     "Einen Umstand, bei dem eine Maßnahme schaden könnte",
+     "Eine Maßnahme, die nur mit Vorsicht angewendet werden darf",
+     "Die schriftliche Dokumentation einer durchgeführten Maßnahme"
+    ],
+    "x": "Indikation = Heilanzeige: bir önlemin neden/ne zaman uygulandığı. Zarar verebileceği durum Kontraindikation'dır, 'sadece dikkatle' ise göreceli KI'nın tarifidir."
+   },
+   {
+    "id": "L:pt-grundlagen-1:n8",
+    "q": "Welche Zuordnung Prophylaxe → System ist richtig?",
+    "o": [
+     "Pneumonieprophylaxe → Atmungssystem",
+     "Dekubitusprophylaxe → Herz-Kreislauf-System",
+     "Thromboseprophylaxe → Atmungssystem",
+     "Kontrakturprophylaxe → Haut"
+    ],
+    "x": "Pnömoni → solunum sistemi. Dekübit → deri, tromboz → kalp-dolaşım/venler, kontraktür → hareket sistemi."
+   },
+   {
+    "id": "L:pt-grundlagen-1:n9",
+    "q": "Wie wird die Kontrakturprophylaxe laut Folie durchgeführt?",
+    "o": [
+     "3× täglich, schmerzarm, im vollen Bewegungsausmaß (full ROM)",
+     "1× pro Woche, endgradig auch über die Schmerzgrenze hinaus",
+     "Alle 2 Stunden, ausschließlich in der 30°-Schräglage",
+     "Nur passiv mit der CPM, ohne dem Patienten etwas zu erklären"
+    ],
+    "x": "Kontraktür önleme: günde 3 kez, ağrısız, tam ROM, iletişimle (bilinci kapalı görünen hastaya bile açıklanır). 2 saatte bir pozisyon ve 30° yan yatış dekübit önlemedir."
+   },
+   {
+    "id": "L:pt-grundlagen-1:n10",
+    "q": "Welcher Faktor ist ein EXTERNER Sturzrisikofaktor?",
+    "o": [
+     "Schlechte Beleuchtung",
+     "Muskelschwäche",
+     "Exsikkose",
+     "Sehstörungen"
+    ],
+    "x": "Dış faktörler: takılma tehlikeleri, aydınlatma, yardımcı araçlar, ayakkabı, kaygan zemin, kıyafet. Kas zayıflığı, susuzluk (Exsikkose) ve görme bozukluğu iç (interne) faktörlerdir."
    }
   ],
   "open": [
@@ -2365,6 +2866,56 @@ export const LESSONS = [
      "ROM|Bewegungsausmaß",
      "Thrombose|venös",
      "ASTE|Kreislauf"
+    ]
+   },
+   {
+    "q": "Definieren Sie Dekubitus und nennen Sie die vier Stadien.",
+    "a": "Ein Dekubitus ist eine lokale Schädigung der Haut und des darunterliegenden Gewebes, meist über Knochenvorsprüngen, durch Druck über längere Zeit. Stadium I ist eine nicht wegdrückbare Rötung bei intakter Haut. Stadium II ist ein oberflächlicher Hautdefekt oder eine Blase. In Stadium III sind alle Hautschichten bis zur Subkutis zerstört, in Stadium IV liegen Muskeln, Sehnen oder Knochen frei. Am häufigsten betroffen sind Kreuzbein und Fersen.",
+    "kw": [
+     "Druck",
+     "Knochenvorsprüngen",
+     "Rötung",
+     "Blase|Hautdefekt",
+     "Subkutis",
+     "Sehnen|Muskeln",
+     "Kreuzbein|Fersen"
+    ]
+   },
+   {
+    "q": "Nennen und definieren Sie die vier Bewegungsformen.",
+    "a": "Passiv bedeutet, dass der Patient komplett locker lässt oder nicht aktiv ansteuern kann; der Therapeut fixiert die Gelenkpartner und bewegt endgradig und schmerzarm. Assistiv heißt, dass der Patient ein wenig mithilft und dazu angeleitet wird. Bei der aktiven Bewegung bewegt der Patient selbstständig. Resistiv bewegt der Patient gegen einen Widerstand durch Therapeut oder Gerät.",
+    "kw": [
+     "passiv",
+     "locker",
+     "assistiv",
+     "mithilft",
+     "aktiv",
+     "resistiv",
+     "Widerstand"
+    ]
+   },
+   {
+    "q": "Erklären Sie Indikation und Kontraindikation und unterscheiden Sie absolute und relative Kontraindikation.",
+    "a": "Eine Indikation ist die Heilanzeige, also der Grund, warum oder wann eine Maßnahme angewendet wird. Eine Kontraindikation ist eine Gegenanzeige: ein Umstand, bei dem eine Maßnahme nicht angewendet werden darf, weil sie schaden könnte. Bei einer absoluten Kontraindikation wird die Maßnahme auf keinen Fall angewendet. Bei einer relativen Kontraindikation darf sie nur mit Vorsicht bzw. nach Absprache angewendet werden. Laut Folie sind künstliche Gelenke und Spondylodesen Kontraindikationen für Traktion.",
+    "kw": [
+     "Heilanzeige|Grund",
+     "Gegenanzeige",
+     "schaden",
+     "absolut",
+     "keinen Fall",
+     "relativ",
+     "Vorsicht|Absprache"
+    ]
+   },
+   {
+    "q": "Nennen Sie die fünf Prophylaxen aus dem Unterricht und was sie jeweils verhindern.",
+    "a": "Die Thromboseprophylaxe verhindert Blutgerinnsel in den Venen und damit eine Lungenembolie. Die Kontrakturprophylaxe verhindert Gelenkversteifungen und Bewegungseinschränkungen. Die Sturzprophylaxe beugt Stürzen und dem Post-Fall-Syndrom vor. Die Dekubitusprophylaxe verhindert Druckgeschwüre der Haut. Die Pneumonieprophylaxe verhindert eine Lungenentzündung.",
+    "kw": [
+     "Thrombose",
+     "Kontraktur",
+     "Sturz",
+     "Dekubitus",
+     "Pneumonie"
     ]
    }
   ],
@@ -2684,6 +3235,83 @@ export const LESSONS = [
      "Weniger als 1 %"
     ],
     "x": "Bel ağrılıların %80'ine kadarında en az bir kırmızı bayrak vardır. '%1'den az' ise gerçekten ciddi hastalığı olanların oranıdır, bayrak oranı değil."
+   },
+   {
+    "id": "L:pt-befund-1:n5",
+    "q": "Welche drei Bereiche stehen im vereinfachten Klassifikationsmodell auf der linken Seite (Befund)?",
+    "o": [
+     "Diagnose, beitragende Faktoren, Stadium",
+     "Therapie, Management, Prognose",
+     "Anamnese, Inspektion, Untersuchung",
+     "Aktivität, Teilhabe, Umweltfaktoren"
+    ],
+    "x": "Sol taraf D-B-S: Diagnose, beitragende Faktoren, Stadium → sağ taraf T-M-P: Therapie, Management, Prognose. Anamnez-inspeksiyon-muayene teşhisin adımlarıdır, aktivite/katılım/çevre ise ICF bileşenleridir."
+   },
+   {
+    "id": "L:pt-befund-1:n6",
+    "q": "Welche Zuordnung im vereinfachten Klassifikationsmodell ist richtig?",
+    "o": [
+     "Stadium (Zeit/Verlauf) → Prognose",
+     "Stadium (Zeit/Verlauf) → Diagnose",
+     "Beitragende Faktoren → Prognose",
+     "Red & Yellow Flags → Stadium"
+    ],
+    "x": "Modelde D→T, B→M, S→P: Zeit/Verlauf (Stadium) prognozla, katkıda bulunan faktörler management ile eşleşir. Red/Yellow Flags fizyoterapinin endike olup olmadığını belirler, evreyi değil."
+   },
+   {
+    "id": "L:pt-befund-1:n7",
+    "q": "Welche Frage gehört NICHT zu den vier Leitfragen des Befunds?",
+    "o": [
+     "Welche Tests kenne ich für dieses Gelenk?",
+     "Was beeinflusst das Problem?",
+     "Was kann der Patient tun?",
+     "Was soll sich verändern?"
+    ],
+    "x": "Dört ana soru: Sorun ne? Ne etkiliyor? Hasta ne yapabiliyor? Ne değişmeli? Notun çapası: 'Hangi testleri biliyorum?' değil, 'Hangi bilgiye ihtiyacım var?' diye düşün."
+   },
+   {
+    "id": "L:pt-befund-1:n8",
+    "q": "Welche Frage ist eine offene Frage?",
+    "o": [
+     "„Was fällt Ihnen im Alltag dadurch schwer?“",
+     "„Gab es bei Ihnen einen Unfall?“",
+     "„Ist der Schmerz beim Treppensteigen stärker?“",
+     "„Sie haben doch sicher Schmerzen, oder?“"
+    ],
+    "x": "Açık soru hastaya kendi anlatımı için alan bırakır. Kaza ve merdiven soruları evet/hayır ile cevaplanan kapalı sorulardır; 'Ağrınız var, değil mi?' cevabı önceden veren yönlendirici sorudur."
+   },
+   {
+    "id": "L:pt-befund-1:n9",
+    "q": "Welcher Punkt gehört NICHT zu den Bereichen der Yellow Flags?",
+    "o": [
+     "Nächtliches Schwitzen",
+     "Kognitionen und Emotionen",
+     "Arbeitsplatz und Familie",
+     "Entschädigungsleistungen"
+    ],
+    "x": "Gece terlemesi bir Red Flag'dir (Minimalkonsens 7). Yellow Flag alanları: Kognitionen, Emotionen, Verhalten, Familie, Arbeitsplatz, Diagnostik/Behandlung, Ausgleich/Entschädigungsleistungen."
+   },
+   {
+    "id": "L:pt-befund-1:n10",
+    "q": "Ein Patient fragt: „Was kann ich selbst tun?“ Welchem Bereich ist diese Frage zugeordnet?",
+    "o": [
+     "Management",
+     "Therapie",
+     "Prognose",
+     "Befund/Diagnostik"
+    ],
+    "x": "Hastanın 4 sorusu: Neyim var? = Befund/Diagnostik, Ne yapılabilir? = Therapie, Ben ne yapabilirim? = Management, Ne kadar sürer? = Prognose."
+   },
+   {
+    "id": "L:pt-befund-1:n11",
+    "q": "Was versteht man unter Clinical Reasoning?",
+    "o": [
+     "Alle Denk- und Entscheidungsprozesse bei Untersuchung und Analyse eines Patienten",
+     "Die ärztliche Diagnose nach dem ICD-10-Schlüssel auf dem Rezept",
+     "Die Sammlung von Klassen zur Ordnung und Abgrenzung von Kategorien",
+     "Die Behandlung, die der Patient unter Anleitung selbst durchführt"
+    ],
+    "x": "Clinical Reasoning (Jones 2019) = hastayı, bağlamını ve klinik sorununu anlamak için tüm düşünme ve karar süreçleri. Sınıfların toplanması 'Klassifikation'ın tanımıdır, hastanın kendi uyguladığı tedavi 'Management'tır."
    }
   ],
   "open": [
@@ -2733,6 +3361,44 @@ export const LESSONS = [
      "beitragende|beitragend",
      "Yellow",
      "Ziele|Erwartungen"
+    ]
+   },
+   {
+    "q": "Erklären Sie das vereinfachte Klassifikationsmodell.",
+    "a": "Auf der linken Seite stehen Diagnose, beitragende Faktoren und Stadium. Die Diagnose fragt, welches Gewebe die Quelle der Symptome ist, welcher Art die Pathologie ist und ob Red Flags vorliegen. Beitragende Faktoren sind z. B. psychosoziale Faktoren (Yellow Flags), biomechanische und Lifestyle-Faktoren sowie Komorbiditäten; das Stadium beschreibt Zeit und Verlauf (akut, subakut, chronisch). Daraus wird entschieden, ob Physiotherapie indiziert, nicht indiziert oder kontraindiziert ist, und Therapie, Management und Prognose werden abgeleitet.",
+    "kw": [
+     "Diagnose",
+     "beitragende Faktoren|beitragend",
+     "Stadium",
+     "indiziert|kontraindiziert",
+     "Therapie",
+     "Management",
+     "Prognose"
+    ]
+   },
+   {
+    "q": "Nennen Sie die vier Leitfragen für den Befund mit je einem Stichwort.",
+    "a": "Die erste Leitfrage lautet: Was ist das Problem? Dazu gehören Beschwerden, Anlass und aktuelle Situation. Die zweite lautet: Was beeinflusst das Problem? Hier geht es um Belastungen, Kontext und relevante Faktoren. Die dritte lautet: Was kann der Patient tun? Sie betrifft Funktion, Aktivität und Alltag. Die vierte lautet: Was soll sich verändern? Sie zielt auf Ziele, Teilhabe und Lebenssituation.",
+    "kw": [
+     "Problem",
+     "beeinflusst",
+     "tun",
+     "verändern",
+     "Beschwerden|Anlass",
+     "Aktivität|Alltag|Funktion",
+     "Ziele|Teilhabe"
+    ]
+   },
+   {
+    "q": "Unterscheiden Sie offene, geschlossene und vertiefende Fragen und nennen Sie je ein Beispiel.",
+    "a": "Offene Fragen geben dem Patienten Raum für die eigene Schilderung, z. B. „Wie kann ich Ihnen helfen?“. Geschlossene Fragen klären konkrete Informationen und werden mit Ja oder Nein beantwortet, z. B. „Gab es einen Unfall?“. Vertiefende Fragen helfen, eine Aussage genauer zu verstehen, z. B. „Nach welcher Zeit im Sitzen bemerken Sie Ihren Schmerz?“. Man startet erst offen und vertieft dann gezielt.",
+    "kw": [
+     "offen",
+     "Schilderung|Raum",
+     "geschlossen",
+     "Ja|Nein",
+     "vertiefend",
+     "genauer"
     ]
    }
   ],
@@ -3052,6 +3718,105 @@ export const LESSONS = [
      "Abduktion/Adduktion → Transversalachse"
     ],
     "x": "Abd/Add sagittal eksen etrafında (frontal düzlemde) olur. Fleks/Ekst transversal, iç/dış rotasyon longitudinal eksen etrafında gerçekleşir."
+   },
+   {
+    "id": "L:pt-befund-2:n5",
+    "q": "Welche Muskeln sind laut Folie die Abduktoren der Hüfte?",
+    "o": [
+     "Mm. glutaei medius et minimus und M. tensor fasciae latae",
+     "M. iliopsoas, M. rectus femoris und M. pectineus",
+     "M. adductor magnus, M. gracilis und M. pectineus",
+     "M. semitendinosus, M. biceps femoris und M. quadratus femoris"
+    ],
+    "x": "Abduktörler: Gluteus medius, Gluteus minimus ve TFL. Iliopsoas ve rectus femoris fleksör, gracilis/pectineus/adductor magnus addüktör, semitendinosus ve biceps femoris ekstansördür."
+   },
+   {
+    "id": "L:pt-befund-2:n6",
+    "q": "Welche fünf Muskeln zählen zu den Hüftadduktoren?",
+    "o": [
+     "Adductor longus, magnus, brevis, M. gracilis, M. pectineus",
+     "Adductor longus, magnus, brevis, M. gracilis, M. sartorius",
+     "Adductor longus, magnus, M. pectineus, M. piriformis, M. gracilis",
+     "Adductor longus, brevis, M. gracilis, M. rectus femoris, M. pectineus"
+    ],
+    "x": "Beş addüktör: Adductor longus, magnus, brevis, Gracilis, Pectineus. Sartorius ve rectus femoris fleksör, piriformis derin dış rotatördür."
+   },
+   {
+    "id": "L:pt-befund-2:n7",
+    "q": "Welche Bewegungen macht der M. tensor fasciae latae („Allrounder“) im Hüftgelenk?",
+    "o": [
+     "Flexion, Abduktion und Innenrotation",
+     "Extension, Adduktion und Außenrotation",
+     "Flexion, Adduktion und Außenrotation",
+     "Extension, Abduktion und Innenrotation"
+    ],
+    "x": "TFL 'Allrounder': fleksiyon + abdüksiyon + iç rotasyon. Ekstansiyon, addüksiyon veya dış rotasyon içeren seçenekler TFL'nin işlevine uymaz."
+   },
+   {
+    "id": "L:pt-befund-2:n8",
+    "q": "Was gilt laut Folie für die Mm. glutaei medius et minimus?",
+    "o": [
+     "Vorderer Anteil: Innenrotation, hinterer Anteil: Extension, ganz: Abduktion",
+     "Vorderer Anteil: Extension, hinterer Anteil: Innenrotation, ganz: Abduktion",
+     "Vorderer Anteil: Flexion, hinterer Anteil: Außenrotation, ganz: Adduktion",
+     "Vorderer Anteil: Außenrotation, hinterer Anteil: Flexion, ganz: Abduktion"
+    ],
+    "x": "Gluteus medius/minimus: ön kısım iç rotasyon, arka kısım ekstansiyon, kasın tamamı abdüksiyon yapar. Diğer seçeneklerde ön/arka kısım yer değiştirmiş veya addüksiyon gibi yanlış hareketler var."
+   },
+   {
+    "id": "L:pt-befund-2:n9",
+    "q": "Welcher Muskel gehört NICHT zu den tiefen Außenrotatoren der Hüfte?",
+    "o": [
+     "M. pectineus",
+     "M. piriformis",
+     "M. quadratus femoris",
+     "M. obturatorius internus"
+    ],
+    "x": "Derin dış rotatörler (yukarıdan aşağı): „Piri Geht Oft Gerne Obst Quetschen“ = Piriformis, Gemellus sup., Obturatorius int., Gemellus inf., Obturatorius ext., Quadratus femoris. Pectineus bir addüktördür."
+   },
+   {
+    "id": "L:pt-befund-2:n10",
+    "q": "Welche Neutral-Null-Werte gibt die Folie für Außen-/Innenrotation der Hüfte an?",
+    "o": [
+     "50° – 0° – 30°",
+     "45° – 0° – 30°",
+     "130° – 0° – 10°",
+     "30° – 0° – 50°"
+    ],
+    "x": "Kalça AR/IR: 50–0–30. 45–0–30 abdüksiyon/addüksiyon, 130–0–10 fleksiyon/ekstansiyon değeridir; 30–0–50 ise değerleri ters çevirir."
+   },
+   {
+    "id": "L:pt-befund-2:n11",
+    "q": "Welche Neutral-Null-Werte gibt die Folie für Abduktion/Adduktion der Hüfte an?",
+    "o": [
+     "45° – 0° – 30°",
+     "50° – 0° – 30°",
+     "30° – 0° – 45°",
+     "130° – 0° – 10°"
+    ],
+    "x": "Kalça ABD/ADD: 45–0–30. 50–0–30 dış/iç rotasyon, 130–0–10 fleksiyon/ekstansiyon değeridir; 30–0–45 değerleri ters çevirir."
+   },
+   {
+    "id": "L:pt-befund-2:n12",
+    "q": "Wie viel Hüftextension braucht man laut Folie beim Gehen?",
+    "o": [
+     "10°",
+     "5°",
+     "30°",
+     "20°"
+    ],
+    "x": "Yürüme (ADL): 30° fleksiyon, 10° ekstansiyon, 5° ABD/ADD/AR/IR. 5° ekstansiyon merdiven çıkmadır, 30° yürümedeki fleksiyondur; 20° notta geçmez."
+   },
+   {
+    "id": "L:pt-befund-2:n13",
+    "q": "Welche Muskeln sind laut Folie die Hauptmuskeln der Innenrotation der Hüfte?",
+    "o": [
+     "M. gluteus minimus (vorderer Anteil) und M. tensor fasciae latae",
+     "M. gluteus maximus und M. piriformis",
+     "M. iliopsoas und M. sartorius",
+     "M. quadratus femoris und Mm. gemelli"
+    ],
+    "x": "İç rotasyonun ana kasları gluteus minimus ön kısmı ve TFL'dir (ek: gluteus medius, adductor magnus/longus, gracilis). Gluteus maximus, piriformis, quadratus femoris ve gemelli dış rotatördür; sartorius da dış rotasyon yapar."
    }
   ],
   "open": [
@@ -3403,6 +4168,61 @@ export const LESSONS = [
      "Medikamente (iatrogen)"
     ],
     "x": "Ağırlık merkezinin öne kayması 'veränderte Statik'tir. Angst-Kreislauf düşme korkusu → az hareket döngüsüdür, Sarkopenie kas kaybıdır; vakada bunlar anlatılmıyor."
+   },
+   {
+    "id": "L:oc-1:n5",
+    "q": "Wie entsteht der „Witwenbuckel“ bei Osteoporose?",
+    "o": [
+     "Durch Keilwirbelbrüche, die Vorderkante des Wirbels bricht ein",
+     "Durch Osteophyten an den Facettengelenken der BWS",
+     "Durch eine Bandscheibe, die Wasser verliert und spröde wird",
+     "Durch eine verknöchernde Entzündung der Rückenmuskulatur"
+    ],
+    "x": "Osteoporozda omurun ön kenarı çöker (kama omur) → hiperkifoz = 'dul kambur'. Osteofit artrozun, kuruyan disk Osteochondrosis intervertebralis'in, kemikleşen kas iltihabı Myositis ossificans'ın özelliğidir."
+   },
+   {
+    "id": "L:oc-1:n6",
+    "q": "Was versteht man bei Osteoporose unter „stummen“ Wirbelbrüchen?",
+    "o": [
+     "Brüche mit wenig oder dumpfem Schmerz, oft für Verspannung gehalten",
+     "Brüche, die nur im MRT und nie im Röntgen sichtbar sind",
+     "Brüche ohne Höhenminderung, die immer von selbst ausheilen",
+     "Brüche, die nur bei Kindern ohne Schmerzen auftreten"
+    ],
+    "x": "Sessiz omur kırıkları az veya künt sırt ağrısı yapar ve sıklıkla kas gerginliği sanılır. Diğer seçenekler notta geçmez; osteoporoz kırıkları boy kısalmasına (3–4 cm) yol açabilir."
+   },
+   {
+    "id": "L:oc-1:n7",
+    "q": "Was beschreibt das Tannenbaumphänomen bei Osteoporose?",
+    "o": [
+     "Schräge Hautfalten am Rücken durch Höhenminderung",
+     "Strahlenförmige Osteophyten im Röntgenbild",
+     "Ausstrahlende Schmerzen entlang der Rippen",
+     "Verzweigte Risse im Knorpel bei Arthrose"
+    ],
+    "x": "Omur kırıklarıyla boy 3–4 cm kısalır, sırt derisinde çam ağacı gibi eğik kıvrımlar oluşur. Osteofit ve kıkırdak çatlakları artroza aittir; kaburga boyunca yayılan ağrı bu fenomen değildir."
+   },
+   {
+    "id": "L:oc-1:n8",
+    "q": "Was ist typisch für die Osteochondrosis dissecans?",
+    "o": [
+     "Ein Knochenstück löst sich, es entsteht eine Gelenkmaus",
+     "Die Bandscheibe flacht ab, am Wirbelrand entstehen Osteophyten",
+     "Die Knochendichte nimmt im gesamten Skelett deutlich ab",
+     "Eine nicht ausgeheilte Fraktur bildet ein falsches Gelenk"
+    ],
+    "x": "OD (sıklıkla genç, ayak bileği ve diz): kıkırdak altındaki kemik parçası ayrılır → Corpus liberum/eklem faresi → blokaj. Düzleşen disk Osteochondrosis intervertebralis, yaygın kemik yoğunluğu kaybı osteoporoz, sahte eklem Pseudarthrose'dur."
+   },
+   {
+    "id": "L:oc-1:n9",
+    "q": "Wo tritt die Osteochondrosis intervertebralis laut Folie häufig auf?",
+    "o": [
+     "Untere LWS und HWS",
+     "Obere BWS und Kreuzbein",
+     "Sprung- und Kniegelenk",
+     "Hüftkopf bei Kindern"
+    ],
+    "x": "Intervertebral osteokondroz en sık alt LWS ve HWS'de görülür (günlük ergonomi, yüksek mekanik yük). Ayak bileği/diz Osteochondrosis dissecans'ın, çocukta kalça başı Morbus Perthes'in tipik yeridir."
    }
   ],
   "open": [
@@ -3435,6 +4255,18 @@ export const LESSONS = [
      "Statik|Schwerpunkt",
      "Angst",
      "Medikamente|iatrogen"
+    ]
+   },
+   {
+    "q": "Nennen Sie Folgen einer Osteoporose.",
+    "a": "Durch Keilwirbelbrüche, bei denen die Vorderkante des Wirbels einbricht, entsteht ein Witwenbuckel bzw. eine Hyperkyphose. Häufig gibt es stumme Wirbelbrüche mit nur wenig oder dumpfem Rückenschmerz. Fortgeschritten brechen Knochen schon beim Niesen, Husten oder Pressen. Die Qualität der Wundheilung von Knochen und Bindegewebe ist schlechter. Durch die Höhenminderung von 3–4 cm entsteht das Tannenbaumphänomen mit schrägen Hautfalten am Rücken.",
+    "kw": [
+     "Keilwirbel",
+     "Witwenbuckel|Hyperkyphose",
+     "stumm",
+     "Niesen|Husten|Pressen",
+     "Wundheilung",
+     "Tannenbaum"
     ]
    }
   ],
@@ -4060,6 +4892,28 @@ export const LESSONS = [
     ],
     "x": "Deneyimle aktarılan, işe yarayan ama henüz bilimsel olarak açıklanmamış bilgi Meisterlehre'dir (Fosbury-Flop örneği). Trainingswissenschaft ve kanıta dayalı araştırma bilimsel çalışmalara dayanır.",
     "typ": "fall"
+   },
+   {
+    "id": "L:trainingslehre-1:n4",
+    "q": "Welche Wirkung hat laut Reizstufenregel ein stark überschwelliger Reiz?",
+    "o": [
+     "Anpassung und Leistungssteigerung",
+     "Keine Wirkung auf den Körper",
+     "Erhalt des Funktionsniveaus",
+     "Schädigung des Gewebes"
+    ],
+    "x": "Reizstufenregel: eşik altı = etki yok · zayıf eşik üstü = mevcut seviyeyi korur · güçlü eşik üstü = uyum, performans artışı (optimal uyaran) · aşırı güçlü = zarar verir."
+   },
+   {
+    "id": "L:trainingslehre-1:n5",
+    "q": "Ein Patient trainiert seit Monaten mit einem schwach überschwelligen Reiz. Was ist laut Reizstufenregel zu erwarten?",
+    "o": [
+     "Das Funktionsniveau bleibt erhalten",
+     "Die Leistung steigt kontinuierlich an",
+     "Das Gewebe wird dauerhaft geschädigt",
+     "Es tritt gar keine Wirkung ein"
+    ],
+    "x": "Zayıf eşik üstü uyaran sadece mevcut seviyeyi korur. Performans artışı için güçlü eşik üstü uyaran gerekir; zarar aşırı güçlü, hiç etki olmaması eşik altı uyaranda görülür."
    }
   ],
   "open": [
@@ -4094,6 +4948,19 @@ export const LESSONS = [
      "vorab|geplant",
      "aufeinander|steigern",
      "regelmäßig"
+    ]
+   },
+   {
+    "q": "Definieren Sie Training nach Hollmann und Hettinger und erklären Sie die Begriffe „überschwellig“ und „morphologisch“.",
+    "a": "Training ist die systematische Wiederholung gezielter überschwelliger Muskelanspannungen mit morphologischen und funktionellen Anpassungserscheinungen zum Zwecke der Leistungssteigerung. Überschwellig bedeutet, dass der Reiz stark genug sein muss, also über einer Schwelle liegt. Morphologisch heißt strukturell, z. B. nimmt der Muskelquerschnitt zu; funktionell bedeutet z. B. eine bessere Ansteuerung.",
+    "kw": [
+     "systematisch",
+     "Wiederholung",
+     "überschwellig",
+     "Muskelanspannung",
+     "morphologisch",
+     "funktionell",
+     "Leistungssteigerung"
     ]
    }
   ],
@@ -4402,6 +5269,17 @@ export const LESSONS = [
     ],
     "x": "Abtraining kasıtlı kademeli azaltmadır (2), Detraining antrenmanın kesilmesiyle kazanımların kaybıdır (3), Übertraining yetersiz dinlenmeyle aşırı yüklenmedir (1). Abtraining ile Detraining'i yer değiştirmek en tipik hatadır.",
     "typ": "zuordnung"
+   },
+   {
+    "id": "L:trainingslehre-2:n5",
+    "q": "Welches Merkmal passt laut Folie zum parasympathikogenen Übertrainingssyndrom?",
+    "o": [
+     "Normales Schlafverhalten und niedrige Ruheherzfrequenz",
+     "Schlafstörungen und erhöhte Ruheherzfrequenz",
+     "Ruhelosigkeit und erhöhter Blutdruck in Ruhe",
+     "Angespannte Körperhaltung und verzögerte Erholung"
+    ],
+    "x": "Parasempatik tip: yorgunluk/depresyon, normal uyku, düşük dinlenme nabzı ve tansiyonu, yükten sonra nabız hızlı düşer. Uyku bozukluğu, yüksek nabız/tansiyon, huzursuzluk, gergin duruş ve gecikmiş toparlanma sempatik tipin belirtileridir."
    }
   ],
   "open": [
@@ -4439,6 +5317,19 @@ export const LESSONS = [
      "Herz",
      "Verlust",
      "reversibel"
+    ]
+   },
+   {
+    "q": "Vergleichen Sie das sympathikogene und das parasympathikogene Übertrainingssyndrom.",
+    "a": "Bei beiden Formen ist die Leistungsfähigkeit vermindert. Das sympathikogene Übertrainingssyndrom zeigt Ruhelosigkeit und Gereiztheit, Schlafstörungen, eine erhöhte Ruheherzfrequenz, einen erhöhten Blutdruck in Ruhe und eine verzögerte Erholung. Das parasympathikogene Übertrainingssyndrom zeigt Müdigkeit und Depression bei normalem Schlafverhalten, eine niedrige Ruheherzfrequenz und einen niedrigen Blutdruck in Ruhe. Nach Belastung geht die Herzfrequenz dabei schnell zurück.",
+    "kw": [
+     "sympathikogen",
+     "Ruhelosigkeit|Gereiztheit",
+     "Schlafstörung",
+     "erhöhte Ruheherzfrequenz",
+     "parasympathikogen",
+     "Müdigkeit|Depression",
+     "niedrige Ruheherzfrequenz"
     ]
    }
   ],
@@ -4758,6 +5649,28 @@ export const LESSONS = [
     ],
     "x": "Isınmada vücut çekirdek ısısı yaklaşık 38–38,5 °C'ye yükselir. 36,5–37 °C normal dinlenme değeridir; 39 °C ve üstü ise ateş seviyesidir.",
     "typ": "zahlen"
+   },
+   {
+    "id": "L:trainingslehre-3:n5",
+    "q": "Patient nach Knie-OP, Ziel Treppensteigen: Zu welchem Trainingsinhalt gehören Step-ups?",
+    "o": [
+     "Spezialübung",
+     "Allgemeine Übung",
+     "Wettkampfübung",
+     "Trainingsmittel"
+    ],
+    "x": "Step-up genel egzersize dayanır ve hedef hareketin (merdiven) öğelerini içerir → Spezialübung. Bacak presi genel egzersiz, gerçek merdiven 'yarışma' egzersizidir; Trainingsmittel ise araç/ekipmandır, içerik değil."
+   },
+   {
+    "id": "L:trainingslehre-3:n6",
+    "q": "Welche Gruppe nennt laut Folie Einflussfaktoren körperlicher Anpassungsvorgänge?",
+    "o": [
+     "Alter, Geschlecht, Trainingszustand, Belastung, Ernährung, Regeneration",
+     "Objektivität, Reliabilität, Validität, Ökonomie, Normierung, Utilität",
+     "Trainingseinheit, Mikrozyklus, Mesozyklus, Makrozyklus, Periodisierung",
+     "Trainingsziele, Trainingsinhalte, Trainingsmethoden, Trainingsmittel"
+    ],
+    "x": "Uyumu etkileyen faktörler: yaş, cinsiyet (testosteron), antrenman durumu; yükün niteliği/niceliği, beslenme, toparlanma önlemleri. Folyoda bunlar exogen/endogen diye ikiye ayrılıyor ama atama büyük ihtimalle ters (endo = iç); sınavdan önce hangi versiyonun istendiğini sor. Diğer seçenekler kalite ölçütleri, periyodizasyon ve antrenman süreci terimleridir."
    }
   ],
   "open": [
@@ -4802,6 +5715,29 @@ export const LESSONS = [
      "Schwelle|Intensitätsschwelle",
      "individuell",
      "Anpassung"
+    ]
+   },
+   {
+    "q": "Nennen und erklären Sie die drei Arten von Trainingsinhalten.",
+    "a": "Allgemeine Übungen bilden die Basis für eine spätere Spezialisierung, z. B. die Beinpresse. Spezialübungen bauen auf den allgemeinen Übungen auf und enthalten Elemente der Wettkampftätigkeit, z. B. Step-ups. Wettkampfübungen sind Bewegungsabläufe, die im Wettkampf vorkommen; in der Physiotherapie entspricht das z. B. der echten Treppe.",
+    "kw": [
+     "allgemeine",
+     "Basis",
+     "Spezialübung",
+     "Elemente|Wettkampftätigkeit",
+     "Wettkampfübung"
+    ]
+   },
+   {
+    "q": "Definieren Sie Kondition und grenzen Sie sie von den koordinativen Fähigkeiten ab.",
+    "a": "Kondition ist die Gesamtheit der konditionellen Fähigkeiten: Kraft, Ausdauer und Schnelligkeit, bei manchen Autoren auch Beweglichkeit. Diese Fähigkeiten sind vor allem energetisch bestimmt, also vom Stoffwechsel abhängig. Koordinative Fähigkeiten werden dagegen durch das Nervensystem gesteuert.",
+    "kw": [
+     "Gesamtheit|konditionell",
+     "Kraft",
+     "Ausdauer",
+     "Schnelligkeit",
+     "energetisch|Stoffwechsel",
+     "Nervensystem"
     ]
    }
   ],
@@ -5121,6 +6057,50 @@ export const LESSONS = [
      "Ling 1831, Hoffa 1893"
     ],
     "x": "P. H. Ling tutuşları 1813'te 'İsveç yöntemi' olarak öğretti, Hoffa 1893'te Berlin'de bunları 5 temel tutuşa indirdi. Yılları ters çevirmek veya rakamların yerini değiştirmek (1831) tipik hatadır."
+   },
+   {
+    "id": "L:kmt-1:n5",
+    "q": "Welche Erkrankung ist laut Tabelle eine absolute Kontraindikation der Massage?",
+    "o": [
+     "CRPS (Morbus Sudeck)",
+     "Hyp- oder Anästhesie",
+     "Abgeheilter Sonnenbrand",
+     "Allergie gegen ein Massagemittel"
+    ],
+    "x": "CRPS (Morbus Sudeck) mutlak KI'dır: masaj tabloyu kötüleştirir. Hip-/anestezi, iyileşmiş güneş yanığı ve masaj yağına alerji göreceli KI'dır: dikkatli doz, eldiven veya başka yağ ile masaj mümkündür."
+   },
+   {
+    "id": "L:kmt-1:n6",
+    "q": "Ein Patient hat einen frischen, roten und schmerzhaften Sonnenbrand auf dem Rücken. Was tun Sie?",
+    "o": [
+     "Nicht massieren, denn es ist eine Verbrennung",
+     "Mit Handschuhen und weniger Druck massieren",
+     "Mit kühlender Lotion besonders kräftig massieren",
+     "Nur die geröteten Stellen gezielt friktionieren"
+    ],
+    "x": "Taze güneş yanığı (kırmızı, ağrılı) bir yanıktır → masaj yok, hasta eve gönderilir. Eldivenle masaj sadece iyileşmiş (ağrısız, kızarıklıksız, soyulan) deride mümkündür."
+   },
+   {
+    "id": "L:kmt-1:n7",
+    "q": "Wie gehen Sie mit einer möglichen Allergie gegen Massagemittel um?",
+    "o": [
+     "Vorher abfragen, bei Reaktion Mittel wechseln und dokumentieren",
+     "Erst nach der Massage fragen, ob es gejuckt hat",
+     "Die Massage absagen, da jede Allergie absolut ist",
+     "Grundsätzlich ein parfümiertes Öl verwenden"
+    ],
+    "x": "Alerji önceden sorulur; kaşıntı olursa başka yağa geçilir ve belgelenir ('Massage mit Lotion X'). Alerji göreceli KI'dır, mutlak değil; masaj yağı normalde pH-nötr ve parfümsüzdür."
+   },
+   {
+    "id": "L:kmt-1:n8",
+    "q": "Worauf achten Sie bei einem Patienten mit Hyp- oder Anästhesie im Behandlungsgebiet?",
+    "o": [
+     "Druck vorsichtig dosieren, da er kein Feedback geben kann",
+     "Besonders kräftig massieren, da er keinen Schmerz spürt",
+     "Sofort abbrechen, da es eine absolute Kontraindikation ist",
+     "Nur Tapotement anwenden, um die Sensibilität zu wecken"
+    ],
+    "x": "Hasta az veya hiç hissetmediği için geri bildirim veremez → basınç dikkatle dozlanır. Bu göreceli KI'dır; güçlü masaj ise hissedilmeyen hasara yol açabilir."
    }
   ],
   "open": [
@@ -5166,6 +6146,16 @@ export const LESSONS = [
      "desinfizieren",
      "Liege",
      "lüften|wegräumen"
+    ]
+   },
+   {
+    "q": "Nennen Sie je eine absolute Kontraindikation der Massage für Haut, Knochen, Gefäße und Nervensystem.",
+    "a": "Absolute Kontraindikationen der Haut sind z. B. Furunkel, Dekubitus, Fußpilz und Hauttumoren. Im Bereich Knochen gehören frische Frakturen, Zustände post-OP, Osteomyelitis und das Osteosarkom dazu. An den Gefäßen sind es große Varizen, Thrombophlebitis und tiefe Venenthrombose. Im Nervensystem zählen Gürtelrose mit Hyperästhesie, Allodynie und CRPS (Morbus Sudeck) dazu.",
+    "kw": [
+     "Furunkel|Dekubitus|Fußpilz",
+     "Fraktur|Osteosarkom|Osteomyelitis",
+     "Varizen|Thrombophlebitis|Venenthrombose",
+     "Gürtelrose|Allodynie|CRPS"
     ]
    }
   ],
@@ -5485,6 +6475,28 @@ export const LESSONS = [
      "Hypertonus → schlaffe Parese, Hypotonus → Komapatient, Atonus → Myogelose"
     ],
     "x": "Miyogeloz sert dokudur (hipertonus), koma hastasında doku gevşek ve şekil alır (hipotonus), gevşek felçte doku cansız ve tamamen gevşektir (atonus). Hipotonus ile atonus örnekleri sıkça karıştırılır."
+   },
+   {
+    "id": "L:kmt-2:n5",
+    "q": "Wofür stehen die Abkürzungen BL, RL und SL?",
+    "o": [
+     "Bauchlage, Rückenlage, Seitenlage",
+     "Beckenlage, Rumpflage, Sitzlage",
+     "Behandlungsliege, Rolle, Sitzhocker",
+     "Beinlage, Rückenlage, Schulterlage"
+    ],
+    "x": "BL = yüzüstü (Bauchlage), RL = sırtüstü (Rückenlage), SL = yan yatış (Seitenlage). Diğer açılımlar kullanılmaz; yaşlı veya hamile hastada masaj oturarak da yapılabilir."
+   },
+   {
+    "id": "L:kmt-2:n6",
+    "q": "Warum muss auch der Boden im Therapieraum desinfizierbar sein?",
+    "o": [
+     "Wegen Inkontinenz, Blut, Erbrochenem oder Fußpilz",
+     "Weil normaler Straßendreck sonst nicht abgeht",
+     "Weil Massageöl nur mit Desinfektion abgeht",
+     "Weil die Reinigungskraft den Boden nicht putzen darf"
+    ],
+    "x": "Zemin vücut sıvıları (idrar kaçırma, kan, kusmuk) ve mantar (Fußpilz) nedeniyle dezenfekte edilebilir olmalı; bunu terapist yapar. Normal sokak kiri için mekanik temizlik yeter; yağ dezenfektanla tamamen çıkmaz, sedye yıkanır."
    }
   ],
   "open": [
@@ -5850,6 +6862,50 @@ export const LESSONS = [
      "Er wird im Mehrbettzimmer versorgt, nur sein Bett wird täglich desinfiziert"
     ],
     "x": "Mikrop getiren hasta izole edilir; kapıda tabela olur ve odaya önlük, bone, maske ve eldivenle girilir. Mikrobun hastaneden kapılmamış olması izolasyonu gereksiz kılmaz; koruyucu giysi sadece yara temasında değil her girişte giyilir."
+   },
+   {
+    "id": "L:hygiene-1:n5",
+    "q": "Was bedeutet „multiresistent“ bei MRSA?",
+    "o": [
+     "Gegen viele Antibiotika unempfindlich",
+     "Besonders leicht ansteckend",
+     "Nur durch Desinfektion abtötbar",
+     "Gegen alle Viren widerstandsfähig"
+    ],
+    "x": "Multiresistent = birçok antibiyotiğe karşı duyarsız (dirençli); 'çok bulaşıcı' demek değildir. Tedavi: burun merhemi + tüm vücut yıkaması, normal dezenfeksiyon yetmez. MRSA bir bakteridir, virüslerle ilgisi yoktur."
+   },
+   {
+    "id": "L:hygiene-1:n6",
+    "q": "Zu welcher Art der Exposition gehört die Strahlenbelastung nach Tschernobyl?",
+    "o": [
+     "Physikalische Exposition",
+     "Chemische Exposition",
+     "Biologische Exposition",
+     "Nosokomiale Exposition"
+    ],
+    "x": "Radyasyon fiziksel (physikalisch) maruziyettir. Sızan gaz/kimyasal kimyasal, Corona gibi mikrop biyolojik/enfeksiyöz maruziyettir; 'nozokomiyal' bir maruziyet türü değil, hastanede kapılan enfeksiyonun adıdır."
+   },
+   {
+    "id": "L:hygiene-1:n7",
+    "q": "Warum geht bei der Drogenprävention ein Streetworker in die Schule und nicht ins Altenheim?",
+    "o": [
+     "Weil man die Zielgruppe der Botschaft gezielt auswählt",
+     "Weil Prävention nur bei Kindern gesetzlich erlaubt ist",
+     "Weil im Altenheim das Infektionsrisiko zu hoch ist",
+     "Weil Präventionskurse nur in Schulen bezahlt werden"
+    ],
+    "x": "Önlemede mesajın alıcısı olan hedef kitle (Zielgruppe) bilinçli seçilir; uyuşturucu önleme için bu gençlerdir. Diğer gerekçeler notta yok ve yanlıştır (ör. kasa kursları da önleme örneğidir)."
+   },
+   {
+    "id": "L:hygiene-1:n8",
+    "q": "Wofür ist John Snow (London 1854) bekannt?",
+    "o": [
+     "Er fand über einen Stadtplan eine Wasserpumpe als Quelle der Cholera",
+     "Er entwickelte die erste Impfung mit Kuhpockenmaterial",
+     "Er begründete die Miasmen-Theorie über schlechten Geruch",
+     "Er führte die Quarantäne für Leprakranke in Venedig ein"
+    ],
+    "x": "John Snow kolera ölümlerini şehir haritasına işledi, Broad Street'teki su pompasının etrafında yoğunlaştığını buldu; pompa kapatılınca vakalar azaldı → modern epidemiyolojinin başlangıcı. Çiçek aşısı Jenner'e aittir; miasma teorisi ve karantina daha eskidir."
    }
   ],
   "open": [
@@ -5894,6 +6950,39 @@ export const LESSONS = [
      "Toiletten|Bäder",
      "Mittelalter",
      "Straße|verloren"
+    ]
+   },
+   {
+    "q": "Wofür steht MRSA und wie wird eine Besiedlung behandelt?",
+    "a": "MRSA steht für Methicillin-resistenter Staphylococcus aureus. Das Bakterium ist multiresistent, also gegen viele Antibiotika unempfindlich. Es sitzt oft im Nasenvorraum. Behandelt wird mit speziellen Nasensalben und Ganzkörperwaschungen, normale Desinfektion reicht nicht.",
+    "kw": [
+     "Methicillin",
+     "Staphylococcus",
+     "multiresistent|Antibiotika",
+     "Nasenvorraum",
+     "Nasensalbe",
+     "Ganzkörperwaschung"
+    ]
+   },
+   {
+    "q": "Nennen Sie drei Arten der Exposition mit je einem Beispiel.",
+    "a": "Exposition bedeutet, einem schädlichen Einfluss ausgesetzt zu sein. Chemisch: ausgetretenes Gas oder eine Chemikalie. Physikalisch: Strahlung, z. B. Tschernobyl oder Röntgen. Biologisch bzw. infektiös: Jemand bringt Corona mit und ist schon ansteckend, bevor Symptome auftreten.",
+    "kw": [
+     "ausgesetzt",
+     "chemisch",
+     "physikalisch|Strahlung",
+     "biologisch|infektiös"
+    ]
+   },
+   {
+    "q": "Was versteht man unter Prävention? Nennen Sie drei Beispiele.",
+    "a": "Prävention bedeutet, die Krankheitslast in der Bevölkerung durch gezielte Maßnahmen zu verringern. Beispiele sind Impfungen, Händewaschen und Masken während Corona. Weitere Beispiele sind Präventionskurse der Krankenkassen, Drogenprävention in Schulen mit einer gezielt gewählten Zielgruppe und Unfallprävention am Arbeitsplatz.",
+    "kw": [
+     "Krankheitslast",
+     "gezielt",
+     "Impfung",
+     "Händewaschen|Maske",
+     "Präventionskurs|Drogenprävention|Unfallprävention"
     ]
    }
   ],
@@ -6152,6 +7241,17 @@ export const LESSONS = [
     ],
     "x": "Kronik bel ağrısında masaj ve egzersiz çoğu zaman yetmez; iş stresi (sosyal) ve hareket korkusu (psikolojik) da ele alınmalıdır. Sadece bedene odaklanmak biyomedikal modelin bakışıdır.",
     "typ": "fall"
+   },
+   {
+    "id": "L:biopsychosoziales-modell:n4",
+    "q": "Ein Patient sagt: „Das wird nie besser.“ Welcher Ebene und welchem Faktor ordnen Sie das zu?",
+    "o": [
+     "Psychische Ebene, Faktor (negative) Erwartung",
+     "Soziale Ebene, Faktor Erfahrungen",
+     "Biologische Ebene, Faktor Krankheit",
+     "Soziale Ebene, Faktor Erziehung"
+    ],
+    "x": "'Bu asla düzelmez' bir beklentidir → psikolojik düzey, faktör (olumsuz) beklenti. Dikkat: buradaki 'Ebene' PT Grundlagen'deki vücut düzlemi değildir. Deneyim ve yetiştirilme sosyal, hastalık biyolojik faktördür."
    }
   ],
   "open": [
@@ -6443,6 +7543,39 @@ export const LESSONS = [
     ],
     "x": "Hoş bir şey (övgü) ekleniyor (pozitif) ve davranış artıyor (pekiştirme). Negatif pekiştirmede hoş olmayan bir şey kaldırılır; ceza ise davranışı azaltır.",
     "typ": "fall"
+   },
+   {
+    "id": "L:pps-grundlagen-psychologie:n5",
+    "q": "Wofür steht das „S“ in SMART?",
+    "o": [
+     "spezifisch – klar und konkret formuliert",
+     "subjektiv – nach dem Gefühl des Patienten",
+     "sicher – ohne Risiko für den Patienten",
+     "sozial – mit Bezug zur Familie formuliert"
+    ],
+    "x": "S = spezifisch: hedef açık ve somut yazılır (ör. torunun bebek arabasıyla yürümek). 'Subjektiv' en sık yapılan hatadır; güvenli ve sosyal SMART harfleri değildir."
+   },
+   {
+    "id": "L:pps-grundlagen-psychologie:n6",
+    "q": "Was bedeutet „realistisch“ in einem SMART-Ziel?",
+    "o": [
+     "Für diesen Patienten in seinem Zustand erreichbar",
+     "Mit einer Zahl überprüfbar, z. B. 1 km",
+     "Innerhalb eines festen Zeitraums erreicht",
+     "Für den Patienten reizvoll und angenommen"
+    ],
+    "x": "R = realistisch: bu hasta için mevcut durumuyla ulaşılabilir; sadece bir sayıyı tekrarlamak değildir. Sayıyla ölçmek M (messbar), zaman sınırı T (terminiert), çekici/kabul edilmiş olmak A (attraktiv/akzeptiert) harfidir."
+   },
+   {
+    "id": "L:pps-grundlagen-psychologie:n7",
+    "q": "Opa-Beispiel: Der Patient möchte mit seinem Enkel am See spielen. Welche Art Ziel ist das nach ICF?",
+    "o": [
+     "Partizipationsziel",
+     "Aktivitätsziel",
+     "Körperstrukturziel",
+     "Umweltfaktorziel"
+    ],
+    "x": "Torunla gölde oynamak sosyal hayata katılımdır → Partizipationsziel. Terapistin '1 km yürümek' hedefi ise Aktivitätsziel'dir. Vücut yapısı ve çevre faktörü burada hedefin türü değildir."
    }
   ],
   "open": [
@@ -6477,6 +7610,17 @@ export const LESSONS = [
      "Tertiärprävention|tertiär",
      "Früherkennung",
      "Rückfall|Verschlechterung"
+    ]
+   },
+   {
+    "q": "Formulieren Sie für das Opa-Beispiel ein SMART-Ziel und erklären Sie die fünf Buchstaben.",
+    "a": "Ein SMART-Ziel wäre: „Der Patient geht innerhalb von 6 Wochen 1 km ohne Pause mit dem Kinderwagen seines Enkels.“ S steht für spezifisch, also klar und konkret formuliert. M heißt messbar, z. B. 1 km ohne Pause. A bedeutet attraktiv bzw. akzeptiert, weil der Patient Zeit mit seinem Enkel verbringen will. R steht für realistisch, also für diesen Patienten erreichbar, und T für terminiert, also zeitlich festgelegt.",
+    "kw": [
+     "spezifisch",
+     "messbar",
+     "attraktiv|akzeptiert",
+     "realistisch|erreichbar",
+     "terminiert"
     ]
    }
   ],
@@ -6583,5 +7727,191 @@ export const LESSONS = [
    }
   ],
   "nh": "24511b90ee76405f"
+ },
+ {
+  "id": "pps-wahrnehmung",
+  "fach": "PPS",
+  "title": "Wahrnehmung: Bottom-up und Top-down",
+  "kern": [
+   {
+    "de": "Bottom-up läuft die Wahrnehmung von den Sinnen zum Gehirn in vier Schritten: Detektion über Rezeption, Enkodierung in neuronale Signale, Übertragung an das Gehirn, Organisation/Interpretation.",
+    "tr": "Bottom-up = duyudan beyne: algılama (reseptör), sinir sinyaline çevirme, beyne iletme, düzenleme/yorumlama."
+   },
+   {
+    "de": "Bei der Detektion nehmen Sinneszellen (Rezeptoren) einen Reiz auf; bei der Enkodierung wird er in Nervensignale (Aktionspotenziale) umgewandelt.",
+    "tr": "Detektion: duyu hücreleri uyaranı alır. Enkodierung: uyaran sinir sinyaline (aksiyon potansiyeli) dönüştürülür."
+   },
+   {
+    "de": "Top-down beeinflussen Erfahrungen, Wissen und Erwartungen die Organisation und Interpretation der Signale.",
+    "tr": "Top-down = beyinden algıya: deneyim, bilgi ve beklentiler sinyalin nasıl yorumlandığını etkiler."
+   },
+   {
+    "de": "Die Interpretation bestimmt unser Verhalten, unsere Gedanken und Emotionen.",
+    "tr": "Yorum; davranışımızı, düşüncelerimizi ve duygularımızı belirler."
+   },
+   {
+    "de": "In einem Foto voller Gesichter findet man die Gesichter schnell, weil das Gehirn das Muster „Gesicht“ kennt und aktiv danach sucht (Top-down).",
+    "tr": "Göz sadece çizgi ve şekil görür; 'bu bir yüz' kararını beyin eski bilgisiyle verir. Bu yüzden bulutta veya prizde bile yüz görürüz (Pareidolie)."
+   },
+   {
+    "de": "Auch Schmerz ist Wahrnehmung: Die Erwartung „Das wird nie besser“ verstärkt den Schmerz; Erklären und Aufklären kann die Erwartung positiv verändern.",
+    "tr": "Ağrı da bir algıdır: 'Bu asla düzelmez' beklentisi ağrıyı büyütür; fizyoterapist açıklama yaparak beklentiyi ve böylece ağrıyı olumlu etkileyebilir."
+   }
+  ],
+  "mcq": [
+   {
+    "id": "L:pps-wahrnehmung:0",
+    "q": "Welche Reihenfolge beschreibt die Bottom-up-Verarbeitung richtig?",
+    "o": [
+     "Detektion → Enkodierung → Übertragung → Interpretation",
+     "Enkodierung → Detektion → Übertragung → Interpretation",
+     "Detektion → Übertragung → Enkodierung → Interpretation",
+     "Interpretation → Detektion → Enkodierung → Übertragung"
+    ],
+    "x": "Önce reseptör uyaranı algılar (Detektion), sonra sinyale çevrilir (Enkodierung), beyne iletilir (Übertragung) ve en son beyin yorumlar. Sinyale çevirmeden iletim olmaz; yorum en sondadır."
+   },
+   {
+    "id": "L:pps-wahrnehmung:1",
+    "q": "Was passiert bei der Enkodierung?",
+    "o": [
+     "Der Reiz wird in neuronale Signale umgewandelt",
+     "Sinneszellen nehmen den Reiz aus der Umwelt auf",
+     "Die Signale werden zum Gehirn weitergeleitet",
+     "Das Gehirn ordnet die Signale und deutet sie"
+    ],
+    "x": "Enkodierung = uyaranın sinir sinyaline (AP) dönüştürülmesi. Uyaranı almak Detektion, beyne iletmek Übertragung, düzenleyip anlam vermek Interpretation'dır."
+   },
+   {
+    "id": "L:pps-wahrnehmung:2",
+    "q": "Welche drei Faktoren beeinflussen die Wahrnehmung top-down?",
+    "o": [
+     "Erfahrungen, Wissen, Erwartungen",
+     "Rezeptoren, Nerven, Gehirn",
+     "Detektion, Enkodierung, Übertragung",
+     "Licht, Lautstärke, Temperatur"
+    ],
+    "x": "Top-down etkenler: deneyim, bilgi, beklenti. Reseptör-sinir-beyin ve Detektion-Enkodierung-Übertragung bottom-up yolun parçalarıdır; ışık, ses, sıcaklık dış uyaranlardır."
+   },
+   {
+    "id": "L:pps-wahrnehmung:3",
+    "q": "Was wird laut Unterricht durch die Interpretation einer Wahrnehmung bestimmt?",
+    "o": [
+     "Unser Verhalten, unsere Gedanken und Emotionen",
+     "Die Zahl der Rezeptoren im Sinnesorgan",
+     "Die Geschwindigkeit der Nervenleitung",
+     "Die Stärke des ankommenden Reizes"
+    ],
+    "x": "Yorum davranışı, düşünceleri ve duyguları belirler. Reseptör sayısı, iletim hızı ve uyaranın gücü yorumdan etkilenmez; bunlar bottom-up tarafındadır."
+   },
+   {
+    "id": "L:pps-wahrnehmung:4",
+    "q": "Warum findet man in einem Foto voller Gesichter die Gesichter so schnell?",
+    "o": [
+     "Das Gehirn kennt das Muster „Gesicht“ und sucht gezielt danach",
+     "Die Augen nehmen Gesichter stärker auf als andere Formen",
+     "Gesichter lösen besonders starke Aktionspotenziale aus",
+     "Rezeptoren im Auge sind nur auf Gesichter spezialisiert"
+    ],
+    "x": "Bu bir top-down etkisidir: beyin 'yüz' kalıbını (2 göz, burun, ağız) bilir ve aktif olarak arar. Göz sadece çizgi ve kontrast görür; AP her zaman aynı büyüklüktedir (hep ya hiç)."
+   },
+   {
+    "id": "L:pps-wahrnehmung:5",
+    "q": "Was bedeutet „bottom-up“ bei der Wahrnehmung?",
+    "o": [
+     "Von den Sinnen zum Gehirn",
+     "Vom Gehirn zur Wahrnehmung",
+     "Vom Gedanken zum Verhalten",
+     "Von der Emotion zur Erfahrung"
+    ],
+    "x": "Bottom-up = aşağıdan yukarı, duyu organından beyne. 'Beyinden algıya' top-down'ın tanımıdır; diğer iki seçenek algı süreci değildir."
+   },
+   {
+    "id": "L:pps-wahrnehmung:6",
+    "q": "Ein Patient sagt: „Das wird nie besser.“ Wie beeinflusst das seine Schmerzwahrnehmung?",
+    "o": [
+     "Die Erwartung verstärkt den Schmerz (Top-down)",
+     "Die Rezeptoren werden geschädigt (Bottom-up)",
+     "Die Enkodierung wird blockiert, er spürt weniger",
+     "Erwartungen haben keinen Einfluss auf den Schmerz"
+    ],
+    "x": "Olumsuz beklenti ağrıyı yukarıdan aşağı (top-down) güçlendirir; bu biyopsikososyal modelde psikolojik düzeydir. Beklenti reseptörlere zarar vermez ve ağrıyı azaltmaz; etkisiz de değildir."
+   },
+   {
+    "id": "L:pps-wahrnehmung:7",
+    "q": "Ein erfahrener Therapeut erkennt ein Hinken schneller als ein Anfänger. Wie lässt sich das erklären?",
+    "o": [
+     "Sein Wissen beeinflusst die Wahrnehmung (Top-down)",
+     "Er hat mehr Rezeptoren im Auge (Bottom-up)",
+     "Er registriert nur passiv aus dem Augenwinkel",
+     "Seine Nervenleitung ist durch Training schneller"
+    ],
+    "x": "Hastada ne gördüğümüz bilgimize de bağlıdır (top-down); deneyimli terapist aksamayı bu yüzden daha hızlı 'görür'. Göz reseptörleri herkeste aynıdır; pasif 'Registrieren' bilinci sonra devreye sokar, hızlı tanımayı açıklamaz."
+   }
+  ],
+  "open": [
+   {
+    "q": "Erklären Sie den Unterschied zwischen Bottom-up- und Top-down-Verarbeitung der Wahrnehmung.",
+    "a": "Bottom-up läuft von den Sinnen zum Gehirn: Zuerst nehmen Rezeptoren einen Reiz auf (Detektion über Rezeption), dann wird er in neuronale Signale umgewandelt (Enkodierung). Danach folgen die Übertragung an das Gehirn und schließlich die Organisation bzw. Interpretation. Top-down wirkt vom Gehirn auf die Wahrnehmung: Erfahrungen, Wissen und Erwartungen beeinflussen, wie wir die Signale interpretieren. Die Interpretation bestimmt unser Verhalten, unsere Gedanken und Emotionen.",
+    "kw": [
+     "Detektion|Rezeption",
+     "Enkodierung",
+     "Übertragung",
+     "Interpretation",
+     "Erfahrungen",
+     "Wissen",
+     "Erwartungen"
+    ]
+   },
+   {
+    "q": "Erklären Sie an einem Patientenbeispiel, wie Erwartungen die Schmerzwahrnehmung beeinflussen.",
+    "a": "Schmerz ist auch Wahrnehmung und wird top-down beeinflusst. Ein Patient mit der Erwartung „Das wird nie besser“ nimmt seinen Schmerz stärker wahr. Das passt zur psychischen Ebene des biopsychosozialen Modells, Faktor Erwartung. Durch Erklären und Aufklären kann der Therapeut die Erwartung verändern und so Schmerz und Verhalten positiv beeinflussen.",
+    "kw": [
+     "top-down",
+     "Erwartung",
+     "stärker",
+     "psychisch",
+     "Aufklären|Erklären"
+    ]
+   }
+  ],
+  "vocab": [
+   {
+    "de": "die Wahrnehmung / wahrnehmen",
+    "tr": "algı / algılamak"
+   },
+   {
+    "de": "die Detektion",
+    "tr": "tespit, fark etme"
+   },
+   {
+    "de": "der Rezeptor",
+    "tr": "reseptör (duyu hücresi)"
+   },
+   {
+    "de": "die Enkodierung",
+    "tr": "kodlama (sinyale çevirme)"
+   },
+   {
+    "de": "die Übertragung / übertragen",
+    "tr": "aktarım / aktarmak"
+   },
+   {
+    "de": "die Interpretation / interpretieren",
+    "tr": "yorum / yorumlamak"
+   },
+   {
+    "de": "die Erwartung",
+    "tr": "beklenti"
+   },
+   {
+    "de": "beeinflussen",
+    "tr": "etkilemek"
+   },
+   {
+    "de": "aufklären",
+    "tr": "(hastayı) bilgilendirmek, aydınlatmak"
+   }
+  ],
+  "nh": "6107c8bed93c507a"
  }
 ];
