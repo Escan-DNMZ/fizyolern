@@ -256,3 +256,15 @@ body.focus3d .hud-top .chips, body.focus3d .hud-top .slider, body.focus3d .searc
 /* Lücke im Lückentext: nicht umbrechen, unterstrichenes Kästchen */
 .gap { display: inline-block; min-width: 3.4em; height: 1.05em; vertical-align: -0.15em; border-bottom: 2.5px solid var(--accent);
   background: color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 4px 4px 0 0; white-space: nowrap; }
+
+/* ───── Knochenpunkte, Achsen, Schritt-für-Schritt-Ansicht ───── */
+.lbl3d.lbl-lm { background: #9333ea; }
+.lbl3d.lbl-via { background: #d97706; }
+.lbl3d.lbl-axis { color: #fff; }
+.badge.landmark { background: color-mix(in srgb, #9333ea 18%, transparent); color: #9333ea; }
+.stepper { display: flex; align-items: center; gap: 8px; margin: -2px 30px 8px 0; }
+.stepper .count { flex: 1; text-align: center; font-weight: 700; font-size: 13px; }
+.stepper .chip:disabled { opacity: .35; }
+.legend { display: grid; gap: 6px; margin-top: 10px; }
+.legend button { display: flex; align-items: center; gap: 4px; text-align: left; background: none; border: 0; padding: 4px 0; color: var(--text); font: inherit; font-size: 14px; }
+.lm-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }

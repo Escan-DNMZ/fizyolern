@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from '../vendor/OrbitControls.js';
 import { BONES, MUSCLES, JOINTS } from './data/anatomy.js';
 import { MUSCLE3D, partNames } from './data/muscle3d.js';
+import { LANDMARKS, findLandmark, landmarksOf, shortLa } from './data/landmarks.js';
+import { axesOf } from './data/axes.js';
 
 const V = (p, sx = 1) => new THREE.Vector3(p[0] * sx, p[1], p[2]);
 
@@ -22,6 +24,24 @@ const COLORS = {
   joint: 0x3b82f6,
   highlight: 0xffc83d,
 };
+
+// Linke Körperseite (x > 0) bzw. Mittellinie
+function isLeftMesh(m) {
+  const p = m.userData.part || '';
+  if (/\bright\b/i.test(p)) return false;
+  if (/\bleft\b/i.test(p)) return true;
+  if (!m.userData.real) return new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3()).x >= -0.005; // gespiegelte Teile: nur links
+  return true; // Mittellinie (z. B. Zwerchfell, Wirbel)
+}
+const boxOf = (meshes) => meshes.reduce((b, m) => b.union(new THREE.Box3().setFromObject(m)), new THREE.Box3());
+const cloneMesh = (m, mat, data) => {
+  const c = new THREE.Mesh(m.geometry, mat);
+  c.matrixAutoUpdate = false;
+  c.matrix.copy(m.matrixWorld);
+  c.userData = data || {};
+  return c;
+};
+const MULTI = [0xe4572e, 0x2563eb, 0x16a34a, 0xa259ff, 0xf3a712, 0xff6fb5, 0x0ea5e9, 0x8d6e63, 0x84cc16, 0x9333ea];
 
 // Spindelförmiger Muskelbauch entlang der y-Achse, Länge 1, Radius 1
 function spindleGeometry() {
@@ -249,6 +269,9 @@ export class Anatomy3D {
     this.labelLayer.className = 'labels3d';
     container.appendChild(this.labelLayer);
     this.alias = {}; // Struktur-ID -> ID der Gruppe, deren echtes Mesh sie mitdarstellt
+    this.onLandmark = () => {};
+    this.showLm = false; // Knochenpunkte in der Gesamtansicht
+    this.lmRoot = null;
 
     this.build();
     this.bindPicking();
@@ -517,6 +540,7 @@ export class Anatomy3D {
 
   applyVisibility() {
     const sel = this.alias[this.selected] || this.selected;
+    if (this.lmRoot) this.lmRoot.visible = this.showLm && !this.focus;
     for (const [id, g] of this.byId) {
       const kind = g.userData.kind;
       if (this.focus) { g.visible = false; continue; } // im Fokusmodus zeigt nur focus.root etwas
@@ -582,36 +606,81 @@ export class Anatomy3D {
   // ───── Schichten (oberflächlich → tief) ─────
   setDepth(n) { this.depth = n; this.applyVisibility(); }
 
-  // ───── Fokusmodus: ein Muskel mit seinen Teilen, Ursprung/Ansatz und den tieferen Muskeln ─────
-  enterFocus(id) {
-    const muscle = MUSCLES.find((m) => m.id === id);
-    const group = this.byId.get(id);
-    if (!muscle || !group || !group.children.length) return null;
+  // ───── Fokusansichten (Muskel, Knochen, Gelenk, Knochenpunkt, mehrere Strukturen) ─────
+  _kit() {
     this.exitFocus();
     this.scene.updateMatrixWorld(true);
+    const mats = [];
+    return { root: new THREE.Group(), mats, labels: [], mat: (o) => { const m = new THREE.MeshStandardMaterial(o); mats.push(m); return m; } };
+  }
 
-    const isLeft = (m) => {
-      const p = m.userData.part || '';
-      if (/\bright\b/i.test(p)) return false;
-      if (/\bleft\b/i.test(p)) return true;
-      if (!m.userData.real) return m.scale.x > 0; // gespiegelte Platten: nur die linke
-      return true; // Mittellinie (z. B. Zwerchfell)
-    };
-    const boxOf = (meshes) => meshes.reduce((b, m) => b.union(new THREE.Box3().setFromObject(m)), new THREE.Box3());
-    const clone = (m, mat, data) => {
-      const c = new THREE.Mesh(m.geometry, mat);
-      c.matrixAutoUpdate = false;
-      c.matrix.copy(m.matrixWorld);
-      c.userData = data || {};
-      return c;
-    };
+  _leftMeshes(id) {
+    const g = this.byId.get(this.alias[id] || id);
+    if (!g) return [];
+    if (g.userData.kind === 'joint') return g.children.slice(0, 1);
+    return g.children.filter(isLeftMesh);
+  }
 
-    const own = group.children.filter(isLeft);
+  // Punkt mit Beschriftung; pick = Landmark-ID (zum Antippen)
+  _dot(kit, pos, color, text, cls, pick = null, r = 0.007) {
+    const s = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), new THREE.MeshBasicMaterial({ color, depthTest: false }));
+    s.renderOrder = 10;
+    s.position.copy(pos);
+    s.userData = { own: true, landmark: pick };
+    kit.root.add(s);
+    if (pick) { // größere, unsichtbare Trefferfläche für den Finger
+      const hit = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 6), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
+      hit.position.copy(pos);
+      hit.userData = { own: true, landmark: pick };
+      kit.root.add(hit);
+    }
+    if (text) kit.labels.push(this.addLabel(text, pos, cls));
+    return s;
+  }
+
+  // Knochen in der Nähe blass, „solid“-Knochen kräftig; skip = schon gezeigte Meshes
+  _contextBones(kit, box, solid = () => false, skip = new Set(), pad = 0.15) {
+    const attachMat = kit.mat({ color: COLORS.bone, roughness: 0.65 });
+    const ghostMat = kit.mat({ color: COLORS.bone, roughness: 0.65, transparent: true, opacity: 0.22, depthWrite: false });
+    const near = box.clone().expandByScalar(pad);
+    for (const b of this.meshes) {
+      if (b.userData.kind !== 'bone' || !b.userData.real || skip.has(b) || !isLeftMesh(b)) continue;
+      if (solid(b)) kit.root.add(cloneMesh(b, attachMat));
+      else if (near.intersectsBox(new THREE.Box3().setFromObject(b))) kit.root.add(cloneMesh(b, ghostMat));
+    }
+  }
+
+  // Strukturen der vorherigen Schritte blass grau
+  _ghosts(kit, ids, skip = new Set()) {
+    if (!ids.length) return;
+    const gm = kit.mat({ color: 0x9aa4b2, roughness: 0.6, transparent: true, opacity: 0.3, depthWrite: false });
+    for (const gid of ids) {
+      const lm = findLandmark(gid);
+      if (lm) { this._dot(kit, V(lm.pos), 0x9aa4b2, null, '', null, 0.005); continue; }
+      this._leftMeshes(gid).forEach((m) => { if (!skip.has(m)) { kit.root.add(cloneMesh(m, gm)); skip.add(m); } });
+    }
+  }
+
+  _show(kit, data, box, factor, dir) {
+    this.scene.add(kit.root);
+    this.focus = { root: kit.root, mats: kit.mats, labels: kit.labels, parts: [], deeper: [], activePart: null, ...data };
+    this.applyVisibility();
+    this.applyViewOffset();
+    this.focusBox(box, factor, dir);
+  }
+
+  enterFocus(id, { ghosts = [] } = {}) {
+    if (findLandmark(id)) return this.enterLandmark(id, { ghosts });
+    const muscle = MUSCLES.find((m) => m.id === id);
+    if (!muscle) return this.enterStructure(id, { ghosts });
+    const group = this.byId.get(id);
+    if (!group || !group.children.length) return null;
+    const kit = this._kit();
+    const { root, mat } = kit;
+
+    const own = group.children.filter(isLeftMesh);
     const selBox = boxOf(own);
     const info = MUSCLE3D[id] || { layer: 1, o: [], i: [] };
-    const root = new THREE.Group();
-    const mats = [];
-    const mat = (opts) => { const m = new THREE.MeshStandardMaterial(opts); mats.push(m); return m; };
 
     // Teile des Muskels, jeder Teil eine eigene Farbe
     const PALETTE = [0xe4572e, 0xf3a712, 0xa259ff, 0xff6fb5, 0x8d6e63, 0xf97316]; // kein Grün/Blau (= U/A-Marker)
@@ -623,67 +692,216 @@ export class Anatomy3D {
         p = { ...names, meshes: [], mat: mat({ color: PALETTE[parts.length % PALETTE.length], roughness: 0.5 }) };
         parts.push(p);
       }
-      const c = clone(m, p.mat, { focusPart: parts.indexOf(p) });
+      const c = cloneMesh(m, p.mat, { focusPart: parts.indexOf(p) });
       p.meshes.push(c);
       root.add(c);
     }
 
     // Knochen: Ursprungs-/Ansatzknochen kräftig, Nachbarknochen blass
-    const matches = (part, list) => list.some((s) => part.toLowerCase().includes(s.toLowerCase()));
-    const bones = this.meshes.filter((m) => m.userData.kind === 'bone' && m.userData.real && isLeft(m));
-    const attachMat = mat({ color: COLORS.bone, roughness: 0.65 });
-    const ghostMat = mat({ color: COLORS.bone, roughness: 0.65, transparent: true, opacity: 0.22, depthWrite: false });
-    const near = selBox.clone().expandByScalar(0.15);
+    const matches = (part, list) => list.some((x) => part.toLowerCase().includes(x.toLowerCase()));
     const attachBones = { o: [], i: [] };
-    for (const b of bones) {
+    for (const b of this.meshes) {
+      if (b.userData.kind !== 'bone' || !b.userData.real || !isLeftMesh(b)) continue;
       const part = b.userData.part || '';
-      const isO = matches(part, info.o), isI = matches(part, info.i);
-      if (isO) attachBones.o.push(b);
-      if (isI) attachBones.i.push(b);
-      if (isO || isI) root.add(clone(b, attachMat));
-      else if (near.intersectsBox(new THREE.Box3().setFromObject(b))) root.add(clone(b, ghostMat));
+      if (matches(part, info.o)) attachBones.o.push(b);
+      if (matches(part, info.i)) attachBones.i.push(b);
     }
+    const solid = new Set([...attachBones.o, ...attachBones.i]);
+    this._contextBones(kit, selBox, (b) => solid.has(b));
 
     // Tiefere Muskeln in derselben Region halbtransparent
     const deepMat = mat({ color: 0xd98b8b, roughness: 0.5, transparent: true, opacity: 0.45, depthWrite: false });
     const touch = selBox.clone().expandByScalar(0.02);
     const deeper = [];
+    const shown = new Set(own);
     for (const [mid, g] of this.byId) {
-      if (mid === id || g.userData.kind !== 'muscle') continue;
+      if (mid === id || g.userData.kind !== 'muscle' || ghosts.includes(mid)) continue;
       const layer = (MUSCLE3D[mid] || {}).layer || 1;
       if (layer <= info.layer) continue;
-      const ms = g.children.filter(isLeft).filter((m) => touch.containsPoint(new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3()))); // Mitte liegt unter dem Muskel
+      const ms = g.children.filter(isLeftMesh).filter((m) => touch.containsPoint(new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3()))); // Mitte liegt unter dem Muskel
       if (!ms.length) continue;
       deeper.push(mid);
-      ms.forEach((m) => root.add(clone(m, deepMat, { deepId: mid })));
+      ms.forEach((m) => { shown.add(m); root.add(cloneMesh(m, deepMat, { deepId: mid })); });
     }
+    this._ghosts(kit, ghosts.filter((g) => g !== id), shown);
 
-    // Ursprung (U) und Ansatz (A): Stellen, an denen der Muskel den Knochen berührt
-    const markers = this.attachmentPoints(own, attachBones);
-    const labels = [];
+    // Ursprung/Ansatz: benannte Knochenpunkte (z. B. „Ursprung: Spina ischiadica“), sonst Kontaktstelle am Knochen
+    const lms = landmarksOf(id);
+    const markers = this.attachmentPoints(own, attachBones).filter((mk) => !lms[mk.role].some((l) => l.bone === mk.boneId));
     for (const mk of markers) {
-      const s = new THREE.Mesh(new THREE.SphereGeometry(0.007, 16, 12), new THREE.MeshBasicMaterial({ color: mk.role === 'o' ? 0x16a34a : 0x2563eb, depthTest: false }));
-      s.renderOrder = 10;
-      s.position.copy(mk.pos);
-      root.add(s);
-      const bone = BONES.find((b) => b.id === mk.boneId);
-      labels.push(this.addLabel(`${mk.role === 'o' ? 'U' : 'A'} · ${bone ? bone.de : ''}`, mk.pos, mk.role === 'o' ? 'lbl-o' : 'lbl-i'));
+      const bone = BONES.find((x) => x.id === mk.boneId);
+      this._dot(kit, mk.pos, mk.role === 'o' ? 0x16a34a : 0x2563eb, `${mk.role === 'o' ? 'U' : 'A'} · ${bone ? bone.de : ''}`, mk.role === 'o' ? 'lbl-o' : 'lbl-i');
+    }
+    const ROLE = { o: ['Ursprung', 0x16a34a, 'lbl-o'], i: ['Ansatz', 0x2563eb, 'lbl-i'], via: ['Umlenkung', 0xf59e0b, 'lbl-via'] };
+    for (const role of ['o', 'i', 'via']) {
+      for (const l of lms[role]) this._dot(kit, V(l.pos), ROLE[role][1], `${ROLE[role][0]}: ${shortLa(l)}`, ROLE[role][2], l.id);
     }
     if (parts.length > 1) {
-      parts.forEach((p, k) => {
-        const c = boxOf(p.meshes).getCenter(new THREE.Vector3());
-        labels.push(this.addLabel(p.la, c, 'lbl-part', k));
-      });
+      parts.forEach((p, k) => kit.labels.push(this.addLabel(p.la, boxOf(p.meshes).getCenter(new THREE.Vector3()), 'lbl-part', k)));
     }
 
-    this.scene.add(root);
-    this.focus = { id, root, parts, mats, labels, deeper, layer: info.layer, activePart: null };
-    this.applyVisibility();
     const c = selBox.getCenter(new THREE.Vector3());
-    const dir = new THREE.Vector3(0.45, 0.12, c.z < -0.02 ? -1 : 1).normalize();
-    this.applyViewOffset();
-    this.focusBox(selBox, 2.2, dir);
-    return { parts: parts.map((p) => ({ la: p.la, de: p.de, tr: p.tr, color: '#' + p.mat.color.getHexString() })), deeper, layer: info.layer, markers: markers.length };
+    this._show(kit, { id, kind: 'muscle', parts, deeper, layer: info.layer }, selBox, 2.2, new THREE.Vector3(0.45, 0.12, c.z < -0.02 ? -1 : 1).normalize());
+    return {
+      kind: 'muscle',
+      parts: parts.map((p) => ({ la: p.la, de: p.de, tr: p.tr, color: '#' + p.mat.color.getHexString() })),
+      deeper, layer: info.layer, markers: markers.length,
+      landmarks: ['o', 'i', 'via'].flatMap((r) => lms[r].map((l) => ({ id: l.id, role: r }))),
+    };
+  }
+
+  // Knochen (mit seinen Knochenpunkten) oder Gelenk (mit den beteiligten Knochen, Achsen zuschaltbar)
+  enterStructure(id, { ghosts = [] } = {}) {
+    const isBone = BONES.some((x) => x.id === id);
+    const isJoint = JOINTS.some((x) => x.id === id);
+    if (!isBone && !isJoint) return null;
+    const own = this._leftMeshes(id);
+    if (!own.length) return null;
+    const kit = this._kit();
+    const hl = kit.mat(isBone ? { color: 0xf2c14e, roughness: 0.55 } : { color: COLORS.joint, roughness: 0.5, transparent: true, opacity: 0.55, depthWrite: false });
+    own.forEach((m) => kit.root.add(cloneMesh(m, hl)));
+    const box = boxOf(own);
+    const skip = new Set(own);
+    let lmIds = [];
+    let axisCenter = null;
+    if (isBone) {
+      this._contextBones(kit, box, () => false, skip);
+      const lms = LANDMARKS.filter((l) => l.bone === id);
+      lms.forEach((l) => this._dot(kit, V(l.pos), 0x9333ea, shortLa(l), 'lbl-lm', l.id, 0.006));
+      lmIds = lms.map((l) => l.id);
+    } else {
+      axisCenter = box.getCenter(new THREE.Vector3());
+      const jb = new THREE.Box3().setFromCenterAndSize(axisCenter, new THREE.Vector3(0.05, 0.05, 0.05));
+      this._contextBones(kit, box, (b) => jb.intersectsBox(new THREE.Box3().setFromObject(b)), skip);
+      box.expandByScalar(0.06);
+    }
+    this._ghosts(kit, ghosts.filter((g) => g !== id), skip);
+    const c = box.getCenter(new THREE.Vector3());
+    this._show(kit, { id, kind: isBone ? 'bone' : 'joint', axisCenter }, box, isBone ? 1.6 : 2.2, new THREE.Vector3(0.35, 0.15, c.z < -0.04 ? -1 : 1).normalize());
+    return { kind: isBone ? 'bone' : 'joint', landmarks: lmIds, axes: isJoint ? axesOf(id) : [] };
+  }
+
+  // Knochenpunkt: Knochen kräftig, Muskeln mit Ursprung (grün) / Ansatz (blau) / Umlenkung (orange) halbtransparent
+  enterLandmark(id, { ghosts = [] } = {}) {
+    const l = findLandmark(id);
+    const kit = this._kit();
+    const p = V(l.pos);
+    const bone = new Set(this._leftMeshes(l.bone));
+    const box = new THREE.Box3().setFromCenterAndSize(p, new THREE.Vector3(0.12, 0.12, 0.12));
+    this._contextBones(kit, box, (b) => bone.has(b));
+    const shown = new Set();
+    const COL = { o: 0x16a34a, i: 0x2563eb, via: 0xf59e0b };
+    for (const role of ['o', 'i', 'via']) {
+      const m = kit.mat({ color: COL[role], roughness: 0.5, transparent: true, opacity: 0.4, depthWrite: false });
+      for (const mid of l[role] || []) this._leftMeshes(mid).forEach((x) => { shown.add(x); kit.root.add(cloneMesh(x, m, { deepId: mid })); });
+    }
+    this._ghosts(kit, ghosts.filter((g) => g !== id), shown);
+    this._dot(kit, p, 0x9333ea, shortLa(l), 'lbl-lm', l.id, 0.009);
+    // von außen auf den Punkt schauen (weg von der Knochenmitte)
+    const out = p.clone().sub(boxOf([...bone]).getCenter(new THREE.Vector3()));
+    out.y *= 0.3;
+    if (out.lengthSq() < 1e-6) out.set(0, 0, 1);
+    this._show(kit, { id, kind: 'landmark' }, box, 2.4, out.normalize());
+    return { kind: 'landmark', o: l.o || [], i: l.i || [], via: l.via || [] };
+  }
+
+  // Alle Strukturen zusammen, jede in eigener Farbe
+  enterGroup(ids) {
+    const kit = this._kit();
+    const all = new THREE.Box3();
+    const legend = [];
+    const shown = new Set();
+    ids.forEach((gid, k) => {
+      const color = MULTI[k % MULTI.length];
+      const lm = findLandmark(gid);
+      if (lm) {
+        const p = V(lm.pos);
+        this._dot(kit, p, color, shortLa(lm), 'lbl-lm', lm.id, 0.008);
+        all.expandByPoint(p);
+      } else {
+        const ms = this._leftMeshes(gid);
+        if (!ms.length) return;
+        const m = kit.mat({ color, roughness: 0.5 });
+        ms.forEach((x) => { shown.add(x); kit.root.add(cloneMesh(x, m, { groupId: gid })); });
+        all.union(boxOf(ms));
+      }
+      legend.push({ id: gid, color: '#' + new THREE.Color(color).getHexString() });
+    });
+    if (all.isEmpty()) return null;
+    this._contextBones(kit, all, () => false, shown, 0.05);
+    const c = all.getCenter(new THREE.Vector3());
+    this._show(kit, { id: null, kind: 'group' }, all.expandByScalar(0.02), 1.9, new THREE.Vector3(0.35, 0.12, c.z < -0.04 ? -1 : 1).normalize());
+    return { kind: 'group', legend };
+  }
+
+  // Bewegungsachsen am Gelenk ein-/ausblenden
+  setAxes(on) {
+    const f = this.focus;
+    if (!f || !f.axisCenter) return;
+    if (f.axisRoot) {
+      f.root.remove(f.axisRoot);
+      f.axisRoot.traverse((o) => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } });
+      f.axisLabels.forEach((l) => l.el.remove());
+      this.labels = this.labels.filter((l) => !f.axisLabels.includes(l));
+      f.labels = f.labels.filter((l) => !f.axisLabels.includes(l));
+      f.axisRoot = null;
+    }
+    if (!on) return;
+    const grp = new THREE.Group();
+    f.axisLabels = [];
+    const len = 0.2;
+    for (const a of axesOf(f.id)) {
+      const dir = new THREE.Vector3(...a.v);
+      const m = new THREE.MeshBasicMaterial({ color: a.color, depthTest: false });
+      const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.0022, 0.0022, len, 8), m);
+      rod.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+      rod.position.copy(f.axisCenter);
+      rod.renderOrder = 11;
+      grp.add(rod);
+      for (const sgn of [1, -1]) {
+        const tip = new THREE.Mesh(new THREE.ConeGeometry(0.006, 0.016, 12), m.clone());
+        tip.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().multiplyScalar(sgn));
+        tip.position.copy(f.axisCenter).addScaledVector(dir, sgn * len / 2);
+        tip.renderOrder = 11;
+        grp.add(tip);
+      }
+      const l = this.addLabel(a.la, f.axisCenter.clone().addScaledVector(dir, len / 2 + 0.012), 'lbl-axis');
+      l.el.style.background = a.color;
+      f.axisLabels.push(l);
+      f.labels.push(l);
+    }
+    f.root.add(grp);
+    f.axisRoot = grp;
+    // etwas weiter weg und schräg von vorne, damit alle drei Achsen samt Namen sichtbar sind
+    const z = f.axisCenter.z < -0.04 ? -1 : 1;
+    this.focusBox(new THREE.Box3().setFromCenterAndSize(f.axisCenter, new THREE.Vector3(len, len, len).multiplyScalar(1.25)), 1.7, new THREE.Vector3(0.55, 0.35, z).normalize());
+  }
+
+  // Knochenpunkte in der Gesamtansicht (Punkte beidseitig, Beschriftung links)
+  setLandmarks(on) {
+    this.showLm = on;
+    if (on && !this.lmRoot) {
+      this.lmRoot = new THREE.Group();
+      const mat = new THREE.MeshBasicMaterial({ color: 0x9333ea, depthTest: false });
+      const hitMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
+      const geo = new THREE.SphereGeometry(0.006, 14, 10), hitGeo = new THREE.SphereGeometry(0.016, 8, 6);
+      for (const l of LANDMARKS) {
+        for (const sx of l.mid ? [1] : [1, -1]) {
+          const p = V(l.pos, sx);
+          const d = new THREE.Mesh(geo, mat);
+          d.renderOrder = 10;
+          d.position.copy(p);
+          const h = new THREE.Mesh(hitGeo, hitMat);
+          h.position.copy(p);
+          h.userData.landmark = d.userData.landmark = l.id;
+          this.lmRoot.add(d, h);
+        }
+        const lbl = this.addLabel(shortLa(l), V(l.pos), 'lbl-lm');
+        lbl.lm = true;
+      }
+      this.scene.add(this.lmRoot);
+    }
+    this.applyVisibility();
   }
 
   applyViewOffset() {
@@ -697,7 +915,7 @@ export class Anatomy3D {
     const f = this.focus;
     if (!f) return;
     this.scene.remove(f.root);
-    f.root.traverse((o) => { if (o.isMesh && o.geometry.type === 'SphereGeometry') { o.geometry.dispose(); o.material.dispose(); } });
+    f.root.traverse((o) => { if (o.isMesh && (o.userData.own || o.parent === f.axisRoot)) { o.geometry.dispose(); o.material.dispose(); } }); // geklonte Meshes teilen die Geometrie – nicht freigeben
     f.mats.forEach((m) => m.dispose());
     f.labels.forEach((l) => l.el.remove());
     this.labels = this.labels.filter((l) => !f.labels.includes(l));
@@ -791,11 +1009,13 @@ export class Anatomy3D {
   updateLabels() {
     if (!this.labels.length) return;
     const w = this.container.clientWidth, h = this.container.clientHeight;
+    const camDist = this.camera.position.distanceTo(this.controls.target);
     const v = new THREE.Vector3();
     for (const l of this.labels) {
       v.copy(l.pos).project(this.camera);
       const hidden = v.z > 1 || v.x < -1.1 || v.x > 1.1 || v.y < -1.1 || v.y > 1.1
-        || (l.part !== null && !(this.focus && this.focus.activePart === l.part));
+        || (l.part !== null && !(this.focus && this.focus.activePart === l.part))
+        || (l.lm && (!this.showLm || this.focus || camDist > 1.5)); // Gesamtansicht: Namen erst beim Heranzoomen
       l.el.style.display = hidden ? 'none' : '';
       if (!hidden) l.el.style.transform = `translate(${((v.x + 1) / 2) * w}px, ${((1 - v.y) / 2) * h}px) translate(-50%, -130%)`;
     }
@@ -837,12 +1057,20 @@ export class Anatomy3D {
       ray.setFromCamera(ndc, this.camera);
       if (this.focus) {
         const pick = [];
-        this.focus.root.traverse((o) => { if (o.isMesh && (o.userData.focusPart !== undefined || o.userData.deepId)) pick.push(o); });
-        const h = ray.intersectObjects(pick, false)[0];
+        this.focus.root.traverse((o) => { if (o.isMesh && (o.userData.focusPart !== undefined || o.userData.deepId || o.userData.landmark || o.userData.groupId)) pick.push(o); });
+        const hits = ray.intersectObjects(pick, false);
+        const h = hits.find((x) => x.object.userData.landmark) || hits[0]; // Knochenpunkte liegen obenauf
         if (!h) { this.focusPart(null); this.onPart(null); return; }
-        if (h.object.userData.focusPart !== undefined) { this.focusPart(h.object.userData.focusPart); this.onPart(h.object.userData.focusPart); }
-        else this.onSelect(h.object.userData.deepId, { focus: true });
+        const u = h.object.userData;
+        if (u.landmark) { if (u.landmark !== this.focus.id) this.onLandmark(u.landmark); }
+        else if (u.focusPart !== undefined) { this.focusPart(u.focusPart); this.onPart(u.focusPart); }
+        else if (u.groupId) this.onPart({ group: u.groupId });
+        else this.onSelect(u.deepId, { focus: true });
         return;
+      }
+      if (this.showLm && this.lmRoot) {
+        const lh = ray.intersectObjects(this.lmRoot.children, false)[0];
+        if (lh) { this.onLandmark(lh.object.userData.landmark); return; }
       }
       const visible = this.meshes.filter((m) => m.parent.visible && !(m.material.transparent && m.material.opacity < 0.5 && m.userData.id !== this.selected));
       const hit = ray.intersectObjects(visible, false)[0];
