@@ -14,8 +14,8 @@ export const LESSONS = [
     "tr": "Kasın başlangıç yeri (Ursprung) proksimal, yapışma yeri (Ansatz) distaldir."
    },
    {
-    "de": "Für Gelenke lernt man Lage, Gelenkpartner, Art des Gelenkes, Freiheitsgrade, ROM-Normwerte und Kapsel-Band-Apparat.",
-    "tr": "Eklemler için: yeri, eklem kemikleri, eklem tipi, serbestlik dereceleri, ROM normal değerleri ve kapsül-bağ yapısı öğrenilir."
+    "de": "Für Gelenke lernt man Lage, Gelenkpartner, Art des Gelenkes, Freiheitsgrade, ROM-Normwerte, Kapsel-Band-Apparat und Sonstiges.",
+    "tr": "Eklemler için: yeri, eklem kemikleri, eklem tipi, serbestlik dereceleri, ROM normal değerleri, kapsül-bağ yapısı ve diğerleri öğrenilir."
    },
    {
     "de": "Für Knochen lernt man den lateinischen Namen, die Art des Knochens, die beteiligten Gelenke und wichtige Referenzpunkte.",
@@ -174,9 +174,9 @@ export const LESSONS = [
      "Der Ansatz eines Muskels liegt proximal, der Ursprung distal",
      "Fachsprache ist präzise, international und interdisziplinär",
      "Bei Knochen lernt man auch wichtige Referenzpunkte",
-     "Freiheitsgrade zeigen, um wie viele Achsen sich ein Gelenk bewegt"
+     "Für Körpersysteme lernt man Lage, Bestandteile, Aufbau und Funktion"
     ],
-    "x": "Yanlış olan: Ursprung proksimal, Ansatz distaldır, yani ifade ters çevrilmiştir. Fachsprache'nin özellikleri, kemiklerde referans noktaları ve serbestlik derecesinin tanımı notta doğru olarak geçer."
+    "x": "Yanlış olan: Ursprung proksimal, Ansatz distaldır, yani ifade ters çevrilmiştir. Fachsprache'nin özellikleri, kemiklerde referans noktaları ve vücut sistemleri için öğrenme modeli notta doğru olarak geçer."
    },
    {
     "id": "L:allg-anatomie-1:n3",
@@ -216,19 +216,24 @@ export const LESSONS = [
     ]
    },
    {
-    "q": "Nennen Sie sechs Körpersysteme mit ihrer Funktion.",
-    "a": "Der Bewegungsapparat dient der Bewegung und Interaktion mit der Umwelt, das Herz-Kreislauf-System dem Transport von Blut und Nährstoffen. Das lymphatische System dient der Abwehr gegen Fremdkörper, das Atmungssystem dem Gasaustausch. Das Verdauungssystem verarbeitet die Nahrung, das Nervensystem steuert Motorik, Sensorik und vitale Funktionen.",
+    "q": "Nennen Sie die zehn Körpersysteme mit ihrer Funktion.",
+    "a": "Der Bewegungsapparat dient der Bewegung und Interaktion mit der Umwelt, das Herz-Kreislauf-System dem Transport von Blut und Nährstoffen. Das lymphatische System dient der Abwehr gegen Fremdkörper, das Atmungssystem dem Gasaustausch, das Verdauungssystem der Nahrungsverarbeitung und das Fortpflanzungssystem der Fortpflanzung. Das endokrine System produziert Hormone zur Regulation, das Nervensystem steuert Motorik, Sensorik und vitale Funktionen. Das Harnsystem filtert das Blut und scheidet Harn aus, die Haut dient dem Schutz, der Reizaufnahme und der Vitamin-Synthese.",
     "kw": [
-     "Bewegungsapparat|Bewegung",
-     "Herz-Kreislauf|Transport",
+     "Bewegungsapparat",
+     "Herz-Kreislauf",
      "Lymph|Abwehr",
      "Atmung|Gasaustausch",
-     "Nervensystem|Steuerung|Verdauung"
+     "Verdauung",
+     "Fortpflanzung",
+     "Endokrin|Hormon",
+     "Nervensystem",
+     "Harn",
+     "Haut"
     ]
    },
    {
     "q": "Nennen Sie das Lernmodell für Gelenke (mindestens fünf Punkte).",
-    "a": "Für ein Gelenk lernt man die Lage, die Gelenkpartner, die Art des Gelenkes, die Freiheitsgrade, die ROM-Normwerte, den Kapsel-Band-Apparat und Sonstiges. Die Freiheitsgrade geben an, um wie viele Achsen sich ein Gelenk bewegen kann.",
+    "a": "Für ein Gelenk lernt man die Lage, die Gelenkpartner, die Art des Gelenkes, die Freiheitsgrade, die ROM-Normwerte, den Kapsel-Band-Apparat und Sonstiges. Freiheitsgrade: Im Lehrbuch entspricht die Zahl der Freiheitsgrade der Zahl der Bewegungsachsen; in Anatomie I zählt man pro Achse 2 Freiheitsgrade (z. B. Ellbogen 1 BA / 2 FG).",
     "kw": [
      "Lage",
      "Gelenkpartner",
@@ -370,8 +375,8 @@ export const LESSONS = [
     "tr": "Bu derste 1 hareket ekseni = 2 serbestlik derecesi (her eksende iki yön). Dirsek 1 BA/2 FG, omuz 3 BA/6 FG."
    },
    {
-    "de": "Das Kugelgelenk (z. B. Hüfte, Schulter) hat 3 Bewegungsachsen und 6 Freiheitsgrade.",
-    "tr": "Küresel eklem (kalça, omuz) 3 eksen / 6 serbestlik derecesine sahiptir."
+    "de": "Das Kugelgelenk (z. B. Hüfte, Schulter) hat 3 Bewegungsachsen; nach der Zählung in Anatomie I (1 BA = 2 FG) sind das 6 Freiheitsgrade, im Lehrbuch und in PT Befund 3 Freiheitsgrade.",
+    "tr": "Küresel eklem (kalça, omuz) 3 eksenlidir: Anatomie I sayımıyla 6 serbestlik derecesi, ders kitabında ve PT Befund'da 3 serbestlik derecesi."
    },
    {
     "de": "Knochenvorsprünge wie Tuberositas, Trochanter oder Spina sind meist Ursprung oder Ansatz von Muskeln und oft tastbar.",
@@ -577,7 +582,7 @@ export const LESSONS = [
     "kw": [
      "Gelenkknorren",
      "Gelenkfläche",
-     "auf|neben",
+     "Vorsprung|Knochenvorsprung",
      "nicht Teil",
      "Muskelursprung|Ursprung"
     ]
@@ -1619,7 +1624,8 @@ export const LESSONS = [
      "Depolarisation",
      "Na⁺|Natrium",
      "Repolarisation",
-     "K⁺|Kalium"
+     "K⁺|Kalium",
+     "Hyperpolarisation"
     ]
    },
    {
@@ -1920,12 +1926,12 @@ export const LESSONS = [
     "typ": "falsch",
     "q": "Welche Aussage zu den Organellen ist FALSCH?",
     "o": [
-     "Der Nukleus bildet Bestandteile der Ribosomen",
+     "Der Nukleolus liegt außerhalb des Zellkerns im Zellplasma",
      "Das glatte ER hilft beim Abbau von Giftstoffen",
      "Das Zentriol organisiert die Teilung der Zelle",
      "Filamente geben der Zelle Halt und ihre Form"
     ],
-    "x": "Ribozom parçalarını çekirdeğin içindeki çekirdekçik (Nukleolus) yapar; Nukleus DNA'yı taşıyan yönetim merkezidir. Diğer üç ifade derste aynen geçer."
+    "x": "Yanlış olan: Çekirdekçik (Nukleolus) çekirdeğin dışında değil, içindedir ve ribozom parçalarını üretir; Nukleus ise DNA'yı taşıyan yönetim merkezidir. Diğer üç ifade derste aynen geçer."
    },
    {
     "id": "L:zelle-organellen:n2",
@@ -2175,9 +2181,9 @@ export const LESSONS = [
      "Sagittalebene",
      "Frontalebene",
      "Transversalebene",
-     "Horizontalebene"
+     "Behandlungsebene"
     ],
-    "x": "Fleksiyon/ekstansiyon sagittal düzlemde, transversal eksen etrafında olur. Frontal düzlemde abdüksiyon/addüksiyon, transversal (horizontal) düzlemde rotasyon gerçekleşir."
+    "x": "Fleksiyon/ekstansiyon sagittal düzlemde, transversal eksen etrafında olur. Frontal düzlemde abdüksiyon/addüksiyon, transversal (horizontal) düzlemde rotasyon gerçekleşir; Behandlungsebene ise eklem içi kayma için kullanılan tedavi düzlemidir, vücut düzlemi değildir."
    },
    {
     "id": "L:pt-grundlagen-1:2",
@@ -2197,9 +2203,9 @@ export const LESSONS = [
      "Exzentrisch",
      "Konzentrisch",
      "Isometrisch",
-     "Isotonisch"
+     "Assistiv"
     ],
-    "x": "Eksantrik çalışmada kas kontrollü olarak uzar ve en yüksek direnç mümkündür. Konsantrik çalışmada kas kısalır, izometrikte ise görünür hareket olmadan gerim oluşur."
+    "x": "Eksantrik çalışmada kas kontrollü olarak uzar ve en yüksek direnç mümkündür. Konsantrik çalışmada kas kısalır, izometrikte görünür hareket olmadan gerim oluşur; asistif ise bir kas çalışma şekli değil, hastanın biraz yardım ettiği bir hareket biçimidir."
    },
    {
     "id": "L:pt-grundlagen-1:4",
@@ -2488,7 +2494,7 @@ export const LESSONS = [
     "tr": "Kanıta dayalı uygulamanın üç sütunu: bilimsel araştırma, klinik deneyim, hastanın bakış açısı/ihtiyaçları."
    },
    {
-    "de": "Clinical Reasoning umfasst alle Denk- und Entscheidungsprozesse der Untersuchung und Analyse eines Patienten, um evidenzbasierte Praxis anzuleiten.",
+    "de": "Clinical Reasoning umfasst alle Denk- und Entscheidungsprozesse der Untersuchung und Analyse eines Patienten, um ihn, seinen Kontext und sein klinisches Problem zu verstehen und evidenzbasierte Praxis anzuleiten.",
     "tr": "Klinik akıl yürütme: hastayı, bağlamını ve sorununu anlamak için tüm düşünme ve karar süreçleri; döngüsel bir süreçtir."
    },
    {
@@ -2611,14 +2617,14 @@ export const LESSONS = [
    },
    {
     "id": "L:pt-befund-1:8",
-    "q": "Welche Art von Frage ist „Nach welcher Zeit im Sitzen bemerken Sie Ihren Schmerz?“",
+    "q": "Wie ist die Frage „Nach welcher Zeit im Sitzen bemerken Sie Ihren Schmerz?“ laut Unterricht einzuordnen?",
     "o": [
      "Vertiefende Frage",
-     "Offene Frage",
      "Geschlossene Frage",
-     "Suggestivfrage"
+     "Suggestivfrage",
+     "Vorwurfsvolle Frage"
     ],
-    "x": "Hastanın verdiği bir bilgiyi (oturunca ağrı) daha iyi anlamak için sorulduğundan derinleştirici sorudur. Evet/hayır ile cevaplanmadığı için kapalı değildir, cevabı da önceden vermez."
+    "x": "Hastanın verdiği bir bilgiyi (oturunca ağrı) daha iyi anlamak için sorulduğundan derinleştirici sorudur. Evet/hayır ile cevaplanmaz (kapalı değil), cevabı önceden vermez (yönlendirici değil) ve suçlayıcı değildir."
    },
    {
     "id": "L:pt-befund-1:9",
@@ -2705,14 +2711,14 @@ export const LESSONS = [
    },
    {
     "q": "Was sind Red Flags? Nennen Sie fünf aus dem Minimalkonsens.",
-    "a": "Red Flags sind Symptome und Zeichen, die eine ernste Erkrankung kennzeichnen oder Risikofaktoren dafür darstellen. Beispiele sind Krebs in der Vorgeschichte, Trauma, unerklärlicher Gewichtsverlust, Fieber, nächtliche Schmerzen oder nächtliches Schwitzen, Veränderung von Miktion oder Defäkation und bizarre neurologische Zeichen. Bis zu 80 % der Rückenschmerzpatienten haben eine Red Flag, aber weniger als 1 % eine ernste Erkrankung.",
+    "a": "Red Flags sind Symptome und Zeichen, die eine ernste Erkrankung kennzeichnen oder Risikofaktoren dafür darstellen. Der Minimalkonsens umfasst: Krebs in der Vorgeschichte, Trauma, unerklärlichen Gewichtsverlust, Fieber bzw. subfebrile Temperaturen, Übelkeit und Erbrechen, Müdigkeit und Erschöpfung, nächtliche Schmerzen oder nächtliches Schwitzen, Veränderung von Miktion oder Defäkation, bizarre neurologische Symptome und keine plausiblen mechanischen Faktoren. Bis zu 80 % der Rückenschmerzpatienten haben eine Red Flag, aber weniger als 1 % eine ernste Erkrankung.",
     "kw": [
-     "ernste Erkrankung|ernsthafte Erkrankung",
-     "Krebs",
-     "Trauma",
-     "Gewichtsverlust",
-     "Fieber",
-     "nächtlich|Nacht"
+     "ernste Erkrankung|ernsthafte Erkrankung|Risikofaktor",
+     "Krebs|Trauma",
+     "Gewichtsverlust|Fieber",
+     "Übelkeit|Erbrechen|Müdigkeit|Erschöpfung",
+     "nächtlich|Nacht|Miktion|Defäkation",
+     "bizarr|neurologisch|mechanisch"
     ]
    },
    {
@@ -2721,10 +2727,12 @@ export const LESSONS = [
     "kw": [
      "Symptomatik",
      "Provokation|Linderung",
-     "Irritierbarkeit",
-     "24-h|24 h",
+     "Schwere|Irritierbarkeit",
+     "24-h|24 h|24-Stunden|24 Stunden",
      "Vorgeschichte",
-     "Ziele"
+     "beitragende|beitragend",
+     "Yellow",
+     "Ziele|Erwartungen"
     ]
    }
   ],
@@ -2843,7 +2851,7 @@ export const LESSONS = [
    },
    {
     "de": "Das Hüftgelenk hat 3 Freiheitsgrade mit 6 Bewegungsrichtungen um 3 Achsen.",
-    "tr": "Kalça 3 eksen etrafında 6 yönde hareket eder."
+    "tr": "Kalçanın 3 serbestlik derecesi vardır: 3 eksen etrafında 6 hareket yönü. (Anatomie I dersinde aynı şey 3 eksen / 6 serbestlik derecesi olarak sayılır.)"
    },
    {
     "de": "Neutral-Null laut Folie: Flexion/Extension 130–0–10, Abduktion/Adduktion 45–0–30, Außen-/Innenrotation 50–0–30.",
@@ -3061,14 +3069,15 @@ export const LESSONS = [
    },
    {
     "q": "Mündliche Prüfung: Stellen Sie die Muskulatur des Hüftgelenks nach Bewegungsrichtung geordnet vor.",
-    "a": "Flexoren sind v. a. der M. iliopsoas, dazu Rectus femoris, TFL, Sartorius und die Adduktoren. Extensoren sind der Gluteus maximus und die drei hüftwirksamen Hamstrings (Biceps femoris Caput longum, Semitendinosus, Semimembranosus); das Caput breve überquert nur das Knie. Abduktoren sind Gluteus medius, Gluteus minimus und TFL, innerviert vom N. gluteus superior, bei Schwäche zeigt sich das Trendelenburg-Zeichen. Adduktoren sind Adductor longus, magnus, brevis, Gracilis und Pectineus (N. obturatorius); Außenrotatoren sind Gluteus maximus und die tiefen Außenrotatoren, Innenrotatoren v. a. vorderer Gluteus minimus/medius und TFL.",
+    "a": "Flexoren sind v. a. der M. iliopsoas, dazu M. rectus femoris, M. tensor fasciae latae, M. sartorius und die Adduktoren. Extensoren sind der M. gluteus maximus und die drei hüftwirksamen ischiocruralen Muskeln (Biceps femoris Caput longum, Semitendinosus, Semimembranosus); das Caput breve überquert nur das Knie. Dazu kommen die hinteren Anteile der Mm. glutaei medius et minimus. Abduktoren sind Gluteus medius, Gluteus minimus und TFL, innerviert vom N. gluteus superior; bei Schwäche zeigt sich das Trendelenburg-Zeichen. Adduktoren sind Adductor longus, magnus, brevis, Gracilis und Pectineus (N. obturatorius). Außenrotatoren sind die tiefen Außenrotatoren (Piriformis, Gemellus superior, Obturatorius internus, Gemellus inferior, Obturatorius externus, Quadratus femoris) und der Gluteus maximus. Innenrotatoren sind v. a. der vordere Anteil des Gluteus minimus und der TFL, dazu Gluteus medius, Adductor magnus, Adductor longus und Gracilis.",
     "kw": [
      "Iliopsoas",
      "Gluteus maximus",
+     "ischiocrural|Hamstrings|Semitendinosus",
      "Gluteus medius|Gluteus minimus",
+     "Tensor|TFL",
      "Adduktoren|Adductor",
-     "Trendelenburg",
-     "Außenrotatoren|Piriformis"
+     "Piriformis|Außenrotatoren"
     ]
    },
    {
@@ -3992,7 +4001,7 @@ export const LESSONS = [
      "1972",
      "1960"
     ],
-    "x": "Fosbury 1968'de Mexiko-Stadt'ta altın kazandı (hoca 1920'ler demişti ama doğrusu 1968). 1964 ve 1972 komşu olimpiyat yıllarıdır, karıştırma."
+    "x": "Fosbury 1968'de Mexiko-Stadt'ta bu teknikle olimpiyat altını kazandı. 1964 ve 1972 komşu olimpiyat yıllarıdır, karıştırma."
    },
    {
     "id": "L:trainingslehre-1:7",
@@ -4011,10 +4020,10 @@ export const LESSONS = [
     "o": [
      "Kraft, Ausdauer, Schnelligkeit",
      "Kraft, Ausdauer, Koordination",
-     "Kraft, Ausdauer, Beweglichkeit",
+     "Kraft, Koordination, Beweglichkeit",
      "Ausdauer, Schnelligkeit, Koordination"
     ],
-    "x": "Kondisyonel (enerjiye dayalı) yetiler kuvvet, dayanıklılık ve sürattir. Koordinasyon sinir sistemiyle yönetilen koordinatif bir yetidir; bu yüzden koordinasyon içeren seçenekler yanlıştır."
+    "x": "Kondisyonel (enerjiye dayalı) yetiler kuvvet, dayanıklılık ve sürattir. Koordinasyon sinir sistemiyle yönetilen koordinatif bir yetidir, hareketlilik ise özel bir konumdadır; bu yüzden koordinasyon içeren seçenekler yanlıştır."
    },
    {
     "id": "L:trainingslehre-1:n1",
@@ -4062,7 +4071,8 @@ export const LESSONS = [
      "Planung",
      "Ausführung|Durchführung",
      "Evaluation",
-     "Prävention|Rehabilitation"
+     "nachhaltig|nachhaltige Ziele",
+     "Sport|Prävention|Rehabilitation"
     ]
    },
    {
@@ -4409,18 +4419,20 @@ export const LESSONS = [
    },
    {
     "q": "Nennen Sie Ursachen und Symptome eines Übertrainings.",
-    "a": "Übertraining entsteht durch zu viel, zu frühes und zu heftiges Training bei zu wenig Erholung, z. B. durch zu hohe Belastungsintensität, zu hohen Umfang oder zu kurze Pausen. Hinzu kommen Schlafmangel, psychischer Stress, Alkohol, Rauchen, schlechte Ernährung und Infekte. Symptome sind chronische Müdigkeit, Schlafstörungen, Leistungsabfall trotz Training, Unlust, erhöhter Ruhepuls und häufige Infekte.",
+    "a": "Übertraining entsteht durch zu viel, zu frühes und zu heftiges Training bei zu wenig Erholung, z. B. durch zu hohe Belastungsintensität, zu hohen Belastungsumfang oder zu hohe Belastungsdichte (zu kurze Pausen). Hinzu kommen Schlafmangel, psychischer Stress, Alkohol, Rauchen, schlechte Ernährung und Infekte. Symptome sind chronische Müdigkeit, Schlafstörungen, Leistungsabfall trotz Training, Unlust und häufige Infekte. Beim sympathikogenen Typ zeigen sich Unruhe, Schlafstörungen und eine erhöhte Ruheherzfrequenz, beim parasympathikogenen Typ Müdigkeit und eine niedrige Ruheherzfrequenz.",
     "kw": [
      "Erholung|Regeneration",
+     "Intensität|Umfang|Dichte",
      "Schlafmangel|Schlaf",
      "Stress",
      "Müdigkeit",
-     "Leistungsabfall"
+     "Leistungsabfall",
+     "sympathikogen|parasympathikogen"
     ]
    },
    {
     "q": "Vergleichen Sie Abtraining und Detraining.",
-    "a": "Abtraining ist ein gewollter, gezielter Prozess, bei dem die Trainingsbelastung nach dem Ende einer Leistungssportkarriere schrittweise, bis zu zwei Jahre lang, reduziert wird, um das Herz-Kreislauf-System zu schützen. Detraining ist eine geplante oder ungeplante Unterbrechung oder ein Ende des Trainings mit Verlust der Anpassungen, z. B. durch Urlaub oder Verletzung. Detraining ist meist reversibel.",
+    "a": "Abtraining ist ein gewollter, gezielter Prozess, bei dem die Trainingsbelastung nach dem Ende einer Leistungssportkarriere schrittweise, bis zu zwei Jahre lang, reduziert wird, um das Herz-Kreislauf-System zu schützen. Detraining ist jede geplante oder ungeplante Unterbrechung oder das Ende des Trainings mit Verlust der Anpassungen, z. B. durch Urlaub, Verletzung oder Krankheit. Detraining ist meist reversibel.",
     "kw": [
      "gewollt|gezielt",
      "schrittweise",
@@ -4561,7 +4573,7 @@ export const LESSONS = [
    },
    {
     "de": "Die sechs Belastungsnormative sind Intensität, Umfang, Dauer, Dichte, Häufigkeit und Bewegungsausführung.",
-    "tr": "Altı yük normu: yoğunluk, hacim, süre, sıklık-oranı (dichte), haftalık sıklık (häufigkeit), hareketin uygulanışı."
+    "tr": "Altı yük normu: yoğunluk (Intensität), hacim (Umfang), süre (Dauer), yük-dinlenme oranı (Dichte), sıklık = belirli sürede antrenman sayısı (Häufigkeit), hareketin uygulanışı (Bewegungsausführung)."
    },
    {
     "de": "Belastungsumfang ist die Gesamtmenge der Reize, Belastungsdichte das zeitliche Verhältnis von Belastung und Erholung.",
@@ -4573,7 +4585,7 @@ export const LESSONS = [
    },
    {
     "de": "Trainingsprinzipien nach Harre beruhen auf Erfahrungen erfolgreicher Trainer und Sportler und ergänzen sich gegenseitig.",
-    "tr": "Harre'nin prensipleri bilimsel kanıttan çok deneyime dayanır; birbirini etkiler ve tamamlar (bireysellik, kademeli artış, doğru sıra, yük-dinlenme dengesi, süreklilik, periyodizasyon)."
+    "tr": "Harre'nin prensipleri bilimsel kanıttan çok deneyime dayanır; birbirini etkiler ve tamamlar (etkili uyaran, bireysellik, kademeli artış, doğru sıra, yük-dinlenme dengesi, süreklilik, periyodizasyon)."
    },
    {
     "de": "Bei der Periodisierung umfasst der Mikrozyklus eine Woche, der Mesozyklus mehrere Wochen und der Makrozyklus mehrere Monate bis ein Jahr.",
@@ -5016,7 +5028,7 @@ export const LESSONS = [
      "Fußmassage",
      "Handmassage"
     ],
-    "x": "Gebelikte kolon (karın) masajı, gebeliğin hangi ayında olursa olsun asla yapılmaz (fetüs zarına/plasentaya baskı riski). Ense, ayak veya el masajı için notta böyle mutlak bir yasak yoktur."
+    "x": "Gebelikte kolon (karın) masajı, hangi ayda olursa olsun asla yapılmaz: ilk 3 ayda düşük riski (ve sorumluluk: 'suçlu sen olursun'), sonra fetüs zarına/plasentaya baskı. Ense, ayak veya el masajı için notta böyle mutlak bir yasak yoktur."
    },
    {
     "id": "L:kmt-1:6",
@@ -5093,10 +5105,10 @@ export const LESSONS = [
     "o": [
      "Termin absagen, da Fieber eine systemische Angelegenheit ist",
      "Behandeln, aber nur fern der Infektquelle lokal massieren",
-     "Behandeln, aber Dosis senken, da Fieber eine relative KI ist",
+     "Behandeln, aber nur mit halber Kraft und kürzerer Dauer",
      "Behandeln, da die Massage die Abwehr im Körper unterstützt"
     ],
-    "x": "Ateş sistemiktir: lenf ve antikorlar tüm vücutta aktiftir, masaj bunu vücuda yayar; ayrıca bulaş riski vardır (kendini koruma). Bu yüzden 'sadece bölgeyi atla' veya 'dozu azalt' gibi göreceli KI çözümleri burada geçerli değildir."
+    "x": "Ateş sistemiktir: lenf ve antikorlar tüm vücutta aktiftir, masaj bunu vücuda yayar; ayrıca bulaş riski vardır (kendini koruma). Notlarda hafif ateş göreceli KI tablosunda olsa da kural nettir: ateşte masaj yapılmaz; doz azaltmak veya bölgeyi atlamak burada çözüm değildir."
    },
    {
     "id": "L:kmt-1:n4",
@@ -5114,13 +5126,14 @@ export const LESSONS = [
   "open": [
    {
     "q": "Was ist der Unterschied zwischen absoluter und relativer Kontraindikation? Nennen Sie je ein Beispiel.",
-    "a": "Bei einer absoluten Kontraindikation wird auf der betroffenen Stelle auf gar keinen Fall massiert, z. B. bei einem Furunkel, einer frischen Fraktur oder einer Thrombophlebitis. Eine relative Kontraindikation erlaubt die Massage unter bestimmten Umständen, etwa durch Anpassung der Dosierung oder Auslassen des Areals. Beispiele sind Blutverdünner, schwere Osteoporose oder klein begrenzte Psoriasis.",
+    "a": "Bei einer absoluten Kontraindikation wird auf der betroffenen Stelle auf gar keinen Fall massiert, z. B. bei einem Furunkel, einer frischen Fraktur, großen Varizen oder einer Thrombophlebitis. Eine relative Kontraindikation erlaubt die Massage unter bestimmten Umständen, etwa durch Anpassung der Dosierung oder Auslassen des Areals. Beispiele sind Blutverdünner, schwere Osteoporose oder klein begrenzte Psoriasis.",
     "kw": [
      "absolut",
      "auf keinen Fall|gar keinen Fall",
      "relativ",
      "Dosierung|auslassen",
-     "Furunkel|Fraktur|Thrombophlebitis|Varizen"
+     "Furunkel|Fraktur|Thrombophlebitis|Varizen",
+     "Blutverdünner|Osteoporose|Psoriasis"
     ]
    },
    {
@@ -5278,8 +5291,8 @@ export const LESSONS = [
     "tr": "Konsensüel reaksiyon: aynı uyarana iki vücut yarısının aynı yönde tepki vermesi (tek taraflı masajda diğer tarafın da kanlanması)."
    },
    {
-    "de": "Alle Massagegriffe verlaufen herzwärts: an den Extremitäten von distal nach proximal, rechts vor links; Ausnahme ist die Stumpfbehandlung.",
-    "tr": "Tüm tutuşlar kalbe doğru: ekstremitede distalden proksimale, sağdan sola; amputasyon güdüğünde tersi (proksimalden distale)."
+    "de": "Alle Massagegriffe verlaufen herzwärts: rechts vor links (Thorax, Schulter-Nacken, Rücken), an den Extremitäten von distal nach proximal; Ausnahme ist die Stumpfbehandlung.",
+    "tr": "Tüm tutuşlar kalbe doğru: gövdede önce sağ, sonra sol taraf; ekstremitede distalden proksimale; amputasyon güdüğünde tersi (proksimalden distale)."
    },
    {
     "de": "Der Hautkontakt bleibt stetig: Beide Hände bleiben am Patienten.",
@@ -5311,7 +5324,7 @@ export const LESSONS = [
    },
    {
     "de": "Die Haut besteht aus Oberhaut (Epidermis, gefäßlos), Lederhaut (Cutis) und Unterhaut (Subcutis).",
-    "tr": "Deri üç katmandır: üst deri (epidermis, damarsız), alt deri/dermis (Lederhaut) ve deri altı (subcutis, yağ dokusu)."
+    "tr": "Deri üç katmandır: üst deri (epidermis, damarsız), orta katman/dermis (Lederhaut) ve deri altı (subcutis, yağ dokusu)."
    }
   ],
   "mcq": [
@@ -5432,10 +5445,10 @@ export const LESSONS = [
     "o": [
      "Zwischen zwei Griffen dürfen beide Hände kurz abheben",
      "Die Dosis ist so stark wie nötig, so schwach wie möglich",
-     "An den Extremitäten wird rechts vor links behandelt",
+     "Die Kraft verläuft herzwärts (auspressende Wirkung)",
      "Außer Wohlschmerz dürfen Griffe keine Schmerzen machen"
     ],
-    "x": "Yanlış olan: deri teması kesintisizdir, iki el de hastanın üzerinde kalır. 'Gerektiği kadar güçlü, mümkün olduğunca hafif', 'sağ soldan önce' ve 'iyi gelen ağrı dışında ağrı olmaz' ilkeleri doğrudur."
+    "x": "Yanlış olan: deri teması kesintisizdir, iki el de hastanın üzerinde kalır. 'Gerektiği kadar güçlü, mümkün olduğunca hafif', 'kuvvet kalbe doğru' ve 'iyi gelen ağrı dışında ağrı olmaz' ilkeleri doğrudur."
    },
    {
     "id": "L:kmt-2:n2",
@@ -5482,6 +5495,7 @@ export const LESSONS = [
      "Hände|Unersetzlichkeit",
      "herzwärts",
      "anpassen|Hohlräume",
+     "Kraft",
      "Hautkontakt|stetig",
      "Entspannung|rhythmisch",
      "Dosis|individuell"
@@ -5500,11 +5514,11 @@ export const LESSONS = [
    },
    {
     "q": "Warum ist der Seitenvergleich bei der Tonusbeurteilung so wichtig?",
-    "a": "Der Tonus ist bei jedem Menschen unterschiedlich und konstitutionsabhängig. Nur wenn man beide Seiten tastet, erkennt man, ob eine Seite abweicht. So tragen Rechtshänder Lasten oft links, wodurch die linke Seite einen höheren Tonus haben kann.",
+    "a": "Der Tonus ist bei jedem Menschen unterschiedlich und konstitutionsabhängig. Nur im Seitenvergleich, also wenn man beide Seiten tastet, erkennt man, ob eine Seite abweicht. So tragen Rechtshänder Lasten oft links, wodurch die linke Seite einen höheren Tonus haben kann.",
     "kw": [
      "beide Seiten",
      "individuell|konstitutionsabhängig",
-     "Vergleich|abweichen",
+     "Vergleich|abweich",
      "Rechtshänder|links"
     ]
    },
@@ -5667,7 +5681,7 @@ export const LESSONS = [
    },
    {
     "de": "In Deutschland sind Trinkwasser und Abwasser komplett getrennte Systeme, und das Leitungswasser muss (noch) nicht gechlort werden.",
-    "tr": "Almanya'da içme suyu ile atık su tamamen ayrı sistemlerdir; musluk suyu klorlanmaz (sıcak ülkelerde klorlanır)."
+    "tr": "Almanya'da içme suyu ile atık su tamamen ayrı sistemlerdir; musluk suyunun (henüz) klorlanması gerekmez (sıcak ülkelerde, ör. İspanya, klorlanır)."
    },
    {
     "de": "Das Römische Reich hatte Kanalisation, Aquädukte, öffentliche Toiletten und beheizte Bäder; im Mittelalter ging dieses Wissen verloren.",
@@ -5719,9 +5733,9 @@ export const LESSONS = [
      "Warum ist jemand erkrankt?",
      "Wie viele Menschen sind erkrankt?",
      "Wie lässt sich die Erkrankung verhindern?",
-     "Wem war der Patient ausgesetzt?"
+     "Wie wird die Erkrankung behandelt?"
     ],
-    "x": "Etiyoloji hastalığın nedenini sorar ('Warum?'). 'Wie viele?' epidemiyolojinin sorusudur; hastalığı önlemek Prävention'a, maruz kalmak ise Exposition'a aittir."
+    "x": "Etiyoloji hastalığın nedenini sorar ('Warum?'). 'Wie viele?' epidemiyolojinin sorusudur; hastalığı önlemek Prävention'a, tedavi ise etiyolojiye değil terapiye aittir."
    },
    {
     "id": "L:hygiene-1:4",
@@ -6005,11 +6019,11 @@ export const LESSONS = [
     "tr": "Biyolojik: ailesel yatkınlık (genetik), hormonlar/cinsiyet, hastalıklar."
    },
    {
-    "de": "Zu den psychischen Faktoren gehören Gedanken, Gefühle, Motivation, Disziplin, Kompensation, Resilienz und Erwartung.",
+    "de": "Zu den psychischen Faktoren gehören Gedanken, Gefühle, Motivation, Verstand, Disziplin, Kompensation, Resilienz und Erwartung.",
     "tr": "Psikolojik: düşünce, duygu, motivasyon, akıl ve disiplin, telafi, psikolojik dayanıklılık, beklenti."
    },
    {
-    "de": "Zu den sozialen Faktoren gehören soziales Umfeld, Kultur, Religion, Sprache, Erfahrungen, wirtschaftliche Lage, Familie und Erziehung.",
+    "de": "Zu den sozialen Faktoren gehören soziales Umfeld und Gruppe, Kultur, Religion, Sprache, Erfahrungen, wirtschaftliche Lage, Familie, Generation und Erziehung.",
     "tr": "Sosyal: çevre ve grup, kültür, din, dil, geçmiş deneyimler, ekonomik durum, aile, kuşak, yetiştirilme."
    },
    {
@@ -6318,7 +6332,7 @@ export const LESSONS = [
    },
    {
     "id": "L:pps-grundlagen-psychologie:3",
-    "q": "Zwischen welchen Schritten scheitert das Handeln laut Lehrerin am häufigsten?",
+    "q": "Zwischen welchen Schritten scheitert das Handeln am häufigsten?",
     "o": [
      "Zwischen Motivation und Volition",
      "Zwischen Kognition und Emotion/Bewertung",

@@ -484,7 +484,7 @@ export const MUSCLES = [
     i: 'Trochanter minor femoris',
     inn: 'N. femoralis (L2–L4), direkte Äste des Plexus lumbalis (L1–L3)',
     f: 'Stärkster Hüftbeuger, schwache Außenrotation; Aufrichten des Rumpfes aus Rückenlage',
-    ftr: 'Kalçayı büken en güçlü kas.',
+    ftr: 'Kalçayı büken en güçlü kas; hafif dış rotasyon yapar, sırtüstü yatıştan gövdeyi kaldırır.',
     k: 'Verkürzung → Hyperlordose der LWS. Test: Thomas-Handgriff.',
     g: [
       { a: [0.035, 1.12, -0.02], b: [0.075, 0.93, 0.045], r: 0.022 },
@@ -660,8 +660,8 @@ export const MUSCLES = [
     i: 'Pes anserinus superficialis (medial der Tuberositas tibiae)',
     inn: 'N. femoralis (L2–L3)',
     f: 'Hüfte: Flexion, Abduktion, Außenrotation; Knie: Flexion, Innenrotation („Schneidersitz“)',
-    ftr: 'Bağdaş kurma pozisyonunu sağlar; vücudun en uzun kası.',
-    k: 'Längster Muskel des Körpers. Pes anserinus: Sartorius, Gracilis, Semitendinosus („Say Grace before Tea“).',
+    ftr: 'Kalçayı büker, yana açar ve dışa döndürür; dizi büker ve içe döndürür (bağdaş kurma pozisyonu). Vücudun en uzun kası.',
+    k: 'Längster Muskel des Körpers. Pes anserinus superficialis: Sartorius, Gracilis, Semitendinosus („Sag Guten Tag“).',
     g: [
       { a: [0.125, 0.99, 0.058], b: [0.072, 0.7, 0.055], r: 0.011 },
       { a: [0.072, 0.7, 0.055], b: [0.062, 0.49, 0.0], r: 0.01 },
@@ -673,7 +673,7 @@ export const MUSCLES = [
     o: 'Ramus inferior ossis pubis',
     i: 'Pes anserinus superficialis',
     inn: 'N. obturatorius (L2–L3)',
-    f: 'Hüfte: Adduktion, Flexion; Knie: Flexion, Innenrotation',
+    f: 'Hüfte: Adduktion, Flexion, Innenrotation (Folie 99); Knie: Flexion, Innenrotation',
     ftr: 'Bacağı içe çeker (addüksiyon), dizi büker.',
     k: 'Einziger zweigelenkiger Adduktor.',
     g: [
@@ -686,7 +686,7 @@ export const MUSCLES = [
     o: 'Ramus superior ossis pubis (bis zur Symphyse)',
     i: 'Labium mediale der Linea aspera (mittleres Drittel)',
     inn: 'N. obturatorius (L2–L4)',
-    f: 'Adduktion und Flexion der Hüfte',
+    f: 'Adduktion und Flexion der Hüfte; laut Folie 99 auch Innenrotation',
     ftr: 'Bacağı içe çeker (addüksiyon) ve kalçayı büker.',
     k: 'Adduktorenzerrung / Leistenschmerz („Leistenzerrung“) v. a. bei Fußballern.',
     g: [{ a: [0.032, 0.87, 0.065], b: [0.1, 0.71, 0.01], r: 0.022, f: 0.6, n: [0, 0, 1] }],
@@ -696,7 +696,7 @@ export const MUSCLES = [
     o: 'Ramus inferior ossis pubis, Ramus ossis ischii, Tuber ischiadicum',
     i: 'Labium mediale der Linea aspera, Tuberculum adductorium (Epicondylus medialis femoris)',
     inn: 'N. obturatorius (L2–L4) und N. tibialis (L4)',
-    f: 'Stärkster Adduktor; dorsaler Anteil Extension der Hüfte',
+    f: 'Stärkster Adduktor; dorsaler Anteil Extension der Hüfte; laut Folie 99 auch Innenrotation',
     ftr: 'En güçlü addüktör kas; arka kısmı kalçayı geriye açar.',
     k: 'Doppelte Innervation („Hybridmuskel“).',
     g: [{ a: [0.05, 0.84, -0.025], b: [0.075, 0.56, -0.012], r: 0.032, f: 0.6, n: [-1, 0, 0] }],
@@ -842,7 +842,7 @@ export const JOINTS = [
   },
   {
     id: 'art_coxae', de: 'Hüftgelenk', la: 'Articulatio coxae', tr: 'Kalça eklemi', region: 'Hüfte',
-    typ: 'Nussgelenk (Sonderform des Kugelgelenks) – 3 Freiheitsgrade',
+    typ: 'Nussgelenk (Sonderform des Kugelgelenks) – 3 Freiheitsgrade (Anatomie I zählt: 3 BA / 6 FG)',
     // Werte nach der Folie aus PT-Befund (Prüfungsmaßstab); Lehrbuch-Spannen separat
     nn: 'Flexion/Extension 130° – 0° – 10° · Abduktion/Adduktion 45° – 0° – 30° · Außen-/Innenrotation 50° – 0° – 30° (Folie PT-Befund)',
     lehrbuch: 'Extension/Flexion 10–15 / 0 / 130–140; Abduktion/Adduktion 30–45 / 0 / 20–30; Außen-/Innenrotation 40–50 / 0 / 30–45',
