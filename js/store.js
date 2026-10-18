@@ -12,7 +12,7 @@ const DEFAULT = () => ({
   words: {},        // Grundwortschatz-Leitner: wortId -> { box, due, r, w, last, known }
   mocks: [],        // Deneme sınavı-Ergebnisse: { date, fach, pct, mcq: {r, n}, open: {score, n}, topics, min }
   mockRun: null,    // laufender Deneme sınavı (übersteht Neuladen der App)
-  settings: { cardsGoal: 15, quizGoal: 10, newPerDay: 10, reverse: false },
+  settings: { cardsGoal: 15, quizGoal: 10, newPerDay: 10, reverse: false, lang: 'tr' }, // lang = Hilfssprache (tr | en)
 });
 
 let state = load();
