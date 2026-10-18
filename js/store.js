@@ -12,6 +12,8 @@ const DEFAULT = () => ({
   words: {},        // Grundwortschatz-Leitner: wortId -> { box, due, r, w, last, known }
   mocks: [],        // Deneme sınavı-Ergebnisse: { date, fach, pct, mcq: {r, n}, open: {score, n}, topics, min }
   mockRun: null,    // laufender Deneme sınavı (übersteht Neuladen der App)
+  cases: {},        // Vaka çalışması: fallId -> { score, best, n, last, missed }
+  caseRun: null,    // laufender Fall: { id, step, seen: [examId], f: { feld: text }, stadium, indik }
   settings: { cardsGoal: 15, quizGoal: 10, newPerDay: 10, reverse: false, lang: 'tr' }, // lang = Hilfssprache (tr | en)
 });
 
@@ -56,7 +58,7 @@ export function day(date = today()) {
 }
 
 // Ein Tag zählt als aktiv, wenn irgendeine Aktivität stattgefunden hat
-export const isActive = (d) => !!(d && (d.cards > 0 || d.quiz > 0 || d.open > 0 || d.lesson || d.lesson2 || d.wordsMorning || d.wordsReturn));
+export const isActive = (d) => !!(d && (d.cards > 0 || d.quiz > 0 || d.open > 0 || d.lesson || d.lesson2 || d.wordsMorning || d.wordsReturn || d.cases));
 
 // Erster Nutzungstag (YYYY-MM-DD). Ältere Daten: frühester Tag mit Aktivität; danach fest gespeichert.
 export function startDate() {
@@ -150,6 +152,15 @@ export function dueCount(cards) {
 export function recordMock(result) {
   state.mocks = [...(state.mocks || []), result].slice(-50);
   state.mockRun = null;
+  save();
+}
+
+// ───── Vaka çalışması (Befund-Trainer) ─────
+export function recordCase(id, score, missed = []) {
+  const c = state.cases[id] || { n: 0, best: 0 };
+  state.cases[id] = { n: c.n + 1, best: Math.max(c.best, score), score, missed, last: today() };
+  const d = day();
+  d.cases = (d.cases || 0) + 1;
   save();
 }
 

@@ -22,6 +22,7 @@ const Q = await imp('js/quizgen.js');
 const { allWords, checkTyped, questionFor, variants } = await imp('js/words.js');
 const { containsFuzzy } = await imp('js/fuzzy.js');
 const { fehlerList, odevList, cleanText } = await imp('js/private.js');
+const { CASES, FIELDS, STADIEN, INDIKATION } = await imp('js/data/cases.js');
 
 const issues = [];
 const add = (kind, where, msg) => issues.push({ kind, where, msg });
@@ -119,6 +120,29 @@ for (const m of MUSCLES) {
 for (const id of Object.keys(UEBUNGEN)) if (!MUSCLES.some((m) => m.id === id)) add('anat', id, 'UEBUNGEN-Muskel unbekannt');
 for (const l of LANDMARKS) for (const id of [...(l.o || []), ...(l.i || []), ...(l.via || [])]) if (!MUSCLES.some((m) => m.id === id)) add('anat', l.id, 'Landmark-Muskel unbekannt: ' + id);
 
+// ── Vaka çalışması: jeder Schlüsselbegriff muss in seiner Musterlösung vorkommen ──
+const caseIds = new Set();
+for (const c of CASES) {
+  if (caseIds.has(c.id)) add('case', c.id, 'doppelte ID'); caseIds.add(c.id);
+  for (const f of ['title', 'tr', 'bereich', 'anamnese', 'anamneseTr']) if (!c[f]) add('case', c.id, `Feld ${f} fehlt`);
+  if (!STADIEN.includes(c.stadium)) add('case', c.id, 'Stadium unbekannt: ' + c.stadium);
+  if (!INDIKATION.includes(c.indikation)) add('case', c.id, 'Indikation unbekannt: ' + c.indikation);
+  if (!c.exams.some((e) => e.key) || c.exams.length < 4) add('case', c.id, 'zu wenige Untersuchungen');
+  const exIds = new Set();
+  for (const e of c.exams) {
+    if (exIds.has(e.id)) add('case', c.id, 'doppelte Untersuchung ' + e.id); exIds.add(e.id);
+    if (!e.name || !e.tr || !e.find || !e.find.length) add('case', `${c.id}/${e.id}`, 'Untersuchung unvollständig');
+    if (!e.key && !e.note) add('case', `${c.id}/${e.id}`, 'nicht nötige Untersuchung ohne Erklärung (note)');
+  }
+  if (!c.flags.red.length || !c.flags.yellow.length) add('case', c.id, 'Red/Yellow-Flag-Liste leer');
+  for (const f of FIELDS) {
+    const x = c[f.k];
+    if (!x || !x.a || !x.kw || !x.kw.length) { add('case', `${c.id}/${f.k}`, 'Musterlösung oder Schlüsselbegriffe fehlen'); continue; }
+    const miss = x.kw.filter((kw) => !kw.split('|').some((alt) => containsFuzzy(x.a, alt)));
+    if (miss.length) add('case-kw', `${c.id}/${f.k}`, 'Musterlösung erfüllt eigene Begriffe nicht: ' + miss.join(', '));
+  }
+}
+
 // ── Notion: Fehler- und Ödevkarten ──
 for (const f of [...fehlerList(), ...odevList()]) {
   const back = (f.seg || []).map((s) => s.t).join('');
@@ -135,4 +159,4 @@ for (const [kind, list] of Object.entries(by)) {
   list.slice(0, 40).forEach((i) => console.log(`- [${i.where}] ${i.msg}`));
   if (list.length > 40) console.log(`  … ${list.length - 40} weitere`);
 }
-console.log(`\n${issues.length} Auffälligkeiten · ${Object.values(pools).flat().length} MC-Fragen · ${opens.length} offene · ${words.length} Wörter · ${LESSONS.length} Lektionen · ${fehlerList().length} Fehler- + ${odevList().length} Ödevkarten`);
+console.log(`\n${issues.length} Auffälligkeiten · ${Object.values(pools).flat().length} MC-Fragen · ${opens.length} offene · ${words.length} Wörter · ${LESSONS.length} Lektionen · ${CASES.length} Fälle · ${fehlerList().length} Fehler- + ${odevList().length} Ödevkarten`);

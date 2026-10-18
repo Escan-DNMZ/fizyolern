@@ -107,6 +107,7 @@ The interface is in Turkish. A short glossary is at the end of this page.
 - **Varied formats.** Single answer, "which statement is false", matching, ordering, case studies and numbers.
 - **Generated anatomy questions.** "Where does M. … insert?", "Which nerve supplies …?". The wrong options come from the same body region and have similar length, so the answer cannot be guessed from the layout. The explanation names the muscle each wrong option belongs to.
 - **Mock exam.** 15 multiple-choice and 3 essay questions in 30 minutes, with no feedback until the end, then a result per topic.
+- **Case trainer** (*Vaka çalışması*). Practice for the practical state exam, where a real patient has to be assessed, documented and given a therapy plan. Seven made-up German patient cases (Coxarthrose, H-TEP, ankle sprain, low back pain with yellow flags, shoulder impingement, knee arthritis, fear of falling after a fall). I read the history, choose which examinations to do (each one reveals its findings), fill in a structured assessment form (flags, ICF, main problem, SMART goal, measures, contraindications) and compare it with a model answer. The app checks key terms and points out important examinations I skipped.
 - **3D button.** When a question mentions anatomy, a button after the answer opens every structure it names in the 3D model.
 
 ### 3. Essay questions with a smart answer check (*Sorular*)
@@ -321,6 +322,7 @@ python tools/bump_sw.py             # after any change, so phones load the new v
 | Noktayı bul | Find the point |
 | Deneme sınavı | Mock exam |
 | Sözlü sınav | Oral exam |
+| Vaka çalışması | Case study (assessment trainer) |
 | 3D'de göster | Show in 3D |
 | Tekrar · Zor · İyi · Kolay | Again · Hard · Good · Easy |
 | Doğru · Yanlış | Correct · Wrong |

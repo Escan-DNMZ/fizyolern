@@ -300,3 +300,18 @@ body.focus3d .hud-top .chips, body.focus3d .hud-top .slider, body.focus3d .searc
 .kw.half { background: var(--warn-soft); color: var(--warn); }
 .btn.rec { background: var(--bad-soft); color: var(--bad); animation: recPulse 1.2s ease-in-out infinite; }
 @keyframes recPulse { 50% { opacity: .65; } }
+
+/* ───── Vaka çalışması (Befund-Trainer) ───── */
+.case-steps { display: flex; gap: 4px; margin: 4px 0 2px; }
+.case-steps span { flex: 1; min-width: 0; text-align: center; font-size: 11px; font-weight: 700; padding: 5px 2px; border-radius: 8px;
+  background: var(--card); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.case-steps span.done { background: var(--accent-soft); color: var(--accent); }
+.case-steps span.on { background: var(--accent); color: #fff; }
+.case-text { line-height: 1.5; }
+.card details, details.card { cursor: default; }
+details.card > summary { cursor: pointer; list-style-position: inside; }
+details.card[open] > summary { margin-bottom: 6px; }
+.finding ul { margin: 8px 0 4px; padding-left: 20px; }
+.finding li { margin: 3px 0; }
+.case-ta { min-height: 84px; margin-top: 6px; font-size: 16px; }
+.case-mine { margin: 8px 0 0; padding: 8px 10px; border-radius: 10px; background: var(--bg); white-space: pre-wrap; }

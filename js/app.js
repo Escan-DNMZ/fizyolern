@@ -16,6 +16,7 @@ import { UEBUNGEN } from './data/uebungen.js';
 import { masteredLessons } from './quizgen.js';
 import { initExam, renderMock } from './exam.js';
 import { initOral, renderOral, leaveOral } from './oral.js';
+import { initBefund, renderCases } from './befund.js';
 import { sayBtn } from './speech.js';
 import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, jointDetailQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked, weight, wpick } from './quizgen.js';
 
@@ -140,6 +141,7 @@ let current = '';
 
 initExam({ view, $, $$, esc, escGap, toast, allOpen });
 initOral({ view, $, $$, esc, toast, allOpen });
+initBefund({ view, $, $$, esc, toast, btn3d });
 // 🔊-Knopf für deutsche/lateinische Aussprache
 const say = (t) => sayBtn(t, esc);
 
@@ -162,6 +164,7 @@ const routes = {
   oku: { title: 'Ders Notları – Okuma', tab: 'bugun', render: renderReading, back: '#/donus' },
   cumartesi: { title: 'Haftalık Tekrar', tab: 'bugun', render: renderSaturday, back: '#/bugun' },
   deneme: { title: 'Deneme Sınavı', tab: 'test', render: renderMock, back: '#/test' },
+  vaka: { title: 'Vaka Çalışması', tab: 'test', render: renderCases, back: 'history' },
   sozlu: { title: 'Sözlü Sınav', tab: 'sorular', render: renderOral, back: '#/sorular' },
 };
 
@@ -508,6 +511,7 @@ function renderLessonNote([id]) {
         ${l.mcq.length ? `<a class="btn" href="#/test?kat=${encodeURIComponent('Lektion: ' + l.id)}">Test (${l.mcq.length} soru)</a>` : ''}
         ${notionLink(l.id) ? `<a class="btn ghost" href="${esc(notionLink(l.id))}" target="_blank" rel="noopener">Notion'da aç</a>` : ''}
       </div>
+      ${l.fach === 'PT Befund' ? '<a class="btn ghost block" style="margin-top:10px" href="#/vaka">🩺 Vaka çalışması (Befund-Trainer)</a>' : ''}
     </div>
     <div class="section-title">Özet (Kernaussagen)</div>
     <div class="list">${l.kern.map((k) => `<div style="display:block"><div lang="de">${esc(k.de)}</div><div class="muted small">🇹🇷 ${esc(k.tr)}</div></div>`).join('')}</div>
@@ -802,6 +806,7 @@ function renderQuizStart(_, params = new URLSearchParams()) {
       <button class="btn block" id="startQuiz" style="margin-top:16px">${store.get().settings.quizGoal} soruluk testi başlat</button>
     </div>
     <a class="card row" href="#/deneme" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">📝 Deneme sınavı</div><h2>Sınav provası</h2><div class="muted small">15 test + 3 açık uçlu · 30 dk · sonuç sonunda</div></span><span class="chev">›</span></a>
+    <a class="card row" href="#/vaka" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">🩺 Vaka çalışması</div><h2>Befund-Trainer</h2><div class="muted small">Hasta vakası · muayene seç · Befundbogen · tedavi planı</div></span><span class="chev">›</span></a>
     <p class="muted small" style="padding:0 4px">Sorular Almanca, açıklamalar Türkçe. Kas/kemik/eklem soruları anatomi verilerinden her seferinde yeniden üretilir; yanlış yaptıkların ve uzun süredir görmediklerin daha sık gelir. Kas seviyesi: <b>${muscleLevel()}/3</b>${romUnlocked() ? ' · ROM soruları açık' : ''}.${weak ? ` Şu ana kadar <b>${weak}</b> soruda daha çok hata yaptın.` : ''}</p>
   `;
   $$('[data-cat]').forEach((b) => b.addEventListener('click', () => { quizCat = b.dataset.cat; renderQuizStart(); }));
