@@ -430,7 +430,7 @@ export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = []) {
       ...wpickQ(pools.Vokabeln(), Math.ceil(n * 0.15)),
     ];
   } else {
-    qs = pools[category]();
+    qs = Object.hasOwn(pools, category) ? pools[category]() : []; // unbekannte Kategorie aus einem Link
   }
   return shuffle(wpickQ(qs, n)).map(prepare);
 }

@@ -315,3 +315,11 @@ details.card[open] > summary { margin-bottom: 6px; }
 .finding li { margin: 3px 0; }
 .case-ta { min-height: 84px; margin-top: 6px; font-size: 16px; }
 .case-mine { margin: 8px 0 0; padding: 8px 10px; border-radius: 10px; background: var(--bg); white-space: pre-wrap; }
+
+/* Landmark-Quiz: Ansicht-Knöpfe verdecken sonst Punkte am Rand */
+body.pq3d .hud-side { display: none; }
+/* Mindestgröße für Fingerziele (≈ 40 px) */
+.say-btn { min-width: 40px; min-height: 40px; }
+.close { min-width: 40px; min-height: 40px; }
+details > summary { min-height: 40px; display: flex; align-items: center; }
+.say-btn { width: 40px; height: 40px; flex-shrink: 0; }

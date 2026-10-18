@@ -26,6 +26,7 @@ const cases = [
   ['der Keim / keimfrei', 'der Kein', 'wrong'],          // ≤ 4 Buchstaben: keine Toleranz
   ['der Bluterguss', 'der Bluterguß', 'ok'],              // ß = ss
   ['die Übelkeit', 'die Uebelkeit', 'ok'],
+  ['das Kribbeln / kribbeln', 'der Kribbeln', 'close:Artikel falsch'],  // Verbvariante darf falschen Artikel nicht retten
 ];
 const kw = [
   ['Der Sensor misst den Istwert, das Regelzentrum vergleicht.', 'Regelzentrum', true],

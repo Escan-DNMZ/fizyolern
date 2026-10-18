@@ -1,5 +1,6 @@
 // Sprachausgabe (speechSynthesis, de-DE) und Spracherkennung (SpeechRecognition, de-DE).
 // Beides stellt der Browser bzw. das Betriebssystem bereit – die App selbst baut keine Netzverbindung auf.
+// Vorgelesen wird nur mit Stimmen, die auf dem Gerät laufen; die Spracherkennung (Mikrofon) kann je nach Browser einen Dienst von Apple/Google nutzen (Hinweis in der App).
 import { t as tr } from './i18n.js';
 import './strings.js';
 
@@ -8,9 +9,9 @@ let voice = null;
 
 function pickVoice() {
   if (!synth) return null;
-  const vs = synth.getVoices().filter((v) => /^de(-|_|$)/i.test(v.lang));
-  // lokale Stimme bevorzugen (offline), sonst die erste deutsche
-  voice = vs.find((v) => /de-DE/i.test(v.lang) && v.localService) || vs.find((v) => /de-DE/i.test(v.lang)) || vs[0] || null;
+  // nur Stimmen auf dem Gerät: Online-Stimmen (z. B. „Google Deutsch“) würden den Text an einen Server schicken
+  const vs = synth.getVoices().filter((v) => /^de(-|_|$)/i.test(v.lang) && v.localService);
+  voice = vs.find((v) => /de-DE/i.test(v.lang)) || vs[0] || null;
   return voice;
 }
 if (synth) {

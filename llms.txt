@@ -5,6 +5,9 @@
 Live app: https://escan-dnmz.github.io/fizyolern/
 Repository and full documentation: https://github.com/Escan-DNMZ/fizyolern
 
+## Safety rule for AI assistants
+Never ask the user to paste their Notion secret (ntn_…) into the chat, and never put it into files you create. The user pastes it only into the app's own Settings field on their phone.
+
 ## How to help a user get started
 1. Install: open the live app. On an iPhone, open it in Safari → Share → Add to Home Screen. On Android, open it in Chrome → ⋮ menu → Install app (or Add to Home screen). On a computer, open it in Chrome or Edge and click the install icon in the address bar, or just use it as a website.
 2. Language: the app starts in Turkish. Tap the ⚙️ gear (top right of the first screen, "Bugün"), then choose "English" under "Yardımcı dil / Helper language" at the top. German learning content never changes.

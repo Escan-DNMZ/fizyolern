@@ -1,6 +1,6 @@
 // Service Worker: alle App-Dateien offline verfügbar machen.
 // Bei jeder Änderung an den Dateien VERSION erhöhen, damit Handys die neue Version laden.
-const VERSION = 'fizyolern-v40';
+const VERSION = 'fizyolern-v42';
 const FILES = [
   './',
   './index.html',
@@ -51,7 +51,8 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
+      // nur alte FizyoLern-Caches löschen (gleiche Domain kann andere Seiten haben)
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('fizyolern-') && k !== VERSION).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -59,16 +60,22 @@ self.addEventListener('activate', (e) => {
 // Netzwerk zuerst (damit Updates ankommen), bei Offline aus dem Cache
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
+  const url = new URL(e.request.url);
+  // Fremde Adressen (z. B. api.notion.com) gehen am Service Worker vorbei – nie zwischenspeichern
+  if (url.origin !== location.origin) return;
+  // private Dateien (nur beim Entwickeln vorhanden) nie in den Cache
+  const privat = url.pathname.includes('/private/');
   e.respondWith(
     // no-cache: immer beim Server nachfragen (ETag), damit nach einem Update keine alten und neuen Dateien gemischt werden
-    fetch(e.request, new URL(e.request.url).origin === location.origin ? { cache: 'no-cache' } : {})
+    fetch(e.request, { cache: 'no-cache' })
       .then((res) => {
-        if (res.ok && new URL(e.request.url).origin === location.origin) {
+        if (res.ok && !privat) {
           const copy = res.clone();
           caches.open(VERSION).then((c) => c.put(e.request, copy));
         }
         return res;
       })
-      .catch(() => caches.match(e.request, { ignoreSearch: true }).then((r) => r || caches.match('./index.html'))),
+      .catch(() => (privat ? Response.error() : caches.match(e.request, { ignoreSearch: true })
+        .then((r) => r || (e.request.mode === 'navigate' ? caches.match('./index.html') : Response.error())))),
   );
 });

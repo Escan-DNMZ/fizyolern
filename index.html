@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-IMakL3k+yyH0KWQ4RUAc4AlYeCmgJV2nryHjf2/BaOg=' 'wasm-unsafe-eval'; worker-src 'self' blob:; connect-src 'self' https://api.notion.com; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <title>FizyoLern</title>
@@ -65,7 +65,7 @@
         <button class="mini" data-view="front" data-i18n="hud.front">Ön</button>
         <button class="mini" data-view="back" data-i18n="hud.back">Arka</button>
         <button class="mini" data-view="left" data-i18n="hud.side">Yan</button>
-        <button class="mini" id="resetView">⟲</button>
+        <button class="mini" id="resetView" aria-label="Görünümü sıfırla" data-i18n-aria="hud.reset">⟲</button>
       </div>
       <div id="sheet3d" class="sheet" hidden></div>
       <div id="hint3d" class="hint3d" data-i18n="h3d.hint">Döndürmek için sürükle · yakınlaştırmak için iki parmak · seçmek için dokun</div>

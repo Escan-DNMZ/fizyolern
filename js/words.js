@@ -132,6 +132,7 @@ function matchPart(word, part) {
   const ans = fold(part).replace(/^sich\s+/, '');
   if (!ans) return null;
   let best = { ok: false, close: false };
+  const withArticle = variants(word.de).some((v) => ART.test(fold(v)));
   // 1. Durchgang: Wort genau getroffen (bei allen Varianten), erst 2. Durchgang mit Tippfehler-Toleranz –
   //    sonst würde „Kräftigung“ (Artikel fehlt) als Tippfehler von „kräftigen“ durchgehen
   for (const fuzzy of [false, true]) {
@@ -140,6 +141,8 @@ function matchPart(word, part) {
       const shown = v.replace(/\s*\([^)]*\)/g, '').trim();
       if (ans === target) return { ok: true, exact: true, target: shown };
       const tArt = (target.match(ART) || [])[1], aArt = (ans.match(ART) || [])[1];
+      // „der Kribbeln“ darf nicht über die Verbform „kribbeln“ als richtig durchgehen
+      if (aArt && !tArt && withArticle) continue;
       const tNoun = target.replace(ART, ''), aNoun = ans.replace(ART, '');
       if (!(fuzzy ? close(aNoun, tNoun) : tNoun === aNoun)) continue;
       if (tArt && !aArt) best = { ok: false, close: true, hint: 'Artikel fehlt', art: tArt, target: shown };

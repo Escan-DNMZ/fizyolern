@@ -12,6 +12,8 @@ You don't need to know how to take notes or how Notion works. The AI turns your 
 
 ---
 
+> 🔒 **Never paste your Notion key (`ntn_…`) into an AI chat.** The AI does not need it. You paste it only into the app's Settings.
+
 ## What you need
 - A free **Notion** account and the **FizyoLern** app (see the [README](../README.md#install-and-start)).
 - Any AI chat: **ChatGPT, Gemini, Claude, Copilot …**
@@ -111,6 +113,7 @@ Type = Exam or Homework, Date like 28.10.2026. Fill it from the timetable if
 exams are listed; otherwise leave one empty example row.
 
 Content rules:
+- Never ask me for my Notion key (ntn_…) and never include it anywhere.
 - Use only what is on the slides. If a slide contradicts a standard German
   physiotherapy textbook (e.g. Prometheus, Schünke), use the textbook-correct fact
   and add "(Folie abweichend)" in the explanation.

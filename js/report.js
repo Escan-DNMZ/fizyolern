@@ -62,7 +62,17 @@ function questionIndex() {
 
 const trDate = (iso) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
 
-export function buildReport() {
+// Kursname ohne Lehrkraft und Raum: „Trainingslehre (Fr. X, R2)“ → „Trainingslehre“
+export const courseName = (k) => String(k || '')
+  .replace(/\([^)]*\)/g, '')
+  .replace(/(^|\s)(Hr|Fr|Herr|Frau|Prof|Dr|Mr|Mrs|Ms)\.?\s+\p{Lu}[\p{L}-]*/gu, ' ')
+  .replace(/\s+(bei|mit|with|by|ile)\s+\p{Lu}[\p{L}-]*/gu, '')
+  .replace(/×\s*\d+|·.*$|,.*$|\s\/\s.*$/g, '')
+  .replace(/\s*[–—\-/]\s*$/g, '')
+  .replace(/\s{2,}/g, ' ').trim();
+
+// details = auch Texte aus Notion (Fehlerkarten, Prüfungs-/Hausaufgabenthemen); standardmäßig aus
+export function buildReport({ details = false } = {}) {
   const s = store.get();
   const lookup = questionIndex();
   const today = store.today();
@@ -72,7 +82,7 @@ export function buildReport() {
   const w = week();
 
   // Test-Treffer der letzten 7 Tage nach Fach
-  const byFach = {};
+  const byFach = Object.create(null); // Fachnamen kommen auch aus Notion (z. B. „__proto__“)
   const wrongRecent = [];
   for (const [id, q] of Object.entries(s.quiz)) {
     if (!q.last || q.last < since) continue;
@@ -126,8 +136,8 @@ export function buildReport() {
   const exams = upcoming('Sınav', 60);
   const hw = upcoming('Ödev', 14);
   const when = (e) => `${trDate(e.date).slice(0, 6)}, ${e.days === 0 ? t('rep.today0') : e.days === 1 ? t('rep.tomorrow') : t('rep.inDays', { n: e.days })}`;
-  if (exams.length) lines.push(t('rep.exams', { x: exams.map((e) => `${e.fach || t('exam.default')}${e.topic ? ' (' + e.topic + ')' : ''} – ${when(e)}`).join(' · ') }));
-  if (hw.length) lines.push(t('rep.hw', { x: hw.map((e) => `${e.fach ? e.fach + ': ' : ''}${e.topic || t('hw.default')} – ${when(e)}`).join(' · ') }));
+  if (exams.length) lines.push(t('rep.exams', { x: exams.map((e) => `${e.fach || t('exam.default')}${details && e.topic ? ' (' + e.topic + ')' : ''} – ${when(e)}`).join(' · ') }));
+  if (hw.length) lines.push(t('rep.hw', { x: hw.map((e) => `${e.fach ? e.fach + ': ' : ''}${(details && e.topic) || t('hw.default')} – ${when(e)}`).join(' · ') }));
   const mocks = (s.mocks || []).filter((m) => m.date >= daysAgo(14));
   if (mocks.length) {
     lines.push(t('rep.mocks', { x: mocks.slice(-4).map((m) => `${m.fach} ${t('pct', { p: m.pct })} (${trDate(m.date).slice(0, 6)})`).join(' · ') }));
@@ -135,7 +145,7 @@ export function buildReport() {
     const weakT = Object.entries(last.topics).filter(([, v]) => v.n && v.r / v.n < 0.6).sort(([, a], [, b]) => a.r / a.n - b.r / b.n).slice(0, 3).map(([tp, v]) => `${tp} ${t('pct', { p: Math.round((v.r / v.n) * 100) })}`);
     if (weakT.length) lines.push(t('rep.mockWeak', { f: last.fach, x: weakT.join(', ') }));
   }
-  if (w) lines.push(t('rep.plan', { kw: w.kw }) + (plan && plan.kurse.length ? t('rep.planToday', { x: plan.kurse.join(' / ') }) : '') + (plan && plan.test.length ? t('rep.planMorning', { x: plan.test.join(' + ') }) : ''));
+  if (w) lines.push(t('rep.plan', { kw: w.kw }) + (plan && plan.kurse.length ? t('rep.planToday', { x: [...new Set(plan.kurse.map(courseName).filter(Boolean))].join(' / ') }) : '') + (plan && plan.test.length ? t('rep.planMorning', { x: plan.test.join(' + ') }) : ''));
 
   const fachRows = Object.entries(byFach).map(([f, v]) => [f, pct(v.r, v.w), v.r + v.w]).filter((x) => x[2] >= 2).sort((a, b) => a[1] - b[1]);
   if (fachRows.length) {
@@ -155,19 +165,20 @@ export function buildReport() {
     lines.push(t('rep.fehler', { n: fehler.length, o: fehlerOpen.length }));
     if (fehlerHard.length) {
       lines.push(t('rep.stillForget'));
-      fehlerHard.slice(0, 5).forEach((f) => lines.push(`- [${f.fach}] ${f.q}`));
+      if (details) fehlerHard.slice(0, 5).forEach((f) => lines.push(`- [${f.fach}] ${f.q}`));
+      else lines.push(t('rep.hardCount', { n: fehlerHard.length, f: [...new Set(fehlerHard.map((f) => f.fach).filter(Boolean))].join(', ') }));
     }
   }
   if (odev.length) {
     // Hausaufgaben zum Auswendiglernen – bewusst getrennt von der Fehlerliste
     lines.push('');
     lines.push(t('rep.odev'));
-    for (const ot of [...new Set(odev.map((f) => f.odev))]) {
+    [...new Set(odev.map((f) => f.odev))].forEach((ot, k) => {
       const cs = odev.filter((f) => f.odev === ot);
       const learned = cs.filter((f) => s.srs[f.id] && s.srs[f.id].int >= 1).length;
       const unseen = cs.filter((f) => !s.srs[f.id] || !s.srs[f.id].reps).length;
-      lines.push(t('rep.odevRow', { t: ot, n: cs.length, l: learned, w: cs.length - learned - unseen, u: unseen }));
-    }
+      lines.push(t('rep.odevRow', { t: details ? ot : t('rep.odevN', { n: k + 1 }), n: cs.length, l: learned, w: cs.length - learned - unseen, u: unseen }));
+    });
   }
   if (openWeak) lines.push(t('rep.openWeak', { n: openWeak }));
 
@@ -184,15 +195,20 @@ export function buildReport() {
 
 // Bildschirm „Claude'a rapor“: Bericht anzeigen, kopieren oder über das iOS-Teilen-Menü senden
 export function renderReport(view, toast) {
-  const text = buildReport();
+  let text = buildReport();
   const esc = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   view.innerHTML = `
     <p class="muted small" style="padding:0 4px">${t('rep.intro')}</p>
-    <textarea id="reportText" readonly style="min-height:360px;font-size:14px">${esc(text)}</textarea>
+    <label class="row small" style="gap:8px;padding:0 4px;margin:6px 0"><input type="checkbox" id="repDetails"> ${t('rep.details')}</label>
+    <textarea id="reportText" readonly aria-label="${t('rep.textLabel')}" style="min-height:360px;font-size:14px">${esc(text)}</textarea>
     <div class="grid2" style="margin-top:10px">
       <button class="btn" id="copyReport">${t('rep.copy')}</button>
       <button class="btn ghost" id="shareReport">${t('rep.share')}</button>
     </div>`;
+  view.querySelector('#repDetails').addEventListener('change', (e) => {
+    text = buildReport({ details: e.target.checked });
+    view.querySelector('#reportText').value = text;
+  });
   view.querySelector('#copyReport').addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(text);

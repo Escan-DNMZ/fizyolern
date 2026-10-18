@@ -23,7 +23,7 @@ const topicName = (q) => (q.lesson && lessonTitle(q.lesson)) || (String(q.id).st
 
 // Aus jedem Thema reihum ziehen, damit die Probeklausur das ganze Fach abdeckt
 function spread(pool, n) {
-  const groups = {};
+  const groups = Object.create(null);
   for (const q of shuffle(pool)) (groups[topicName(q)] = groups[topicName(q)] || []).push(q);
   const lists = shuffle(Object.values(groups));
   const out = [];
@@ -159,7 +159,7 @@ function finish() {
   stopTick();
   const r = run();
   if (!r) return renderMock();
-  const topics = {};
+  const topics = Object.create(null);
   const add = (t, got, max) => { const o = topics[t] || (topics[t] = { r: 0, n: 0 }); o.r += got; o.n += max; };
   const mcq = r.mcq.map((q) => {
     const pick = r.pick[q.id];
@@ -178,7 +178,7 @@ function finish() {
     return { ...q, text, hits, score };
   });
   const got = mcq.filter((q) => q.ok).length + open.reduce((n, q) => n + q.score * 3, 0);
-  const max = mcq.length + open.length * 3;
+  const max = Math.max(1, mcq.length + open.length * 3); // nie durch 0 teilen
   store.recordMock({
     date: store.today(),
     fach: r.fach,

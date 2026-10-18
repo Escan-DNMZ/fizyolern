@@ -28,22 +28,36 @@ export const looksLikeToken = (t) => /^(ntn_|secret_)[A-Za-z0-9]{20,}$/.test(t.t
 async function call(path, { method = 'GET', body } = {}) {
   const token = getToken();
   if (!token) throw new Error(t('nt.noKey'));
-  const res = await fetch(API + path, {
-    method,
-    headers: {
-      Authorization: 'Bearer ' + token,
-      'Notion-Version': NOTION_VERSION,
-      'Content-Type': 'application/json',
-    },
-    body: body ? JSON.stringify(body) : undefined,
-    cache: 'no-store',
-    credentials: 'omit',
-    referrerPolicy: 'no-referrer',
-  });
+  let res;
+  for (let tries = 0; ; tries++) {
+    try {
+      res = await fetch(API + path, {
+        method,
+        headers: {
+          Authorization: 'Bearer ' + token,
+          'Notion-Version': NOTION_VERSION,
+          'Content-Type': 'application/json',
+        },
+        body: body ? JSON.stringify(body) : undefined,
+        cache: 'no-store',
+        credentials: 'omit',
+        referrerPolicy: 'no-referrer',
+        signal: AbortSignal.timeout ? AbortSignal.timeout(20000) : undefined,
+      });
+    } catch (e) {
+      // offline, blockiert oder zu langsam – nie die rohe Browsermeldung zeigen
+      throw new Error(e && e.name === 'TimeoutError' ? t('nt.timeout') : t('nt.network'));
+    }
+    // zu viele Anfragen: kurz warten und es noch höchstens zweimal versuchen
+    if (res.status === 429 && tries < 2) { const wait = Math.min(10, Number(res.headers.get('Retry-After')) || 1.5 * (tries + 1)); await new Promise((r) => setTimeout(r, wait * 1000)); continue; }
+    break;
+  }
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const msg = res.status === 401 ? t('nt.401') : res.status === 404 ? t('nt.404') : (json.message || 'HTTP ' + res.status);
-    throw new Error(msg);
+    const msg = res.status === 401 ? t('nt.401') : res.status === 404 ? t('nt.404') : res.status === 429 ? t('nt.429') : t('nt.http', { s: res.status });
+    const err = new Error(msg);
+    err.status = res.status;
+    throw err;
   }
   return json;
 }
@@ -73,14 +87,15 @@ async function findByTitle(names, type) {
   return null;
 }
 
+const MAX_PAGES = 40; // höchstens 4000 Einträge pro Seite/Datenbank
 async function children(id) {
   const out = [];
-  let cursor;
+  let cursor, nPages = 0;
   do {
     const r = await call(`/blocks/${id}/children?page_size=100${cursor ? '&start_cursor=' + cursor : ''}`);
     out.push(...r.results);
     cursor = r.has_more ? r.next_cursor : null;
-  } while (cursor);
+  } while (cursor && ++nPages < MAX_PAGES);
   return out;
 }
 
@@ -101,8 +116,8 @@ function faecherIn(text, faecher) {
   const alias = { Anatomie: ['anatomie', 'ana '], 'PT Befund': ['pt befund'], 'PT Grundlagen': ['pt grundlagen'] };
   const all = [...new Set([...faecher, ...EXTRA_FAECHER])];
   return all.filter((f) => {
-    if (f.length <= 3 && !alias[f]) return new RegExp(`[^a-zäöüß]${lower(f)}[^a-zäöüß]`).test(t); // AM, AKL, KI, PPS, O/C
-    return (alias[f] || [lower(f)]).some((a) => t.includes(a));
+    if (f.length <= 3 && !Object.hasOwn(alias, f)) return new RegExp(`[^a-zäöüß]${lower(f).replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}[^a-zäöüß]`).test(t); // AM, AKL, KI, PPS, O/C
+    return (Object.hasOwn(alias, f) ? alias[f] : [lower(f)]).some((a) => t.includes(a));
   });
 }
 
@@ -277,7 +292,7 @@ export async function parseExamPage(blocks, faecher, loadChildren, now = new Dat
 // ───── Grundwortschatz-Datenbank ─────
 async function loadWords(db) {
   const words = [];
-  let cursor;
+  let cursor, nPages = 0;
   do {
     const r = await call(`/databases/${db.id}/query`, { method: 'POST', body: { page_size: 100, start_cursor: cursor } });
     for (const p of r.results) {
@@ -297,7 +312,7 @@ async function loadWords(db) {
       if (de) words.push({ id: 'gw:' + de, de, tr: any('Türkçe', 'Turkish') || en, ...(en ? { en } : {}), ex: any('Beispiel', 'Example'), cat: 'GW · ' + (any('Kategorie', 'Category') || 'Diğer'), stufe: any('Stufe', 'Level'), next: any('Nächste Wiederholung', 'Next review') });
     }
     cursor = r.has_more ? r.next_cursor : undefined;
-  } while (cursor);
+  } while (cursor && ++nPages < MAX_PAGES);
   return words;
 }
 
@@ -338,7 +353,7 @@ export async function rowsFromPages(pages) {
 
 async function loadLessonRows(db) {
   const pages = [];
-  let cursor;
+  let cursor, nPages = 0;
   do {
     const r = await call(`/databases/${db.id}/query`, {
       method: 'POST',
@@ -346,7 +361,7 @@ async function loadLessonRows(db) {
     });
     pages.push(...r.results);
     cursor = r.has_more ? r.next_cursor : undefined;
-  } while (cursor);
+  } while (cursor && ++nPages < MAX_PAGES);
   return rowsFromPages(pages);
 }
 
@@ -389,7 +404,7 @@ export async function syncFromNotion({ faecher, lessons }) {
     result.week = week || old.week;
     result.weeks = weeks.length ? weeks : old.weeks || [];
     result.fehler = fehler.length ? fehler : old.fehler || [];
-    report.push(week ? t('nt.weeks', { list: weeks.map((w) => w.kw).join('/'), kw: week.kw }) : t('nt.noPlan'), t('nt.fehler', { n: fehler.length }));
+    report.push(week ? t('nt.weeks', { list: weeks.map((w) => w.kw).join('/'), kw: week.kw }) : t('nt.noPlan'), t('nt.fehler', { n: fehler.filter((f) => !f.odev).length }), t('nt.odev', { n: fehler.filter((f) => f.odev).length }));
   } else report.push(t('nt.noPlanPage'));
 
   if (db) {
@@ -399,11 +414,11 @@ export async function syncFromNotion({ faecher, lessons }) {
 
   if (sinav) {
     result.exams = await parseExamPage(await children(sinav.id), faecher, children);
-    const n = result.exams.filter((e) => e.typ === 'Sınav' && !e.done).length;
-    report.push(t('nt.exams', { n, m: result.exams.length - n }));
+    const open = result.exams.filter((e) => !e.done);
+    report.push(t('nt.exams', { n: open.filter((e) => e.typ === 'Sınav').length, m: open.filter((e) => e.typ !== 'Sınav').length }));
   } else result.exams = old.exams || [];
 
   result.notion = dersler ? await loadLessonLinks(dersler, lessons) : old.notion || {};
-  setPrivate(result);
+  if (!setPrivate(result)) report.push(t('set.storageFull'));
   return report.join(' · ');
 }

@@ -5,22 +5,58 @@ import './strings.js';
 
 const KEY = 'fizyo.private';
 
-let data = load();
+// Typen prüfen (Notion-Sync, importierte Datei oder gespeicherter Stand): falsche Typen ließen sonst Seiten abstürzen
+const isObj = (x) => x !== null && typeof x === 'object' && !Array.isArray(x);
+const str = (x, max = 5000) => (typeof x === 'string' ? x.slice(0, max) : x == null ? '' : String(x).slice(0, max));
+const strs = (x, max = 500) => (Array.isArray(x) ? x.filter((v) => typeof v === 'string').map((v) => v.slice(0, max)).slice(0, 200) : []);
+const date = (x) => (typeof x === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x) ? x : '');
+const objs = (x, n = 5000) => (Array.isArray(x) ? x.filter(isObj).slice(0, n) : []);
+const BAD = new Set(['__proto__', 'constructor', 'prototype']);
+function cleanWeek(w) {
+  if (!isObj(w)) return null;
+  const days = {};
+  if (isObj(w.days)) for (const [k, d] of Object.entries(w.days)) if (/^[1-7]$/.test(k) && isObj(d)) days[k] = { kurse: strs(d.kurse), test: strs(d.test, 100), note: str(d.note, 1000) };
+  const kw = Number(w.kw);
+  return { kw: Number.isFinite(kw) ? Math.round(kw) : 0, range: str(w.range, 100), from: date(w.from), to: date(w.to), days };
+}
+// Notion-Links: nur echte Notion-Seiten (keine fremden Adressen aus einer manipulierten Datei)
+export const NOTION_URL = /^https:\/\/(www\.)?notion\.so\/[0-9a-f]{32}$/;
+export function cleanPrivate(obj) {
+  if (!isObj(obj) || obj.kind !== 'fizyolern-private') throw new Error('format');
+  const notion = {};
+  if (isObj(obj.notion)) for (const [k, v] of Object.entries(obj.notion)) if (!BAD.has(k) && typeof v === 'string' && NOTION_URL.test(v)) notion[k] = v;
+  return {
+    kind: 'fizyolern-private', version: Number(obj.version) || 1, source: str(obj.source, 50), syncedAt: str(obj.syncedAt, 40),
+    week: cleanWeek(obj.week),
+    weeks: objs(obj.weeks, 60).map(cleanWeek).filter(Boolean),
+    fehler: objs(obj.fehler, 3000).map((f) => ({
+      id: str(f.id, 100), fach: str(f.fach, 100), q: str(f.q, 2000), ...(f.odev ? { odev: str(f.odev, 200) } : {}),
+      ...(Array.isArray(f.seg) ? { seg: f.seg.filter(isObj).slice(0, 200).map((x) => ({ t: str(x.t, 2000), b: !!x.b })) } : {}),
+      ...(f.a !== undefined ? { a: str(f.a, 2000) } : {}), ...(f.tr !== undefined ? { tr: str(f.tr, 2000) } : {}),
+    })).filter((f) => f.id),
+    gw: objs(obj.gw, 5000).map((w) => ({ id: str(w.id, 300), de: str(w.de, 300), tr: str(w.tr, 500), ...(w.en ? { en: str(w.en, 500) } : {}), ex: str(w.ex, 1000), cat: str(w.cat, 100), stufe: str(w.stufe, 50), next: date(w.next) })).filter((w) => w.id && w.de),
+    lessonRows: objs(obj.lessonRows, 5000).filter((r) => /^[0-9a-f]{16}$/.test(r.h)).map((r) => ({ h: r.h, fach: str(r.fach, 100), lektion: str(r.lektion, 200), typ: str(r.typ, 20), frage: str(r.frage), antwort: str(r.antwort), ablenker: strs(r.ablenker, 1000).slice(0, 3), erkl: str(r.erkl), kw: strs(r.kw, 200).slice(0, 20) })),
+    exams: objs(obj.exams, 500).map((e) => ({ typ: e.typ === 'Sınav' ? 'Sınav' : 'Ödev', fach: str(e.fach, 100), topic: str(e.topic, 300), date: date(e.date), done: !!e.done, note: str(e.note, 500) })).filter((e) => e.date),
+    notion,
+  };
+}
 
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) { /* privater Modus o. Ä. */ }
+    if (raw) return cleanPrivate(JSON.parse(raw));
+  } catch (e) { /* privater Modus oder kaputte Daten */ }
   return null;
 }
 
+let data = load(); // nach den Prüffunktionen (sonst Zugriff vor der Definition)
+
 export function getPrivate() { return data; }
 
+// gibt false zurück, wenn der Speicher voll ist (die Daten gelten dann nur bis zum Neuladen)
 export function setPrivate(obj) {
-  if (!obj || obj.kind !== 'fizyolern-private') throw new Error('format');
-  data = obj;
-  try { localStorage.setItem(KEY, JSON.stringify(obj)); } catch (e) { /* ignorieren */ }
+  data = cleanPrivate(obj);
+  try { localStorage.setItem(KEY, JSON.stringify(data)); return true; } catch (e) { return false; }
 }
 
 export function clearPrivate() {

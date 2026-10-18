@@ -6,7 +6,7 @@ import { GRUNDWORTSCHATZ, BASE_VOCAB } from './data/vocab.js';
 import { OPEN } from './data/questions.js';
 import { LESSONS, FAECHER, refreshLessons } from './lessons.js';
 import { cleanSegments, cleanText, cardFront } from './private.js';
-import { getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, odevList, notionLink, week, todayPlan, tomorrowPlan, upcoming, examFaecher } from './private.js';
+import { NOTION_URL, getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, odevList, notionLink, week, todayPlan, tomorrowPlan, upcoming, examFaecher } from './private.js';
 import { getToken, setToken, clearToken, looksLikeToken, syncFromNotion } from './notion.js';
 import { renderReport } from './report.js';
 import { containsFuzzy } from './fuzzy.js';
@@ -43,7 +43,9 @@ const { partText } = M3;
 // Schicht-Namen (Yüzeysel / Superficial …); LAYER_NAMES_EN kommt evtl. erst später in die Daten
 const layerName = (n) => ((lang() === 'en' && M3.LAYER_NAMES_EN) || M3.LAYER_NAMES)[n] || '';
 // Kartenintervall „1dk / 10dk / 4g / 2,5ay“ (store.js) in der Hilfssprache
-const ivlLabel = (s) => (lang() === 'en' ? String(s).replace(/dk$/, 'm').replace(/ay$/, 'mo').replace(/g$/, 'd').replace(',', '.') : s);
+// Flagge der tatsächlich angezeigten Hilfssprache: fehlt die englische Fassung, ist der Text unbekannter Sprache → 🌐
+const flagFor = (obj, field = 'tr') => (lang() === 'en' && obj && !obj[field === 'tr' ? 'en' : field === 'ftr' ? 'fen' : field + 'En'] ? '🌐' : flag());
+const ivlLabel = (s) => (lang() === 'en' ? String(s).replace(/dk$/, 'm').replace(/ay$/, 'mo').replace(/yıl$/, 'y').replace(/g$/, 'd').replace(',', '.') : s);
 // Zahl mit Dezimalkomma (TR) bzw. -punkt (EN)
 const dec = (x) => (lang() === 'en' ? String(x) : String(x).replace('.', ','));
 // Struktur oder Knochenpunkt
@@ -180,7 +182,8 @@ const routes = {
 function navigate() {
   const hash = location.hash.replace(/^#\/?/, '') || 'bugun';
   const [path, query] = hash.split('?');
-  const [name, ...args] = path.split('/').map(decodeURIComponent);
+  const dec = (x) => { try { return decodeURIComponent(x); } catch { return x; } };
+  const [name, ...args] = path.split('/').map(dec);
   const r = routes[name] || routes.bugun;
   const params = new URLSearchParams(query || '');
   current = name;
@@ -202,7 +205,12 @@ function navigate() {
   r.render(args, params);
 }
 
+// Nicht in fremden Seiten einbetten lassen (Clickjacking) – vor allem anderen
+if (window.top !== window.self) { document.body.textContent = ''; throw new Error('framed'); }
 window.addEventListener('hashchange', navigate);
+store.onSaveError(() => toast(t('set.storageFull')));
+// „Zurück“-Knöpfe ohne Inline-Handler (die CSP erlaubt keine onclick-Attribute)
+document.addEventListener('click', (e) => { if (e.target.closest('[data-back]')) history.back(); });
 
 // ───────────────────────── Heute ─────────────────────────
 function renderToday() {
@@ -233,7 +241,7 @@ function renderToday() {
     { done: d.lesson2, label: t(b.kind === 'bone' ? 'task.bone' : 'task.joint', { name: esc(b.de) }), href: `#/ders/${b.id}` },
     { done: d.cards >= s.settings.cardsGoal, label: `${t('task.cards', { n: s.settings.cardsGoal })} <span class="muted">(${d.cards}/${s.settings.cardsGoal})</span>`, href: '#/oturum/vocab' },
     { done: d.quiz >= s.settings.quizGoal, label: `${t('task.quiz', { n: s.settings.quizGoal })} <span class="muted">(${d.quiz}/${s.settings.quizGoal})</span>`, href: '#/test' },
-    { done: d.open >= 1, label: t('task.open'), href: `#/soru/${nextOpenQuestion().id}` },
+    { done: d.open >= 1, label: t('task.open'), href: `#/soru/${encodeURIComponent(nextOpenQuestion().id)}` },
   ];
   const doneN = tasks.filter((t) => t.done).length;
   const pct = doneN / tasks.length;
@@ -414,7 +422,7 @@ function renderLesson([id]) {
         <dt>Funktion</dt><dd>${esc(s.f)}</dd>
         ${UEBUNGEN[s.id] ? `<dt>💪 Übung im Studio</dt><dd>${UEBUNGEN[s.id].map((u) => `<b>${esc(u.n)}</b> – ${esc(u.b)} <span class="muted">(${flag()} ${esc(tx(u))})</span>`).join('<br>')}</dd>` : ''}
       </dl>
-      <div class="tr-box small">${flag()} ${esc(tx(s, 'ftr'))}</div>`;
+      <div class="tr-box small">${flagFor(s, 'ftr')} ${esc(tx(s, 'ftr'))}</div>`;
   } else if (s.kind === 'bone') {
     facts = `
       <dl class="facts" lang="de">
@@ -446,7 +454,7 @@ function renderLesson([id]) {
       <span class="badge ${s.kind}">${kindLabel(s.kind)}</span>
       <h2 style="margin-top:8px">${esc(s.de)} ${say(s.de)}</h2>
       <div class="la">${esc(s.la)} ${say(s.la)}</div>
-      <div class="muted small">${flag()} ${esc(tx(s))}</div>
+      <div class="muted small">${flagFor(s)} ${esc(tx(s))}</div>
       ${facts}
       ${s.k || s.klinik ? `<div class="klinik small">🩺 <b>Klinik:</b> ${esc(s.k || s.klinik)}</div>` : ''}
       <a class="btn ghost block" style="margin-top:14px" href="#/3d?id=${s.id}">${t('btn.show3dModel')}</a>
@@ -493,7 +501,7 @@ function lessonProgress(l) {
 }
 
 function renderLessonList() {
-  const byFach = {};
+  const byFach = Object.create(null);
   LESSONS.forEach((l) => (byFach[l.fach] = byFach[l.fach] || []).push(l));
   view.innerHTML = `
     <p class="muted small" style="padding:0 4px">${t('lessons.intro')}</p>
@@ -518,12 +526,12 @@ function renderLessonNote([id]) {
       <h2 lang="de">${esc(l.title)}</h2>
       <div class="grid2" style="margin-top:12px">
         ${l.mcq.length ? `<a class="btn" href="#/test?kat=${encodeURIComponent('Lektion: ' + l.id)}">${t('note.test', { n: l.mcq.length })}</a>` : ''}
-        ${notionLink(l.id) ? `<a class="btn ghost" href="${esc(notionLink(l.id))}" target="_blank" rel="noopener">${t('note.openNotion')}</a>` : ''}
+        ${notionLink(l.id) && NOTION_URL.test(notionLink(l.id)) ? `<a class="btn ghost" href="${esc(notionLink(l.id))}" target="_blank" rel="noopener noreferrer">${t('note.openNotion')}</a>` : ''}
       </div>
       ${l.fach === 'PT Befund' ? `<a class="btn ghost block" style="margin-top:10px" href="#/vaka">${t('vaka.btn')}</a>` : ''}
     </div>
     <div class="section-title">${t('note.summary')}</div>
-    <div class="list">${l.kern.map((k) => `<div style="display:block"><div lang="de">${esc(k.de)}</div><div class="muted small">${flag()} ${esc(tx(k))}</div></div>`).join('')}</div>
+    <div class="list">${l.kern.map((k) => `<div style="display:block"><div lang="de">${esc(k.de)}</div><div class="muted small">${flagFor(k)} ${esc(tx(k))}</div></div>`).join('')}</div>
     ${opens.length ? `<div class="section-title">${t('note.open')}</div><div class="list">${opens.map((q) => `<a href="#/soru/${encodeURIComponent(q.id)}"><span class="grow small" lang="de">${esc(q.q)}</span><span class="chev">›</span></a>`).join('')}</div>` : ''}
     <div class="section-title">${t('note.terms')}</div>
     <div class="list">${l.vocab.map((v) => `<div><span class="grow"><b lang="de">${esc(v.de)}</b><div class="small">${esc(vocabTr(v))}</div></span>${say(v.de)}</div>`).join('')}</div>
@@ -557,9 +565,17 @@ function renderWordSession([pass = 'sabah']) {
     <div id="wAfter"></div>
     ${pass === 'hafta' ? '' : `<button class="btn plain block" id="wKnown" style="margin-top:14px">${t('words.known')}</button>`}`;
   // ok: true/false; near: fast richtig (Artikel falsch/fehlt) = halber Punkt; note darf HTML enthalten
+  // Rückmeldung anzeigen (auch nach „3D'de göster“ → Zurück, ohne erneut zu zählen)
+  const showAfter = ({ ok, note, near }) => {
+    if ($('#wKnown')) $('#wKnown').hidden = true;
+    $('#wAfter').innerHTML = `<div class="explain">${t(ok ? 'res.right' : near ? 'res.near' : 'res.wrong')}${note ? ' · ' + note : ''}<br><b lang="de">${esc(w.de)}</b> = ${esc(vocabTr(w))}${w.ex ? `<br><span class="muted" lang="de">„${esc(w.ex)}“</span>` : ''}${q.type === 'partizip' ? `<br>Partizip II: <b lang="de">${esc(q.answer)}</b>` : ''}</div>${btn3d(w.de, { style: 'margin:0 0 10px' })}
+      <button class="btn block" id="wNext">${wordSess.i + 1 < words.length ? t('words.next') : t('finish')}</button>`;
+    $('#wNext').addEventListener('click', () => { wordSess.i++; wordSess.answered = false; wordSess.fb = null; wordSess.q = null; renderWordSession([pass]); });
+  };
   const finish = (ok, note = '', near = false) => {
     if (wordSess.answered) return;
     wordSess.answered = true;
+    wordSess.fb = { ok, note, near, pick: wordSess.pick, typed: wordSess.typed };
     const morningOk = (store.day().wordRes || {})[w.id];
     // Morgens zählt für das Leitner-Fach; abends nur, wenn falsch (zurück in Fach 1) oder morgens nicht geübt
     if (pass === 'sabah' || !ok || morningOk === undefined) recordWord(w.id, ok, near);
@@ -567,15 +583,13 @@ function renderWordSession([pass = 'sabah']) {
     d.wordRes = { ...(d.wordRes || {}), [w.id]: near ? 'close' : ok };
     store.save();
     wordSess.res.push({ id: w.id, ok, near });
-    if ($('#wKnown')) $('#wKnown').hidden = true;
-    $('#wAfter').innerHTML = `<div class="explain">${t(ok ? 'res.right' : near ? 'res.near' : 'res.wrong')}${note ? ' · ' + note : ''}<br><b lang="de">${esc(w.de)}</b> = ${esc(vocabTr(w))}${w.ex ? `<br><span class="muted" lang="de">„${esc(w.ex)}“</span>` : ''}${q.type === 'partizip' ? `<br>Partizip II: <b lang="de">${esc(q.answer)}</b>` : ''}</div>${btn3d(w.de, { style: 'margin:0 0 10px' })}
-      <button class="btn block" id="wNext">${wordSess.i + 1 < words.length ? t('words.next') : t('finish')}</button>`;
-    $('#wNext').addEventListener('click', () => { wordSess.i++; wordSess.answered = false; wordSess.q = null; renderWordSession([pass]); });
+    showAfter(wordSess.fb);
   };
   if (q.typed) {
     const input = $('#wInput');
     const check = () => {
       const r = checkTyped(w, input.value);
+      wordSess.typed = input.value;
       input.disabled = true; $('#wCheck').hidden = true;
       const b = (x) => `<b lang="de">${esc(x)}</b>`;
       const note = r.ok && r.abbr ? t('words.abbr', { x: b(r.target) })
@@ -589,10 +603,18 @@ function renderWordSession([pass = 'sabah']) {
   } else {
     $$('.opt').forEach((b) => b.addEventListener('click', () => {
       const ok = q.opts[+b.dataset.n] === q.answer;
+      wordSess.pick = +b.dataset.n;
       $$('.opt').forEach((x) => { x.disabled = true; if (q.opts[+x.dataset.n] === q.answer) x.classList.add('correct'); });
       if (!ok) b.classList.add('wrong');
       finish(ok);
     }));
+  }
+  // schon beantwortet (z. B. zurück aus der 3D-Ansicht): Antwort und Rückmeldung wiederherstellen
+  if (wordSess.answered && wordSess.fb) {
+    const fb = wordSess.fb;
+    if (q.typed) { $('#wInput').value = fb.typed || ''; $('#wInput').disabled = true; $('#wCheck').hidden = true; }
+    else $$('.opt').forEach((x) => { x.disabled = true; if (q.opts[+x.dataset.n] === q.answer) x.classList.add('correct'); if (+x.dataset.n === fb.pick && !fb.ok) x.classList.add('wrong'); });
+    showAfter(fb);
   }
   if ($('#wKnown')) $('#wKnown').addEventListener('click', () => {
     const next = markKnown(w.id);
@@ -677,7 +699,7 @@ function btn3d(text, { style = 'margin-top:10px', stop = false, block = true } =
   const ss = structuresInText(text);
   if (!ss.length) return '';
   const label = ss.length > 1 ? t('btn3d.many', { n: ss.length }) : t('btn3d.one', { x: esc(shortName(ss[0])) });
-  return `<a class="btn ghost${block ? ' block' : ''}" style="${style}" href="#/3d?ids=${ss.map((x) => x.id).join(',')}"${stop ? ' onclick="event.stopPropagation()"' : ''}>${label}</a>`;
+  return `<a class="btn ghost${block ? ' block' : ''}" style="${style}" href="#/3d?ids=${ss.map((x) => x.id).join(',')}"${stop ? ' data-stop' : ''}>${label}</a>`;
 }
 
 // ───────────────────────── Samstag: Wochenwiederholung ─────────────────────────
@@ -707,7 +729,7 @@ function todayFaecher(plan = todayPlan()) {
   if (!plan) return examFaecher(7);
   const text = (plan.kurse || []).join(' ').replace(/PT-Befund/g, 'PT Befund');
   const all = [...new Set([...FAECHER, 'AM', 'AKL', 'Atemtherapie', 'KI'])];
-  const hit = all.filter((f) => (f.length <= 3 ? new RegExp(`(^|[^A-Za-zÄÖÜäöü])${f.replace('/', '\\/')}($|[^A-Za-zÄÖÜäöü])`).test(text) : text.includes(f)) || (f === 'Anatomie' && /\bANA\b/.test(text)));
+  const hit = all.filter((f) => (f.length <= 3 ? new RegExp(`(^|[^A-Za-zÄÖÜäöü])${f.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}($|[^A-Za-zÄÖÜäöü])`).test(text) : text.includes(f)) || (f === 'Anatomie' && /\bANA\b/.test(text)));
   // Fächer mit Prüfung in ≤ 7 Tagen zuerst (Lesestoff und ✗-Karten im Rückweg)
   return [...new Set([...examFaecher(7), ...(plan.test || []), ...hit])];
 }
@@ -779,7 +801,7 @@ function renderReading() {
     <p class="muted small" style="padding:0 4px">${t('read.intro')}</p>
     ${lessons.map((l) => `
       <div class="section-title" lang="de">${esc(l.fach)} · ${esc(l.title)}</div>
-      ${l.kern.map((k) => `<div class="card read-card"><div lang="de">${esc(k.de)}</div><div class="muted">${flag()} ${esc(tx(k))}</div>${btn3d(k.de, { style: 'margin-top:10px', block: false })}</div>`).join('')}`).join('')}
+      ${l.kern.map((k) => `<div class="card read-card"><div lang="de">${esc(k.de)}</div><div class="muted">${flagFor(k)} ${esc(tx(k))}</div>${btn3d(k.de, { style: 'margin-top:10px', block: false })}</div>`).join('')}`).join('')}
     <button class="btn block" id="readDone" style="margin-top:12px">${t('read.done')}</button>
     <button class="btn plain block" id="readSkip" style="margin-top:8px">${t('read.skip')}</button>`;
   const markRead = () => { lessons.forEach((l) => { store.get().learned['les:' + l.id] = store.today(); }); markDonus('notlar'); };
@@ -792,7 +814,7 @@ let quiz = null;
 
 const topicLabel = (c) => (c.startsWith('Ders: ') ? t('topic.ders', { f: c.slice(6) }) : c === 'Knochenpunkte' ? t('topic.lm') : catLabel(c));
 // Beschriftung einer Test-Kategorie (die Kategorie selbst bleibt der interne Schlüssel)
-const catLabel = (c) => (c === 'Gemischt' ? t('cat.mixed') : c === 'Hatalar: bugün' ? t('cat.wrongToday') : c === 'Hatalar: hafta' ? t('cat.wrongWeek') : c);
+const catLabel = (c) => (c === 'Gemischt' ? t('cat.mixed') : c === 'Hatalar: bugün' ? t('cat.wrongToday') : c === 'Hatalar: hafta' ? t('cat.wrongWeek') : c.startsWith('Ders: ') ? topicLabel(c) : c);
 let quizCat = 'Gemischt';
 
 function renderQuizStart(_, params = new URLSearchParams()) {
@@ -807,6 +829,8 @@ function renderQuizStart(_, params = new URLSearchParams()) {
     if (!quiz.qs.length) { quiz = null; toast(t('quiz.none')); } else return renderQuizQuestion();
   }
   if (quiz && !quiz.finished) return renderQuizQuestion();
+  // gerade beendet (z. B. zurück aus der 3D-Ansicht): Ergebnis statt Kategorieauswahl zeigen
+  if (quiz && quiz.finished && Date.now() - quiz.endAt < 10 * 60e3) return renderQuizEnd();
   const stats = store.get().quiz;
   const weak = Object.entries(stats).filter(([, v]) => v.w > v.r).length;
   view.innerHTML = `
@@ -840,22 +864,29 @@ function renderQuizQuestion() {
     <div id="after"></div>
     <button class="btn plain block" id="quitQuiz" style="margin-top:20px">${t('quiz.quit')}</button>
   `;
-  $$('.opt').forEach((btn) => btn.addEventListener('click', () => {
-    const i = +btn.dataset.i;
+  // Antwort anzeigen; record = false, wenn die Frage schon beantwortet war (z. B. zurück aus der 3D-Ansicht)
+  const answer = (i, record) => {
     const ok = i === q.ans;
-    $$('.opt').forEach((b, j) => { b.disabled = true; if (j === q.ans) b.classList.add('correct'); });
-    if (!ok) { btn.classList.add('wrong'); quiz.wrong.push(q); } else quiz.right++;
-    if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(ok ? 15 : [30, 40, 30]);
-    store.recordQuiz(q.id, ok);
+    $$('.opt').forEach((b, j) => { b.disabled = true; if (j === q.ans) b.classList.add('correct'); if (j === i && !ok) b.classList.add('wrong'); });
+    if (record) {
+      quiz.answers = { ...(quiz.answers || {}), [quiz.i]: i };
+      if (!ok) quiz.wrong.push(q); else quiz.right++;
+      if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(ok ? 15 : [30, 40, 30]);
+      store.recordQuiz(q.id, ok);
+    }
     $('#after').innerHTML = `<div class="explain">${ok ? t('quiz.right') : t('quiz.wrong')}${esc(tx(q, 'x'))}</div>${btn3d(`${q.q} ${q.opts[q.ans]} ${q.x}`, { style: 'margin:0 0 10px' })}<button class="btn block" id="next">${quiz.i + 1 < quiz.qs.length ? t('quiz.next') : t('quiz.result')}</button>`;
     $('#next').addEventListener('click', () => { quiz.i++; renderQuizQuestion(); });
-    $('#next').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }));
+    if (record) $('#next').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+  $$('.opt').forEach((btn) => btn.addEventListener('click', () => answer(+btn.dataset.i, true)));
+  const prev = quiz.answers && quiz.answers[quiz.i];
+  if (prev !== undefined) answer(prev, false);
   $('#quitQuiz').addEventListener('click', () => { quiz.qs = quiz.qs.slice(0, quiz.i); renderQuizEnd(); });
 }
 
 function renderQuizEnd() {
   quiz.finished = true;
+  quiz.endAt = quiz.endAt || Date.now();
   const plan = todayPlan();
   if (morningKat() && quiz.cat === morningKat() && quiz.qs.length) { store.day().morning = true; store.save(); }
   if (quiz.cat === 'Hatalar: bugün') markDonus('hatalar');
@@ -903,7 +934,7 @@ function renderOpenList() {
         ${all.filter((q) => q.cat === c).map((q) => {
           const r = st[q.id];
           const badge = !r ? `<span class="badge">${t('badge.new')}</span>` : r.score >= 0.75 ? `<span class="badge good">${t('badge.good')}</span>` : r.score >= 0.4 ? `<span class="badge warn">${t('badge.partial')}</span>` : `<span class="badge bad">${t('badge.again')}</span>`;
-          return `<a href="#/soru/${q.id}"><span class="grow small">${esc(q.q)}</span>${badge}</a>`;
+          return `<a href="#/soru/${encodeURIComponent(q.id)}"><span class="grow small">${esc(q.q)}</span>${badge}</a>`;
         }).join('')}
       </div>`).join('')}
   `;
@@ -911,7 +942,8 @@ function renderOpenList() {
 
 function renderOpenQuestion([id]) {
   const all = allOpen();
-  const q = all.find((x) => x.id === id) || all[0];
+  const q = all.find((x) => x.id === id);
+  if (!q) { view.innerHTML = `<p class="empty">${t('open.notFound')}</p><a class="btn block" href="#/sorular">${t('route.sorular')}</a>`; return; }
   view.innerHTML = `
     <div class="card">
       <span class="badge">${esc(q.cat)}</span>
@@ -924,6 +956,7 @@ function renderOpenQuestion([id]) {
   const ta = $('#answer');
   ta.addEventListener('input', () => { drafts[q.id] = ta.value; });
   $('#check').addEventListener('click', () => {
+    if (!ta.value.trim()) { toast(t('open.writeFirst')); ta.focus(); return; }
     const ans = norm(ta.value);
     const hits = q.kw.map((k) => ({ k, hit: k.split('|').some((alt) => containsFuzzy(ta.value, alt)) }));
     const score = hits.filter((h) => h.hit).length / hits.length;
@@ -995,6 +1028,10 @@ let session = null;
 const FEHLER_PER_DAY = 20;
 
 function renderCardSession([deckId]) {
+  // unbekanntes Deck (z. B. aus einem Link): Hinweis statt „heute fertig“
+  const known = DECKS().some((d) => d.id === deckId) || /^(fehler|ders):/.test(deckId)
+    || (deckId.startsWith('vocab:') && vocabCategories().includes(deckId.slice(6)));
+  if (!known) { view.innerHTML = `<p class="empty">${t('cards.notFound')}</p><a class="btn block" href="#/kartlar">${t('route.kartlar')}</a>`; return; }
   if (!session || session.deck !== deckId) {
     const cards = deckCards(deckId);
     let queue = store.buildSession(cards, { noNewLimit: deckId.startsWith('fehler') || deckId === 'odev' });
@@ -1057,7 +1094,8 @@ function renderCardSession([deckId]) {
     $('#rateBox').hidden = !session.flipped;
     $('#showBtn').hidden = session.flipped;
   };
-  $('#flash').addEventListener('click', flip);
+  // Knöpfe/Links auf der Karte (3D, 🔊) drehen die Karte nicht um
+  $('#flash').addEventListener('click', (e) => { if (!e.target.closest('a, button, [data-stop]')) flip(); });
   $('#showBtn').addEventListener('click', flip);
   $$('[data-r]').forEach((b) => b.addEventListener('click', () => {
     const r = +b.dataset.r;
@@ -1080,7 +1118,7 @@ function renderWordList() {
   const draw = () => {
     const q = norm($('#wq').value);
     const list = allVocab().filter((v) => !q || norm(v.de + ' ' + v.tr + ' ' + vocabTr(v)).includes(q));
-    const byCat = {};
+    const byCat = Object.create(null);
     list.forEach((v) => (byCat[v.cat] = byCat[v.cat] || []).push(v));
     $('#wl').innerHTML = Object.entries(byCat).map(([cat, vs]) => `
       <div class="section-title" lang="de">${esc(cat)}</div>
@@ -1188,7 +1226,7 @@ function exitFocus() {
   focusHistory = [];
   pq = null;
   viewer.exitFocus();
-  document.body.classList.remove('focus3d');
+  document.body.classList.remove('focus3d', 'pq3d');
   if (id && kind !== 'landmark') viewer.select(id); else showSheet(null);
 }
 
@@ -1215,10 +1253,10 @@ function renderFocusSheet(k) {
     <button class="close" aria-label="${t('f.allBody')}">✕</button>
     <span class="badge ${cls}">${badge}</span>
     <h2 style="margin:6px 0 0;font-size:18px">${esc(s.la)}</h2>
-    <div class="muted small">${esc(s.de)} · ${flag()} ${esc(tx(s))}</div>`;
+    <div class="muted small">${esc(s.de)} · ${flagFor(s)} ${esc(tx(s))}</div>`;
   const foot = (lesson = true) => `<div class="grid2" style="margin-top:8px">
       <button class="btn plain" id="exitFocus">${t('f.allBody')}</button>
-      ${lesson && s && findStructure(s.id) ? `<a class="btn" href="#/ders/${s.id}">${t('btn.openLesson')}</a>` : `<button class="btn" onclick="history.back()">${t('f.goBack')}</button>`}
+      ${lesson && s && findStructure(s.id) ? `<a class="btn" href="#/ders/${s.id}">${t('btn.openLesson')}</a>` : `<button class="btn" data-back>${t('f.goBack')}</button>`}
     </div>`;
   let body = '';
   if (info.kind === 'muscle') {
@@ -1295,7 +1333,7 @@ const PQ_ROUNDS = 10;
 let pq = null; // { set, qs, k, results, answer }
 
 function pointQuestions(set) {
-  const bones = PQ_SETS[set] || PQ_SETS.pelvis;
+  const bones = Object.hasOwn(PQ_SETS, set) ? PQ_SETS[set] : PQ_SETS.pelvis;
   const lms = LANDMARKS.filter((l) => bones.includes(l.bone));
   const qs = lms.map((l) => ({ id: 'lm:' + l.id, kind: 'point', ans: [l] }));
   for (const role of ['o', 'i']) {
@@ -1320,11 +1358,12 @@ function buildPointQuiz(set, only = null) {
 
 function startPointQuiz(set = 'pelvis', only = null) {
   if (focusState) exitFocus();
-  const info = viewer.enterPointQuiz(PQ_SETS[set] || PQ_SETS.pelvis);
+  if (!Object.hasOwn(PQ_SETS, set)) set = 'pelvis'; // unbekannter Name aus einem Link
+  const info = viewer.enterPointQuiz(PQ_SETS[set]);
   if (!info) { toast(t('pq.notReady')); return; }
   pq = { set, qs: buildPointQuiz(set, only), k: 0, results: [], answer: null };
   focusState = { id: null, s: null, info };
-  document.body.classList.add('focus3d');
+  document.body.classList.add('focus3d', 'pq3d'); // pq3d: Ansicht-Knöpfe ausblenden, damit sie keine Punkte verdecken
   $('#hint3d').hidden = true;
   renderPointQuizSheet();
 }
@@ -1375,7 +1414,7 @@ function pqPrompt(q) {
   if (q.kind === 'point') {
     const l = q.ans[0];
     return `<h2 style="margin:4px 0 0;font-size:18px" lang="la">${esc(l.la)}</h2>
-      <div class="muted small"><span lang="de">${esc(l.de)}</span> · ${flag()} ${esc(tx(l))}</div>
+      <div class="muted small"><span lang="de">${esc(l.de)}</span> · ${flagFor(l)} ${esc(tx(l))}</div>
       <div class="small" style="margin-top:6px">${t('pq.showPoint')}</div>`;
   }
   const verb = q.kind === 'o' ? t('pq.origin') : t('pq.insert');
@@ -1499,7 +1538,7 @@ function showSheet(id) {
     <button class="close" aria-label="${t('close')}">✕</button>
     <span class="badge ${s.kind}">${kindLabel(s.kind)}</span>
     <h2 style="margin:6px 0 0;font-size:18px">${esc(s.la)}</h2>
-    <div class="muted small">${esc(s.de)} · ${flag()} ${esc(tx(s))}</div>
+    <div class="muted small">${esc(s.de)} · ${flagFor(s)} ${esc(tx(s))}</div>
     <p class="small" style="margin:6px 0">${esc(summary)}</p>
     <div class="more small">${more}${s.k || s.klinik ? `<div class="klinik">🩺 ${esc(s.k || s.klinik)}</div>` : ''}</div>
     <div class="grid2" style="margin-top:8px">
@@ -1523,8 +1562,8 @@ function renderSettings() {
     </div>
     <div class="section-title">${t('set.goals')}</div>
     <div class="list">
-      <label><span class="grow">${t('set.cardsGoal')}</span><input type="number" min="5" max="200" id="cardsGoal" value="${s.cardsGoal}" style="width:80px"></label>
-      <label><span class="grow">${t('set.quizGoal')}</span><input type="number" min="5" max="50" id="quizGoal" value="${s.quizGoal}" style="width:80px"></label>
+      <label><span class="grow">${t('set.cardsGoal')}</span><input type="number" min="1" max="200" id="cardsGoal" value="${s.cardsGoal}" style="width:80px"></label>
+      <label><span class="grow">${t('set.quizGoal')}</span><input type="number" min="1" max="50" id="quizGoal" value="${s.quizGoal}" style="width:80px"></label>
       <label><span class="grow">${t('set.newPerDay')}</span><input type="number" min="0" max="100" id="newPerDay" value="${s.newPerDay}" style="width:80px"></label>
     </div>
     <div class="section-title">${t('set.backup')}</div>
@@ -1552,11 +1591,18 @@ function renderSettings() {
     </div>
     <div class="section-title">${t('set.other')}</div>
     <button class="btn danger block" id="resetBtn">${t('set.reset')}</button>
-    <p class="muted small" style="margin-top:24px;padding:0 4px">${t('set.credits', { lic: '<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>' })}</p>
+    <button class="btn plain block" id="wipeBtn" style="margin-top:8px">${t('set.wipe')}</button>
+    <p class="muted small" style="padding:0 4px">${t('set.wipeNote')}</p>
+    <p class="muted small" style="margin-top:24px;padding:0 4px">${t('set.credits', { lic: '<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>' })}</p>
   `;
+  const LIMITS = { cardsGoal: [1, 200], quizGoal: [1, 50], newPerDay: [0, 100] };
   ['cardsGoal', 'quizGoal', 'newPerDay'].forEach((k) => $('#' + k).addEventListener('change', (e) => {
     const v = parseInt(e.target.value, 10);
-    if (!isNaN(v)) { s[k] = v; store.save(); toast(t('savedPlain')); }
+    if (isNaN(v)) { e.target.value = s[k]; return; }
+    s[k] = Math.min(LIMITS[k][1], Math.max(LIMITS[k][0], v));
+    e.target.value = s[k];
+    store.save();
+    toast(t('savedPlain'));
   }));
   $$('[data-lang]').forEach((b) => b.addEventListener('click', () => {
     if (b.dataset.lang === lang()) return;
@@ -1574,12 +1620,16 @@ function renderSettings() {
   });
   $('#importFile').addEventListener('change', async (e) => {
     const f = e.target.files[0];
+    e.target.value = '';
     if (!f) return;
+    if (f.size > 5e6) { toast(t('set.tooBig')); return; }
     try {
       const data = JSON.parse(await f.text());
-      if (!data.srs || !data.days) throw new Error('format');
-      store.replace(data);
+      if (!store.looksLikeBackup(data)) throw new Error('format');
+      store.replace(data); // prüft und bereinigt alle Felder
+      applyStatic(); // Sprache der Sicherung
       toast(t('set.backupLoaded'));
+      renderSettings();
     } catch { toast(t('set.backupBad')); }
   });
   const nStatus = $('#nStatus');
@@ -1591,7 +1641,11 @@ function renderSettings() {
       toast(t('set.synced'));
       renderSettings();
       $('#nStatus').textContent = '✅ ' + r;
-    } catch (err) { nStatus.textContent = '⚠️ ' + err.message; }
+    } catch (err) {
+      // ungültiger Schlüssel: nicht gespeichert lassen (sonst „verbunden“, obwohl nichts geht)
+      if (err.status === 401) { clearToken(); renderSettings(); }
+      $('#nStatus').textContent = '⚠️ ' + err.message;
+    }
   };
   const nConnect = $('#nConnect');
   if (nConnect) nConnect.addEventListener('click', () => {
@@ -1607,17 +1661,39 @@ function renderSettings() {
   if (nDisc) nDisc.addEventListener('click', () => {
     if (!confirm(t('set.confirmDisc'))) return;
     clearToken();
+    // auch die aus Notion gelesenen Daten (Plan, Fehler, Ödev, Prüfungen) vom Gerät löschen?
+    if (getPrivate() && confirm(t('set.confirmDiscData'))) { clearPrivate(); refreshLessons(); }
     toast(t('set.keyDeleted'));
     renderSettings();
   });
   $('#privFile').addEventListener('change', async (e) => {
     const f = e.target.files[0];
+    e.target.value = '';
     if (!f) return;
-    try { setPrivate(JSON.parse(await f.text())); refreshLessons(); toast(t('set.privLoaded')); renderSettings(); } catch { toast(t('set.privBad')); }
+    if (f.size > 5e6) { toast(t('set.tooBig')); return; }
+    try {
+      const stored = setPrivate(JSON.parse(await f.text())); // prüft alle Felder
+      refreshLessons();
+      toast(stored ? t('set.privLoaded') : t('set.storageFull'));
+      renderSettings();
+    } catch { toast(t('set.privBad')); }
   });
   $('#privClear').addEventListener('click', () => { clearPrivate(); refreshLessons(); toast(t('set.removed')); renderSettings(); });
   $('#resetBtn').addEventListener('click', () => {
     if (confirm(t('set.confirmReset'))) { store.reset(); toast(t('set.resetDone')); location.hash = '#/bugun'; }
+  });
+  // Alles vom Gerät löschen: Fortschritt, Notion-Schlüssel, Notion-Daten, Offline-Dateien
+  $('#wipeBtn').addEventListener('click', async () => {
+    if (!confirm(t('set.confirmWipe'))) return;
+    const doneMsg = t('set.wiped'); // vor dem Löschen (danach ist die Sprache zurückgesetzt)
+    clearToken();
+    clearPrivate();
+    store.reset();
+    try { Object.keys(localStorage).filter((k) => k.startsWith('fizyo.')).forEach((k) => localStorage.removeItem(k)); } catch { /* ignorieren */ }
+    try { const reg = await navigator.serviceWorker?.getRegistration(); if (reg) await reg.unregister(); } catch { /* ignorieren */ }
+    try { for (const k of await caches.keys()) if (k.startsWith('fizyolern-')) await caches.delete(k); } catch { /* ignorieren */ }
+    alert(doneMsg);
+    location.replace(location.pathname);
   });
 }
 

@@ -247,6 +247,10 @@ Much of the first year is homework like *"learn the pelvic landmarks and the hip
 - **The Notion key never leaves the device.** It is read-only and sent only to `api.notion.com`; the browser blocks every other destination.
 - **The public repository contains only general learning content.** It holds no timetable, mistakes, teacher names or links to personal pages.
 
+- **The daily report shares only what you choose.** It contains statistics and course names without teachers or rooms. Your own mistake texts and exam topics are only added if you tick the box.
+- **Imported files are checked.** Backup and data files are validated field by field before use, so a broken or manipulated file cannot break the app or inject content.
+- **One app per web address.** Browser storage belongs to the whole address `escan-dnmz.github.io`, so no other website is published from this GitHub account.
+- **Delete everything:** ⚙️ Settings → *Delete all data on this device* removes progress, the Notion key, the Notion data and the offline files, for example before giving the phone to someone else.
 ---
 
 ## Install and start
