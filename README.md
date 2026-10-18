@@ -7,6 +7,8 @@
 
 **▶ Live app:** https://escan-dnmz.github.io/fizyolern/ (works in any browser; on an iPhone use Safari → *Share* → *Add to Home Screen*)
 
+💬 **Easiest way to get help:** give this page's link to your AI (ChatGPT, Gemini, Claude …) and ask *"How do I use this app?"*. It explains everything step by step, in your language.
+
 <p align="center">
   <img src="docs/screenshots/today.png" width="230" alt="Daily plan">
   <img src="docs/screenshots/3d-muscle-focus.png" width="230" alt="3D muscle with origin and insertion">
@@ -250,6 +252,13 @@ Much of the first year is homework like *"learn the pelvic landmarks and the hip
 ## Install and start
 
 The app is a website that can be installed like an app. It is free, needs no account and works offline after the first visit.
+
+> 💬 **Not sure how to start? Ask your AI.** Copy the link of this page, `https://github.com/Escan-DNMZ/fizyolern`, into ChatGPT, Gemini, Claude or any other AI and ask one of these:
+> - *"How do I use this app?"*
+> - *"How do I install it on my Android phone and switch it to English?"*
+> - *"Set up my Notion for this app from my slides and timetable."* (attach them)
+>
+> The page and the [`llms.txt`](llms.txt) file were written so that an AI can read them and guide you, in your own language.
 
 | Device | How to install |
 |---|---|
