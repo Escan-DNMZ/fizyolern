@@ -233,25 +233,53 @@ Much of the first year is homework like *"learn the pelvic landmarks and the hip
 
 1. Open https://escan-dnmz.github.io/fizyolern/ (best on a phone).
 2. On an iPhone: Safari → **Share** → **Add to Home Screen**. It then starts like a normal app and works offline.
-3. Without any setup you can use the tests, essay questions, flash cards, words and 3D anatomy with the built-in content. Connecting your own Notion (⚙️ Settings) adds a personal timetable, mistakes, homework and exams.
+3. Without any setup you can use the tests, essay questions, flash cards, words and 3D anatomy with the built-in content. Connecting your own Notion adds a personal timetable, mistakes, homework and exams; see the step-by-step guide below.
 
-<details>
-<summary><b>Connecting Notion (optional)</b></summary>
+## Connecting your Notion (step by step)
 
-1. Go to https://www.notion.so/profile/integrations → **New integration** (type *Internal*, only **Read content**). Copy the secret and keep it private.
-2. In Notion, open your study dashboard → **•••** → **Connections** → add the integration.
-3. In the app: ⚙️ → *Notion bağlantısı* → paste the key → *Bağlan ve güncelle* (connect and update).
+The app works without Notion. With Notion it also shows **your own** timetable, mistakes, homework and exams, and it updates itself whenever you change your notes. The connection is **read-only**: the app can never change or delete anything in Notion.
 
-| Notion page | Used for |
-|---|---|
-| `Haftalık Plan` (weekly plan) | `## … KW 43 (19.–23.10.2026)` headings with a timetable table; lists after a `✗ …` line become mistake cards, or homework cards if the heading says *Ezber/Ödev/Hausaufgabe*; **bold** = answer |
-| `Grundwortschatz` (database) | Words of the day |
-| `Dersler` | Lesson notes |
-| `FizyoLern Sorular` (database) | Extra questions without an app update |
-| `Sınav & Ödev Takibi` | Exam and homework dates |
+### Step 1: Create a read-only key in Notion (on a computer, about 2 minutes)
+1. Open https://www.notion.so/profile/integrations and click **New integration**.
+2. Fill in:
+   - **Name:** `FizyoLern` (any name works);
+   - **Type:** **Internal**;
+   - **Workspace:** the workspace that contains your study notes.
+3. Click **Save**, then open the **Capabilities** tab and leave **only "Read content"** switched on. Switch off *Update content*, *Insert content* and user information.
+4. Copy the **Internal Integration Secret**. It starts with `ntn_`.
+   Treat it like a password: never post it, send it in a chat or put it in a repository.
 
-If a phone is lost, delete or renew the key in Notion. The old key stops working immediately.
-</details>
+### Step 2: Give the key access to your study pages
+1. In Notion, open the page that contains all your study pages (for example a "Physiotherapy dashboard").
+2. Click **•••** (top right) → **Connections** → **Connect to** → choose `FizyoLern`.
+3. That page and all its sub-pages are now visible to the key. Nothing else in your workspace is.
+
+### Step 3: Paste the key in the app
+<img src="docs/screenshots/settings-entry.png" width="300" alt="The gear icon at the top right of the Today screen">
+
+1. Open FizyoLern and tap the **⚙️ gear icon** at the top right of the *Bugün* (Today) screen. This opens **Ayarlar** (Settings).
+2. Scroll to **Notion bağlantısı** (Notion connection).
+3. Paste the key into the field `ntn_… (Notion Internal Integration Secret)`.
+4. Tap **Bağlan ve güncelle** (connect and update). After a few seconds the app shows a short summary of what it found (weeks, mistake cards, words, questions).
+
+<img src="docs/screenshots/settings-notion.png" width="300" alt="Settings screen with the Notion connection field">
+
+From then on the app updates itself when it is opened (at most every 3 hours). **Şimdi güncelle** (update now) in the same place updates immediately, and **Bağlantıyı sil** (remove connection) deletes the key from the phone.
+
+**Where is the key stored?** Only in this phone's browser storage. It is sent only to `api.notion.com`; the app's security policy blocks every other server. If the phone is lost, delete or renew the secret on the Notion integrations page and the old key stops working immediately.
+
+### Step 4: Name your pages so the app finds them
+The app looks for these page titles below the connected page. All are optional; use the ones you need.
+
+| Notion page | What the app does with it | How to write it |
+|---|---|---|
+| **`Haftalık Plan`** (weekly plan) | Today's and tomorrow's classes, morning test, mistake cards, homework cards | One heading per week, e.g. `## KW 43 (19.–23.10.2026)`, followed by a table with the columns *day · class 1 · class 2 · review · notes*. Write "Sabah testi: Anatomie" in the review column for the morning test. |
+| ↳ mistakes | Mistake cards (max. 20 per day) | Under a subject heading (`### Anatomie`), a line starting with `✗` (e.g. `✗ Test 14.10:`), then one bullet per mistake starting with `✗` or `½`. Write the correct answer in **bold**: `✗ Fossa = **Grube**` |
+| ↳ homework | 📌 homework cards (no daily limit) | Same as mistakes, but the `✗` line contains *Ezber*, *Ödev* or *Hausaufgabe*, e.g. `✗ Ezber kartları – Becken & Hüft-ROM:` |
+| **`Grundwortschatz`** (database) | Words of the day | Columns *Wort, Türkçe, Beispiel, Kategorie, Stufe, Nächste Wiederholung* |
+| **`Dersler`** (lesson notes) | Links from each lesson in the app to its note | One sub-page per lesson note |
+| **`FizyoLern Sorular`** (database) | New questions without an app update | Columns *Typ* (Kern / MCQ / Offen / Wort), *Fach, Lektion, Frage, Antwort, Ablenker 1–3, Erklärung TR, Schlüsselbegriffe, Gizle* |
+| **`Sınav & Ödev Takibi`** (exams and homework) | Countdown on the Today screen, priority for subjects with an exam within 7 days | A table with *Tür* (Sınav = exam / Ödev = homework), *Ders, Konu, Tarih, Durum*, or simple to-do items containing a date, e.g. `☐ PT Befund Klausur 28.10.` |
 
 <details>
 <summary><b>Development</b></summary>
