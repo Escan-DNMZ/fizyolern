@@ -40,9 +40,12 @@ Explanations are in a **helper language you choose in Settings: Turkish or Engli
 | **21** lessons in **9** subjects | Anatomy, physiology, PT basics, PT assessment, orthopaedics/surgery, training science, massage, hygiene, psychology |
 | **830+** multiple-choice questions | 377 hand-written (337 of them from the lesson notes), plus questions generated automatically from the anatomy data |
 | **100+** open (essay) questions | Answers typed in German, checked for the required key terms |
-| **56** muscles, **23** bone groups, **12** joints | Each with origin, insertion, innervation and function, or range of motion, in German and Latin with Turkish explanations |
+| **56** muscles, **23** bone groups, **12** joints | Each with origin, insertion, innervation and function, or range of motion, in German and Latin with Turkish and English explanations |
 | **19** bony landmarks in 3D | SIAS, Tuber ischiadicum, Trochanter major and others, each linked to the muscles attached there |
 | **600+** vocabulary items | Basic medical vocabulary, lesson terms, and 55 gym exercises linked to the muscles they train |
+| **7** patient cases | Practice for the practical exam: history → examination → assessment form → therapy plan |
+| **3** oral exam subjects | Anatomie, Physiologie and Spezielle Krankheitslehre with the official time limits, questions read aloud in German |
+| **2** helper languages | Turkish or English for the interface and all explanations; the German content never changes |
 | **~2 MB** of 3D models | Real anatomical meshes (BodyParts3D), compressed so the whole app runs offline on a phone |
 
 ---
@@ -88,7 +91,11 @@ The project shows how someone with a clear idea and deep knowledge of a field ca
 
 ## Features
 
-**Helper language:** in ⚙️ Settings you choose Turkish 🇹🇷 or English 🇬🇧 for the interface, explanations and translations. German content (questions, answers, model answers, terms) never changes. The screenshots below show the Turkish interface; a glossary is at the end of this page.
+<img src="docs/screenshots/settings-language.png" width="230" align="right" alt="Settings: choose the helper language">
+
+**Helper language:** in ⚙️ Settings you choose Turkish 🇹🇷 or English 🇬🇧 for the interface, explanations and translations. German content (questions, answers, model answers, terms) never changes. The screenshots on this page show the **English** mode. The app starts in Turkish, and a glossary of the Turkish labels is at the end of this page.
+
+<br clear="right">
 
 ### 1. A plan for every day (*Bugün* = Today)
 - Today's and tomorrow's classes, read from my weekly timetable in Notion. If several weeks are planned ahead, the right one is picked by date.
@@ -106,11 +113,22 @@ The project shows how someone with a clear idea and deep knowledge of a field ca
 - **Adaptive selection.** Questions I missed come back more often; questions I answered correctly yesterday are skipped today; harder question types unlock as accuracy rises.
 - **Varied formats.** Single answer, "which statement is false", matching, ordering, case studies and numbers.
 - **Generated anatomy questions.** "Where does M. … insert?", "Which nerve supplies …?". The wrong options come from the same body region and have similar length, so the answer cannot be guessed from the layout. The explanation names the muscle each wrong option belongs to.
-- **Mock exam.** 15 multiple-choice and 3 essay questions in 30 minutes, with no feedback until the end, then a result per topic.
-- **Case trainer** (*Vaka çalışması*). Practice for the practical state exam, where a real patient has to be assessed, documented and given a therapy plan. Seven made-up German patient cases (Coxarthrose, H-TEP, ankle sprain, low back pain with yellow flags, shoulder impingement, knee arthritis, fear of falling after a fall). I read the history, choose which examinations to do (each one reveals its findings), fill in a structured assessment form (flags, ICF, main problem, SMART goal, measures, contraindications) and compare it with a model answer. The app checks key terms and points out important examinations I skipped.
 - **3D button.** When a question mentions anatomy, a button after the answer opens every structure it names in the 3D model.
 
-### 3. Essay questions with a smart answer check (*Sorular*)
+### 3. Practising for the state exam
+The German state exam has a written, an oral and a practical part, and each must be passed on its own. FizyoLern trains all three.
+
+<p>
+  <img src="docs/screenshots/mock-exam.png" width="230" alt="Mock exam with timer and question overview">
+  <img src="docs/screenshots/oral-exam.png" width="230" alt="Oral exam: the examiner asks a follow-up question">
+  <img src="docs/screenshots/case-trainer.png" width="230" alt="Case trainer: examination findings of a patient case">
+</p>
+
+- **Mock exam** (*Deneme sınavı*). 15 multiple-choice and 3 essay questions in 30 minutes, with no feedback until the end, then a result per topic.
+- **Oral exam simulator** (*Sözlü sınav*). An "examiner" reads 5 questions aloud in German (Anatomie 30 min, Physiologie 15 min, Spezielle Krankheitslehre 30 min, the official limits). I answer by voice, or by keyboard dictation on the iPhone. If a key point is missing, the examiner asks a follow-up ("Und welche Funktion hat er?"). At the end I see the terms I found and missed, plus the model answer. All speech runs in the browser, with no server. A 🔊 button on cards and lesson terms reads the German or Latin pronunciation aloud.
+- **Case trainer** (*Vaka çalışması*). Practice for the practical state exam, where a real patient has to be assessed, documented and given a therapy plan. Seven made-up German patient cases (Coxarthrose, H-TEP, ankle sprain, low back pain with yellow flags, shoulder impingement, knee arthritis, fear of falling after a fall). I read the history, choose which examinations to do (each one reveals its findings), fill in a structured assessment form (flags, ICF, main problem, SMART goal, measures, contraindications) and compare it with a model answer. The app checks key terms and points out important examinations I skipped.
+
+### 4. Essay questions with a smart answer check (*Sorular*)
 <img src="docs/screenshots/open-question.png" width="230" align="right" alt="Open question with key-term check">
 
 - I type my answer in German. The app checks it for the exam-relevant key terms (green ✓ found, red ✗ missing), then shows the model answer.
@@ -120,11 +138,9 @@ The project shows how someone with a clear idea and deep knowledge of a field ca
   - small typos are tolerated;
   - umlauts may be written as *ae/oe/ue*.
 - **Opposites are never accepted as typos.** *Abduktion* ≠ *Adduktion*, *Sympathikus* ≠ *Parasympathikus*, *hyper-* ≠ *hypo-*. They differ by a letter or two but mean the opposite.
-- **Oral exam simulator** (*Sözlü sınav*). An "examiner" reads 5 questions aloud in German (Anatomie 30 min, Physiologie 15 min, Spezielle Krankheitslehre 30 min, the official limits). I answer by voice, or by keyboard dictation on the iPhone. If a key point is missing, the examiner asks a follow-up ("Und welche Funktion hat er?"). At the end I see the terms I found and missed, plus the model answer. All speech runs in the browser, with no server. A 🔊 button on cards and lesson terms reads the German or Latin pronunciation aloud.
-
 <br clear="right">
 
-### 4. Flash cards with spaced repetition (*Kartlar*)
+### 5. Flash cards with spaced repetition (*Kartlar*)
 - An Anki-style algorithm with learning steps. *Again* comes back in 1 minute and *Hard* in 10 minutes. After that, *Hard* < *Good* < *Easy* in days, which can never be equal.
 - Decks:
   - mistake cards and homework cards from Notion;
@@ -132,11 +148,11 @@ The project shows how someone with a clear idea and deep knowledge of a field ca
   - muscles (each with a typical gym exercise), bones and joints.
 - At most 20 mistake cards per day, today's subjects first, so reviewing never becomes overwhelming.
 
-### 5. Words of the day
+### 6. Words of the day
 - 5 words a day, chosen from categories that match today's classes.
 - The morning and the way home ask the same words in different formats: German→Turkish, typing the German word with its article, cloze sentence, *Partizip II* of separable verbs (`an|schwellen` → *angeschwollen*). Practising each word twice in different ways helps it stick.
 
-### 6. Interactive 3D anatomy
+### 7. Interactive 3D anatomy
 <p>
   <img src="docs/screenshots/3d-step-by-step.png" width="230" alt="Spine shown step by step in four colours">
   <img src="docs/screenshots/3d-joint-axes.png" width="230" alt="Hip joint with three movement axes">
@@ -154,7 +170,7 @@ The project shows how someone with a clear idea and deep knowledge of a field ca
 - **Step-by-step viewer:** a question about "the spine" opens the cervical, thoracic and lumbar spine and the sacrum one after another, then all together in four colours (middle picture).
 - **"Find the point" drill:** the app asks "Show the SIAS" or "Where does M. sartorius originate?" and I tap the bone. A wrong tap shows the correct point with its name (right picture).
 
-### 7. Homework and memorisation
+### 8. Homework and memorisation
 <img src="docs/screenshots/homework-card.png" width="230" align="right" alt="Homework flash card">
 
 Much of the first year is homework like *"learn the pelvic landmarks and the hip muscles by next week"*. FizyoLern keeps it separate from mistakes:
@@ -167,7 +183,7 @@ Much of the first year is homework like *"learn the pelvic landmarks and the hip
 
 <br clear="right">
 
-### 8. Lesson notes and AI tutor report
+### 9. Lesson notes and AI tutor report
 - Each lesson has key sentences in German with a Turkish translation, a test, essay questions and vocabulary, plus a link to the original note.
 - **Status report.** One tap turns the day's progress into a message for an AI tutor. The message gives context, the study streak, cards (reviews vs. new), weak subjects, the most frequent mistakes in readable form, and homework. The tutor can then explain weak topics and set a mini exam.
 
@@ -259,14 +275,14 @@ The app works without Notion. With Notion it also shows **your own** timetable, 
 ### Step 3: Paste the key in the app
 <img src="docs/screenshots/settings-entry.png" width="300" alt="The gear icon at the top right of the Today screen">
 
-1. Open FizyoLern and tap the **⚙️ gear icon** at the top right of the *Bugün* (Today) screen. This opens **Ayarlar** (Settings).
-2. Scroll to **Notion bağlantısı** (Notion connection).
+1. Open FizyoLern and tap the **⚙️ gear icon** at the top right of the **Today** screen (*Bugün* in Turkish). This opens **Settings** (*Ayarlar*).
+2. Scroll to **Notion connection** (*Notion bağlantısı*).
 3. Paste the key into the field `ntn_… (Notion Internal Integration Secret)`.
-4. Tap **Bağlan ve güncelle** (connect and update). After a few seconds the app shows a short summary of what it found (weeks, mistake cards, words, questions).
+4. Tap **Connect and update** (*Bağlan ve güncelle*). After a few seconds the app shows a short summary of what it found (weeks, mistake cards, words, questions).
 
 <img src="docs/screenshots/settings-notion.png" width="300" alt="Settings screen with the Notion connection field">
 
-From then on the app updates itself when it is opened (at most every 3 hours). **Şimdi güncelle** (update now) in the same place updates immediately, and **Bağlantıyı sil** (remove connection) deletes the key from the phone.
+From then on the app updates itself when it is opened (at most every 3 hours). **Update now** (*Şimdi güncelle*) in the same place updates immediately, and **Remove connection** (*Bağlantıyı sil*) deletes the key from the phone.
 
 **Where is the key stored?** Only in this phone's browser storage. It is sent only to `api.notion.com`; the app's security policy blocks every other server. If the phone is lost, delete or renew the secret on the Notion integrations page and the old key stops working immediately.
 
@@ -309,7 +325,7 @@ python tools/bump_sw.py             # after any change, so phones load the new v
 
 ---
 
-## Glossary of the Turkish interface (shown in the screenshots)
+## Glossary of the Turkish interface (the app's default language)
 
 | Turkish | English |
 |---|---|
