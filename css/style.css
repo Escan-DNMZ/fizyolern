@@ -288,3 +288,15 @@ body.focus3d .hud-top .chips, body.focus3d .hud-top .slider, body.focus3d .searc
 .opt.picked { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
 .mock-topic { margin: 8px 0; }
 .mock-topic .progress { margin: 4px 0 0; }
+
+/* Sözlü sınav + 🔊 Aussprache */
+.say-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; min-width: 32px; padding: 0; margin-left: 4px;
+  border: 0; border-radius: 999px; background: var(--accent-soft); font-size: 15px; line-height: 1; vertical-align: middle; cursor: pointer; }
+.say-btn.off { opacity: .4; }
+.face .say-btn { margin: 10px auto 0; }
+.examiner { background: var(--card); border-radius: 16px; padding: 14px; margin: 10px 0; border-left: 4px solid var(--accent); }
+.examiner-who { font-weight: 750; font-size: 14px; color: var(--muted); }
+.examiner-q { font-size: 18px; font-weight: 650; margin-top: 6px; line-height: 1.4; }
+.kw.half { background: var(--warn-soft); color: var(--warn); }
+.btn.rec { background: var(--bad-soft); color: var(--bad); animation: recPulse 1.2s ease-in-out infinite; }
+@keyframes recPulse { 50% { opacity: .65; } }

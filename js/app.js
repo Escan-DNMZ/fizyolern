@@ -15,6 +15,8 @@ import { MUSCLE3D, LAYER_NAMES, partText } from './data/muscle3d.js';
 import { UEBUNGEN } from './data/uebungen.js';
 import { masteredLessons } from './quizgen.js';
 import { initExam, renderMock } from './exam.js';
+import { initOral, renderOral, leaveOral } from './oral.js';
+import { sayBtn } from './speech.js';
 import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, jointDetailQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked, weight, wpick } from './quizgen.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -74,7 +76,7 @@ function deckCards(deck) {
     const cat = deck.split(':')[1];
     return allVocab().filter((v) => !cat || v.cat === cat).map((v) => ({
       id: v.id,
-      tag: v.cat,
+      tag: v.cat, de: v.de,
       front: rev ? v.tr : v.de,
       back: `<div class="big">${esc(rev ? v.de : v.tr)}</div>${v.ex ? `<div class="sub">„${esc(v.ex)}“</div>` : ''}`,
     }));
@@ -94,7 +96,7 @@ function deckCards(deck) {
     const fach = deck.slice(5);
     const seen = new Set();
     return lessonVocab((l) => l.fach === fach).filter((v) => !seen.has(v.id) && seen.add(v.id)).map((v) => ({
-      id: v.id, tag: fach,
+      id: v.id, tag: fach, de: v.de,
       front: rev ? v.tr : v.de,
       back: `<div class="big">${esc(rev ? v.de : v.tr)}</div>${v.ex ? `<div class="sub">„${esc(v.ex)}“</div>` : ''}`,
     }));
@@ -137,6 +139,9 @@ let viewer = null; // Anatomy3D-Instanz (lazy)
 let current = '';
 
 initExam({ view, $, $$, esc, escGap, toast, allOpen });
+initOral({ view, $, $$, esc, toast, allOpen });
+// 🔊-Knopf für deutsche/lateinische Aussprache
+const say = (t) => sayBtn(t, esc);
 
 const routes = {
   bugun: { title: 'Bugün', tab: 'bugun', render: renderToday },
@@ -157,6 +162,7 @@ const routes = {
   oku: { title: 'Ders Notları – Okuma', tab: 'bugun', render: renderReading, back: '#/donus' },
   cumartesi: { title: 'Haftalık Tekrar', tab: 'bugun', render: renderSaturday, back: '#/bugun' },
   deneme: { title: 'Deneme Sınavı', tab: 'test', render: renderMock, back: '#/test' },
+  sozlu: { title: 'Sözlü Sınav', tab: 'sorular', render: renderOral, back: '#/sorular' },
 };
 
 function navigate() {
@@ -166,6 +172,7 @@ function navigate() {
   const r = routes[name] || routes.bugun;
   const params = new URLSearchParams(query || '');
   current = name;
+  if (name !== 'sozlu') leaveOral();
 
   $('#title').textContent = r.title;
   $$('.tabbar a').forEach((a) => a.classList.toggle('active', a.dataset.tab === r.tab));
@@ -425,8 +432,8 @@ function renderLesson([id]) {
   view.innerHTML = `
     <div class="card">
       <span class="badge ${s.kind}">${KIND_LABEL[s.kind]}</span>
-      <h2 style="margin-top:8px">${esc(s.de)}</h2>
-      <div class="la">${esc(s.la)}</div>
+      <h2 style="margin-top:8px">${esc(s.de)} ${say(s.de)}</h2>
+      <div class="la">${esc(s.la)} ${say(s.la)}</div>
       <div class="muted small">🇹🇷 ${esc(s.tr)}</div>
       ${facts}
       ${s.k || s.klinik ? `<div class="klinik small">🩺 <b>Klinik:</b> ${esc(s.k || s.klinik)}</div>` : ''}
@@ -506,7 +513,7 @@ function renderLessonNote([id]) {
     <div class="list">${l.kern.map((k) => `<div style="display:block"><div lang="de">${esc(k.de)}</div><div class="muted small">🇹🇷 ${esc(k.tr)}</div></div>`).join('')}</div>
     ${opens.length ? `<div class="section-title">Açık uçlu sorular</div><div class="list">${opens.map((q) => `<a href="#/soru/${encodeURIComponent(q.id)}"><span class="grow small" lang="de">${esc(q.q)}</span><span class="chev">›</span></a>`).join('')}</div>` : ''}
     <div class="section-title">Terimler</div>
-    <div class="list">${l.vocab.map((v) => `<div><span class="grow"><b lang="de">${esc(v.de)}</b><div class="small">${esc(v.tr)}</div></span></div>`).join('')}</div>
+    <div class="list">${l.vocab.map((v) => `<div><span class="grow"><b lang="de">${esc(v.de)}</b><div class="small">${esc(v.tr)}</div></span>${say(v.de)}</div>`).join('')}</div>
     <a class="btn ghost block" href="#/oturum/${encodeURIComponent('ders:' + l.fach)}">Terimleri kartlarla çalış</a>
   `;
 }
@@ -674,6 +681,7 @@ function renderSaturday() {
     <div class="list">
       <a href="#/test?kat=${encodeURIComponent('Hatalar: hafta')}"><span class="grow"><b>❌ Bu hafta yanlış yaptıkların</b><div class="muted small">${wrong} soru</div></span><span class="chev">›</span></a>
       <a href="#/oturum/fehler"><span class="grow"><b>✗ Tüm ✗ kartları</b><div class="muted small">${fehler} kart (Notion)</div></span><span class="chev">›</span></a>
+      <a href="#/sozlu"><span class="grow"><b>🎤 Sözlü sınav provası</b><div class="muted small">5 soru · Prüfer Almanca sorar, sen sesli cevaplarsın</div></span><span class="chev">›</span></a>
       <a href="#/kelime/hafta"><span class="grow"><b>🔤 Haftanın kelimeleri</b><div class="muted small">${words.length} kelime · çoğunlukla yazarak${d.wordsWeek ? ` · bugün ${d.wordsWeek.r}/${d.wordsWeek.n}` : ''}</div></span><span class="chev">›</span></a>
     </div>
     ${opens.length ? `<div class="section-title">Açık uçlu sorular (bu haftanın dersleri)</div><div class="list">${opens.map((q) => `<a href="#/soru/${encodeURIComponent(q.id)}"><span class="grow small" lang="de">${esc(q.q)}</span><span class="badge">${esc(q.cat)}</span></a>`).join('')}</div>` : ''}`;
@@ -870,6 +878,7 @@ function renderOpenList() {
   const all = allOpen();
   const cats = [...new Set(all.map((q) => q.cat))];
   view.innerHTML = `
+    <a class="card row" href="#/sozlu" style="text-decoration:none;color:inherit;border:2px solid var(--accent)"><span class="grow"><div class="eyebrow">🎤 Sözlü sınav provası</div><h2>Prüfer sorar, sen Almanca konuşursun</h2><div class="muted small">Anatomie 30 dk · Physiologie 15 dk · Krankheitslehre 30 dk</div></span><span class="chev">›</span></a>
     <p class="muted small" style="padding:0 4px">Cevabını Almanca yaz (sınav pratiği!). Uygulama anahtar kavramları kontrol eder, sonra örnek cevabı gösterir ve kendini değerlendirirsin.</p>
     ${cats.map((c) => `
       <div class="section-title" lang="de">${esc(c)}</div>
@@ -889,7 +898,7 @@ function renderOpenQuestion([id]) {
   view.innerHTML = `
     <div class="card">
       <span class="badge">${esc(q.cat)}</span>
-      <div class="question" style="margin-top:8px">${esc(q.q)}</div>
+      <div class="question" style="margin-top:8px" lang="de">${esc(q.q)} ${say(q.q)}</div>
       <textarea id="answer" placeholder="Cevabını buraya yaz (Almanca)…">${esc(drafts[q.id] || '')}</textarea>
       <button class="btn block" id="check" style="margin-top:10px">Kontrol et</button>
     </div>
@@ -1004,12 +1013,14 @@ function renderCardSession([deckId]) {
   const c = store.get().srs[card.id];
   const isNewCard = c.reps === 0;
   const ivl = (r) => store.nextInterval(c, r).label;
+  // Vorderseite deutsch/lateinisch? Bei „TR → DE“ steht das deutsche Wort hinten
+  const deFront = !(store.get().settings.reverse && card.de);
   view.innerHTML = `
     <div class="row"><span class="muted small">Kalan: ${session.queue.length}</span><span class="spacer"></span>${deckId.startsWith('fehler') ? '<span class="badge bad">✗ hata</span>' : deckId === 'odev' ? '<span class="badge warn">📌 ödev</span>' : isNewCard ? '<span class="badge good">yeni</span>' : ''}</div>
     <div class="flash ${session.flipped ? 'flipped' : ''}" id="flash">
       <div class="flash-inner">
-        <div class="face front"><span class="badge tag">${esc(card.tag)}</span><div class="big">${escGap(card.front)}</div>${card.frontSub ? `<div class="sub">${esc(card.frontSub)}</div>` : ''}<div class="sub" style="margin-top:24px">Çevirmek için dokun</div></div>
-        <div class="face back">${card.back}${btn3d(card.front + ' ' + card.back.replace(/<[^>]+>/g, ' '), { style: 'margin-top:12px', stop: true, block: false })}</div>
+        <div class="face front"><span class="badge tag">${esc(card.tag)}</span><div class="big">${escGap(card.front)}</div>${deFront ? say(card.de || card.front) : ''}${card.frontSub ? `<div class="sub">${esc(card.frontSub)}</div>` : ''}<div class="sub" style="margin-top:24px">Çevirmek için dokun</div></div>
+        <div class="face back">${deFront ? '' : say(card.de)}${card.back}${btn3d(card.front + ' ' + card.back.replace(/<[^>]+>/g, ' '), { style: 'margin-top:12px', stop: true, block: false })}</div>
       </div>
     </div>
     <div id="rateBox" ${session.flipped ? '' : 'hidden'}>

@@ -119,6 +119,7 @@ The interface is in Turkish. A short glossary is at the end of this page.
   - small typos are tolerated;
   - umlauts may be written as *ae/oe/ue*.
 - **Opposites are never accepted as typos.** *Abduktion* ≠ *Adduktion*, *Sympathikus* ≠ *Parasympathikus*, *hyper-* ≠ *hypo-*. They differ by a letter or two but mean the opposite.
+- **Oral exam simulator** (*Sözlü sınav*). An "examiner" reads 5 questions aloud in German (Anatomie 30 min, Physiologie 15 min, Spezielle Krankheitslehre 30 min, the official limits). I answer by voice, or by keyboard dictation on the iPhone. If a key point is missing, the examiner asks a follow-up ("Und welche Funktion hat er?"). At the end I see the terms I found and missed, plus the model answer. All speech runs in the browser, with no server. A 🔊 button on cards and lesson terms reads the German or Latin pronunciation aloud.
 
 <br clear="right">
 
@@ -319,6 +320,7 @@ python tools/bump_sw.py             # after any change, so phones load the new v
 | Günün kası / kemiği | Muscle / bone of the day |
 | Noktayı bul | Find the point |
 | Deneme sınavı | Mock exam |
+| Sözlü sınav | Oral exam |
 | 3D'de göster | Show in 3D |
 | Tekrar · Zor · İyi · Kolay | Again · Hard · Good · Easy |
 | Doğru · Yanlış | Correct · Wrong |
