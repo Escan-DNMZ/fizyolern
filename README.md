@@ -247,11 +247,27 @@ Much of the first year is homework like *"learn the pelvic landmarks and the hip
 
 ---
 
-## Try it
+## Install and start
 
-1. Open https://escan-dnmz.github.io/fizyolern/ (best on a phone).
-2. On an iPhone: Safari → **Share** → **Add to Home Screen**. It then starts like a normal app and works offline.
-3. Without any setup you can use the tests, essay questions, flash cards, words and 3D anatomy with the built-in content. Connecting your own Notion adds a personal timetable, mistakes, homework and exams; see the step-by-step guide below.
+The app is a website that can be installed like an app. It is free, needs no account and works offline after the first visit.
+
+| Device | How to install |
+|---|---|
+| **iPhone / iPad** | Open https://escan-dnmz.github.io/fizyolern/ in **Safari** → **Share** → **Add to Home Screen**. Start it from the home screen icon. |
+| **Android** | Open the link in **Chrome** → **⋮** menu → **Install app** (or **Add to Home screen**). |
+| **Computer** (Windows, Mac, Linux) | Open the link in **Chrome** or **Edge** and click the install icon on the right of the address bar, or simply use it as a website in any browser. |
+
+**First steps**
+1. **Switch to English (optional):** the app starts in Turkish. Tap the **⚙️ gear** at the top right of the first screen (*Bugün*), then choose **English** at the very top under *Yardımcı dil / Helper language*.
+2. **Start learning right away:** the tests, essay and oral exam questions, flash cards, words of the day and 3D anatomy work immediately with the built-in content.
+3. **Make it personal (optional):** connect your Notion to see your own timetable, mistakes, homework and exams; see the next section.
+
+### Backup and moving to a new phone
+All progress (cards, test history, streak, settings) lives **only in this browser on this device**. There is no cloud copy.
+- **Back up:** ⚙️ Settings → **Download backup**. This saves a file `fizyolern-yedek-<date>.json`; keep it in iCloud Drive, Google Drive or e-mail it to yourself.
+- **Restore:** on the new device, install the app, then use ⚙️ Settings → **Restore backup** and choose the file.
+- **The Notion key is not part of the backup** (on purpose). Paste it again on the new device.
+- **Data can be lost** if you delete the app, clear the browser's website data, or use a private/incognito window. Make a backup from time to time, e.g. every Saturday.
 
 ## Connecting your Notion (step by step)
 
@@ -286,18 +302,59 @@ From then on the app updates itself when it is opened (at most every 3 hours). *
 
 **Where is the key stored?** Only in this phone's browser storage. It is sent only to `api.notion.com`; the app's security policy blocks every other server. If the phone is lost, delete or renew the secret on the Notion integrations page and the old key stops working immediately.
 
-### Step 4: Name your pages so the app finds them
-The app looks for these page titles below the connected page. All are optional; use the ones you need.
+### Step 4: Create the pages (template included)
+**Easiest way:** copy the ready-made pages from the **[Notion template](docs/notion-template.md)** and paste them into Notion. It has a sample weekly plan with mistakes and homework, plus the database columns.
 
-| Notion page | What the app does with it | How to write it |
-|---|---|---|
-| **`Haftalık Plan`** (weekly plan) | Today's and tomorrow's classes, morning test, mistake cards, homework cards | One heading per week, e.g. `## KW 43 (19.–23.10.2026)`, followed by a table with the columns *day · class 1 · class 2 · review · notes*. Write "Sabah testi: Anatomie" in the review column for the morning test. |
-| ↳ mistakes | Mistake cards (max. 20 per day) | Under a subject heading (`### Anatomie`), a line starting with `✗` (e.g. `✗ Test 14.10:`), then one bullet per mistake starting with `✗` or `½`. Write the correct answer in **bold**: `✗ Fossa = **Grube**` |
-| ↳ homework | 📌 homework cards (no daily limit) | Same as mistakes, but the `✗` line contains *Ezber*, *Ödev* or *Hausaufgabe*, e.g. `✗ Ezber kartları – Becken & Hüft-ROM:` |
-| **`Grundwortschatz`** (database) | Words of the day | Columns *Wort, Türkçe, Beispiel, Kategorie, Stufe, Nächste Wiederholung* |
-| **`Dersler`** (lesson notes) | Links from each lesson in the app to its note | One sub-page per lesson note |
-| **`FizyoLern Sorular`** (database) | New questions without an app update | Columns *Typ* (Kern / MCQ / Offen / Wort), *Fach, Lektion, Frage, Antwort, Ablenker 1–3, Erklärung TR, Schlüsselbegriffe, Gizle* |
-| **`Sınav & Ödev Takibi`** (exams and homework) | Countdown on the Today screen, priority for subjects with an exam within 7 days | A table with *Tür* (Sınav = exam / Ödev = homework), *Ders, Konu, Tarih, Durum*, or simple to-do items containing a date, e.g. `☐ PT Befund Klausur 28.10.` |
+The app finds the pages by title. Titles work in **English, German or Turkish**. A title only has to **contain** the name and capital letters don't matter, so `Weekly Plan (iPad)` works too. All pages must be inside the page you connected in Step 2.
+
+| English title | German | Turkish | What the app does with it |
+|---|---|---|---|
+| **Weekly Plan** | Wochenplan | Haftalık Plan | Today's and tomorrow's classes, morning test, mistake cards, homework cards |
+| **Vocabulary** (database) | Wortschatz | Grundwortschatz | Words of the day |
+| **Lessons** | Unterricht | Dersler | Links from each lesson in the app to its note |
+| **FizyoLern Questions** (database) | FizyoLern Fragen | FizyoLern Sorular | New questions without an app update |
+| **Exams & Homework** | Prüfungen & Hausaufgaben | Sınav & Ödev Takibi | Countdown on the Today screen; subjects with an exam within 7 days get priority |
+
+**How the weekly plan is written**
+- One heading per week: `## Week 43 (19.–23.10.2026)` (also *KW / Woche / Hafta*). The dates tell the app which week is now, so you can plan weeks ahead.
+- Below it, a **simple table** (not a database) with the columns *Day · Class 1 · Class 2 · Review · Notes*. Days start with `Mon`, `Tue` … (or `Mo`, `Di` … / `Pzt`, `Sal` …).
+- `Morning test: Anatomie` in the review column sets the morning test (also *Morgentest:* / *Sabah testi:*).
+- **Mistakes:** under a subject heading (`### Anatomie`), a line starting with `✗`, then one bullet per mistake starting with `✗` or `½`. The **bold** part is the answer: `✗ Fossa = **Grube**`. At most 20 mistake cards come per day.
+- **Homework:** the same, but the `✗` line contains *Homework*, *Hausaufgabe*, *Ezber* or *Ödev*. These cards go to the 📌 homework deck and have no daily limit.
+- Subject names the app knows: Anatomie, Physiologie, PT Grundlagen, PT Befund, O/C, Trainingslehre, KMT, Hygiene, PPS.
+
+---
+
+## Troubleshooting
+
+| What you see | What to do |
+|---|---|
+| *"This doesn't look like a Notion key"* | The key must start with `ntn_` (older keys: `secret_`). Copy it again from the integrations page, without spaces. |
+| *"Invalid key (401)"* | The key was deleted or renewed in Notion. Copy the current secret and paste it again. |
+| *"No page is visible"* or *"Page not found"* | The integration is not connected. In Notion open the parent page → **•••** → **Connections** → add `FizyoLern`. |
+| *"Weekly Plan page is not visible"* (or another page) | That page's title doesn't contain one of the names in Step 4, or the page is outside the connected parent page. |
+| The timetable stays empty | The week heading needs a date range like `(19.–23.10.2026)`, the table must be a simple table and not a database, and every row must start with a day name. |
+| No morning test appears | Write `Morning test: <subject>` in the review column, using one of the subject names above. |
+| A mistake card has no gap | Make the answer **bold** in Notion. Lines without bold text become "remember" cards. |
+| Changes in Notion don't show up | Tap ⚙️ Settings → **Update now**. The app updates by itself at most every 3 hours. |
+| The phone shows an old version | Close the app completely and open it again. The new version loads in the background, then appears on the next start. |
+| Progress is gone | The browser data was cleared or a different browser or private window is in use. Restore your last backup (Settings → Restore backup). |
+
+---
+
+## FAQ
+
+**Does it cost anything? Do I need an account?** No. The app is free, has no account and no ads. Notion's free plan is enough for the integration.
+
+**Can I set up Notion only on my phone?** Yes, but a computer is easier. The integrations page also opens in a phone browser, and the Connections menu is in the Notion app. To create an integration you must be an owner of the workspace; in your own personal workspace you are.
+
+**Is my data safe?** There is no server. Your progress and your Notion key stay on your device; the key is sent only to `api.notion.com`, and the app can only read, not change, your Notion. See *Privacy and security* above.
+
+**Can I use it without Notion?** Yes. Everything except your personal timetable, mistakes, homework and exams works with the built-in content.
+
+**Is the content correct?** It was written from real lesson notes and checked against standard German physiotherapy textbooks. Where a teacher's slide contradicts the textbook, the app teaches the textbook version. It is a study aid and doesn't replace your school's materials.
+
+**I'm an AI assistant. Where is a short summary?** In [`llms.txt`](llms.txt) (also at https://escan-dnmz.github.io/fizyolern/llms.txt).
 
 <details>
 <summary><b>Development</b></summary>

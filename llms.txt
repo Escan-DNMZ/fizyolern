@@ -1,0 +1,42 @@
+# FizyoLern
+
+> FizyoLern is a free, offline study app (Progressive Web App) for physiotherapy students in German vocational training (Ausbildung). It has an interactive 3D anatomy model, adaptive multiple-choice tests, essay questions with key-term checking, an oral exam simulator, a patient-case (Befund) trainer, spaced-repetition flash cards and a daily study plan that can sync read-only from the user's own Notion. Content is German/Latin; the helper language (interface and explanations) is Turkish or English. Idea and content: Escan Dönmez. Code and design: Claude Code (Anthropic).
+
+Live app: https://escan-dnmz.github.io/fizyolern/
+Repository and full documentation: https://github.com/Escan-DNMZ/fizyolern
+
+## How to help a user get started
+1. Install: open the live app. On an iPhone, open it in Safari → Share → Add to Home Screen. On Android, open it in Chrome → ⋮ menu → Install app (or Add to Home screen). On a computer, open it in Chrome or Edge and click the install icon in the address bar, or just use it as a website.
+2. Language: the app starts in Turkish. Tap the ⚙️ gear (top right of the first screen, "Bugün"), then choose "English" under "Yardımcı dil / Helper language" at the top. German learning content never changes.
+3. Without any setup, the user can use: Test (quiz), Sorular/Questions (essay and oral exam), Kartlar/Cards, words of the day and 3D anatomy. All progress stays only in that browser on that device.
+4. Optional, personal timetable, mistakes, homework and exams from Notion:
+   - Create an internal integration at https://www.notion.so/profile/integrations with only "Read content".
+   - Copy the secret (starts with ntn_) and never share it.
+   - In Notion, open the parent page of the study pages → ••• → Connections → add the integration.
+   - In the app: Settings → Notion connection → paste the key → Connect and update.
+   - The pages must have the expected titles and formats. The ready-to-paste template is at https://github.com/Escan-DNMZ/fizyolern/blob/main/docs/notion-template.md
+5. Backup: Settings → Download backup (a JSON file). Restore it on the new device with Settings → Restore backup, then paste the Notion key again (the key is not part of the backup).
+
+## Notion page names (English / German / Turkish; the title only has to contain the name)
+- Weekly Plan / Wochenplan / Haftalık Plan. One heading per week, e.g. "## Week 43 (19.–23.10.2026)", followed by a simple table: Day | Class 1 | Class 2 | Review ("Morning test: Anatomie") | Notes. Under a subject heading (###), a line starting with ✗ followed by ✗/½ bullets creates mistake cards; the bold text is the answer. If the ✗ line contains "Homework"/"Hausaufgabe"/"Ezber"/"Ödev", the bullets become homework cards instead.
+- Vocabulary / Wortschatz / Grundwortschatz (database). Columns: Word, English, Turkish, Example, Category, Level, Next review.
+- Lessons / Unterricht / Dersler. Sub-pages with lesson notes; used for links.
+- FizyoLern Questions / FizyoLern Fragen / FizyoLern Sorular (database). Extra questions: Frage, Typ (Kern/MCQ/Offen/Wort), Fach, Antwort, Ablenker 1–3, Erklärung TR, Schlüsselbegriffe.
+- Exams & Homework / Prüfungen & Hausaufgaben / Sınav & Ödev Takibi. A table Type | Subject | Topic | Date | Status | Note, or to-do items containing a date.
+- Subject names used by the app: Anatomie, Physiologie, PT Grundlagen, PT Befund, O/C, Trainingslehre, KMT, Hygiene, PPS.
+
+## Troubleshooting
+- "This doesn't look like a Notion key": the key must start with ntn_ (older keys: secret_). Copy it again without spaces.
+- "Invalid key (401)": the key was deleted or renewed in Notion. Create or copy a new one.
+- "No page is visible" or "Page not found": the integration is not connected. In Notion open the parent page → ••• → Connections → add it. Sub-pages are included automatically.
+- A page is "not visible" in the sync summary: its title does not contain one of the names above, or it lies outside the connected parent page.
+- Timetable empty: the week heading needs a date range like (19.–23.10.2026), and the table must be a simple table, not a database. Day cells must start with a day name (Mon/Mo/Pzt …).
+- No morning test: the review column needs "Morning test: <subject>" with an app subject name.
+- Old version on the phone: close and reopen the app; after a Notion change, tap Settings → Update now.
+
+## Privacy
+There is no server and no account. Progress is stored only in the browser on the device. The Notion key is stored only on the device and sent only to api.notion.com (enforced by a Content-Security-Policy). The public repository contains only general learning content.
+
+## Key files
+- README (full feature list, screenshots): https://github.com/Escan-DNMZ/fizyolern#readme
+- Notion template: https://github.com/Escan-DNMZ/fizyolern/blob/main/docs/notion-template.md

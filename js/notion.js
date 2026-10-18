@@ -56,9 +56,21 @@ function titleOf(obj) {
   return p ? plain(p.title) : '';
 }
 
-async function findByTitle(query, type) {
-  const r = await call('/search', { method: 'POST', body: { query, filter: { property: 'object', value: type }, page_size: 20 } });
-  return r.results.find((x) => titleOf(x).includes(query)) || null;
+// Titel-Varianten (Türkisch / Englisch / Deutsch): der Seitentitel muss einen davon enthalten (Groß-/Kleinschreibung egal)
+export const TITLES = {
+  plan: ['Haftalık Plan', 'Weekly Plan', 'Wochenplan'],
+  words: ['Grundwortschatz', 'Vocabulary', 'Wortschatz'],
+  lessons: ['Dersler', 'Lessons', 'Unterricht'],
+  questions: ['FizyoLern Sorular', 'FizyoLern Questions', 'FizyoLern Fragen'],
+  exams: ['Sınav & Ödev Takibi', 'Exams & Homework', 'Prüfungen & Hausaufgaben'],
+};
+async function findByTitle(names, type) {
+  for (const query of [].concat(names)) {
+    const r = await call('/search', { method: 'POST', body: { query, filter: { property: 'object', value: type }, page_size: 20 } });
+    const hit = r.results.find((x) => lower(titleOf(x)).includes(lower(query)));
+    if (hit) return hit;
+  }
+  return null;
 }
 
 async function children(id) {
@@ -94,7 +106,21 @@ function faecherIn(text, faecher) {
   });
 }
 
-const WD = { pzt: 1, sal: 2, car: 3, per: 4, cum: 5, cmt: 6, paz: 7 };
+const DAY_NAMES = {
+  1: ['pzt', 'pazartesi', 'mon', 'monday', 'mo', 'montag'],
+  2: ['sal', 'sali', 'tue', 'tues', 'tuesday', 'di', 'dienstag'],
+  3: ['car', 'carsamba', 'wed', 'wednesday', 'mi', 'mittwoch'],
+  4: ['per', 'persembe', 'thu', 'thur', 'thursday', 'do', 'donnerstag'],
+  5: ['cum', 'cuma', 'fri', 'friday', 'fr', 'freitag'],
+  6: ['cmt', 'cumartesi', 'sat', 'saturday', 'sa', 'samstag'],
+  7: ['paz', 'pazar', 'sun', 'sunday', 'so', 'sonntag'],
+};
+// erstes Wort der Zelle (ohne Punkt/Zahlen) → Wochentag 1–7, sonst 0
+export function weekdayOf(cell) {
+  const w = (lower(cell || '').replace(/ı/g, 'i').match(/^[a-z]+/) || [''])[0];
+  for (const [d, names] of Object.entries(DAY_NAMES)) if (names.includes(w)) return +d;
+  return 0;
+}
 const DASH = /^[\s—–-]*$|^\s*—/;
 
 // ───── Wochenplan + Fehlerliste aus der Seite „Haftalık Plan“ ─────
@@ -112,8 +138,9 @@ export async function parsePlanPage(blocks, faecher, loadChildren) {
     const rt = b[type] && b[type].rich_text;
     const text = plain(rt);
 
-    if (type === 'heading_2' && /KW\s*\d+/.test(text)) {
-      const kw = +text.match(/KW\s*(\d+)/)[1];
+    // „KW 43“, „Week 43“, „Woche 43“, „Hafta 43“
+    if (type === 'heading_2' && /(?:KW|Week|Woche|Hafta)\s*\d+/i.test(text)) {
+      const kw = +text.match(/(?:KW|Week|Woche|Hafta)\s*(\d+)/i)[1];
       const m = text.match(/(\d{1,2})\.?\s*[–-]\s*(\d{1,2})\.(\d{1,2})\.(\d{4})/);
       week = { kw, range: (text.match(/\(([^)]*)\)/) || [, ''])[1], days: {} };
       if (m) {
@@ -127,12 +154,13 @@ export async function parsePlanPage(blocks, faecher, loadChildren) {
       const rows = await loadChildren(b.id);
       for (const row of rows.slice(b.table.has_column_header ? 1 : 0)) {
         const cells = row.table_row.cells.map(plain);
-        const wd = WD[lower(cells[0] || '').slice(0, 3)];
+        const wd = weekdayOf(cells[0]);
         if (!wd) continue;
         const kurse = [cells[1], cells[2]].filter((c) => c && !DASH.test(c));
         const tekrar = cells[3] || '';
-        const sabah = tekrar.match(/Sabah testi:\s*([^·]+)/i);
-        const rest = tekrar.replace(/Sabah testi:\s*[^·]+·?\s*/i, '').trim();
+        // „Sabah testi: …“ / „Morning test: …“ / „Morgentest: …“
+        const sabah = tekrar.match(/(?:Sabah testi|Morning test|Morgen-?test):\s*([^·]+)/i);
+        const rest = tekrar.replace(/(?:Sabah testi|Morning test|Morgen-?test):\s*[^·]+·?\s*/i, '').trim();
         week.days[wd] = {
           kurse,
           test: sabah ? faecherIn(sabah[1], faecher) : [],
@@ -147,7 +175,7 @@ export async function parsePlanPage(blocks, faecher, loadChildren) {
     }
     if (type === 'paragraph' && /^\s*✗/.test(text)) {
       inMistakes = true;
-      odev = /ezber|ödev|hausaufgabe|auswendig/i.test(text) ? odevTitle(text) : null;
+      odev = /ezber|ödev|hausaufgabe|auswendig|homework|memori[sz]/i.test(text) ? odevTitle(text) : null;
     }
     if (type === 'bulleted_list_item' && inMistakes && /^\s*(✗|½)/.test(text)) {
       const card = await mistakeCard(rt, fach);
@@ -159,7 +187,7 @@ export async function parsePlanPage(blocks, faecher, loadChildren) {
 
 // „✗ Ezber kartları – Becken & Hüft-ROM (Cumartesi 17.10 odak, …): · @Seite“ → „Becken & Hüft-ROM“
 export function odevTitle(text) {
-  const t = text.replace(/^\s*✗\s*/, '').replace(/\s*[(:].*$/s, '').replace(/^(ezber\s*kartları|ödev(ler)?|hausaufgabe)\s*[–—-]?\s*/i, '').trim();
+  const t = text.replace(/^\s*✗\s*/, '').replace(/\s*[(:].*$/s, '').replace(/^(ezber\s*kartları|ödev(ler)?|hausaufgaben?|homework|memori[sz]ation(\s*cards)?)\s*[–—-]?\s*/i, '').trim();
   return t || 'Ödev';
 }
 
@@ -213,7 +241,7 @@ export async function parseExamPage(blocks, faecher, loadChildren, now = new Dat
       const rows = await loadChildren(b.id);
       const cells0 = rows.length ? rows[0].table_row.cells.map((c) => lower(plain(c))) : [];
       const col = (re, dflt) => { const i = cells0.findIndex((c) => re.test(c)); return b.table.has_column_header && i >= 0 ? i : dflt; };
-      const C = { typ: col(/tur|tür|typ/, 0), ders: col(/ders|fach/, 1), konu: col(/konu|baslik|thema/, 2), tarih: col(/tarih|datum/, 3), durum: col(/durum|status/, 4), not: col(/^not|notiz/, 5) };
+      const C = { typ: col(/tur|tür|typ|type|^art/, 0), ders: col(/ders|fach|subject/, 1), konu: col(/konu|baslik|thema|topic|title/, 2), tarih: col(/tarih|datum|date|due/, 3), durum: col(/durum|status/, 4), not: col(/^not|notiz|note/, 5) };
       for (const row of rows.slice(b.table.has_column_header ? 1 : 0)) {
         const cells = row.table_row.cells;
         const get = (k) => plain(cells[C[k]]).trim();
@@ -263,8 +291,10 @@ async function loadWords(db) {
         if (x.type === 'date') return x.date ? x.date.start.slice(0, 10) : '';
         return '';
       };
-      const de = get('Wort');
-      if (de) words.push({ id: 'gw:' + de, de, tr: get('Türkçe'), ex: get('Beispiel'), cat: 'GW · ' + (get('Kategorie') || 'Diğer'), stufe: get('Stufe'), next: get('Nächste Wiederholung') });
+      const any = (...names) => names.map(get).find(Boolean) || '';
+      const de = any('Wort', 'Word');
+      const en = any('English', 'Englisch');
+      if (de) words.push({ id: 'gw:' + de, de, tr: any('Türkçe', 'Turkish') || en, ...(en ? { en } : {}), ex: any('Beispiel', 'Example'), cat: 'GW · ' + (any('Kategorie', 'Category') || 'Diğer'), stufe: any('Stufe', 'Level'), next: any('Nächste Wiederholung', 'Next review') });
     }
     cursor = r.has_more ? r.next_cursor : undefined;
   } while (cursor);
@@ -335,11 +365,11 @@ async function loadLessonLinks(dersler, lessons) {
 
 export async function syncFromNotion({ faecher, lessons }) {
   const [planPage, db, dersler, sorular, sinav] = await Promise.all([
-    findByTitle('Haftalık Plan', 'page'),
-    findByTitle('Grundwortschatz', 'database'),
-    findByTitle('Dersler', 'page'),
-    findByTitle('FizyoLern Sorular', 'database'),
-    findByTitle('Sınav & Ödev Takibi', 'page'),
+    findByTitle(TITLES.plan, 'page'),
+    findByTitle(TITLES.words, 'database'),
+    findByTitle(TITLES.lessons, 'page'),
+    findByTitle(TITLES.questions, 'database'),
+    findByTitle(TITLES.exams, 'page'),
   ]);
   if (!planPage && !db && !dersler && !sorular && !sinav) throw new Error(t('nt.nothing'));
 
