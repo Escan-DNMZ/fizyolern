@@ -377,6 +377,13 @@ export async function syncFromNotion({ faecher, lessons }) {
   const result = { kind: 'fizyolern-private', version: 2, source: 'notion', syncedAt: new Date().toISOString() };
   const report = [];
 
+  // Fragen-Datenbank zuerst: neue Fächer daraus (z. B. „Neurologie“) sollen im Wochenplan schon erkannt werden
+  if (sorular) {
+    result.lessonRows = await loadLessonRows(sorular);
+    report.push(t('nt.lessonQ', { n: result.lessonRows.length }));
+  } else result.lessonRows = old.lessonRows || [];
+  faecher = [...new Set([...faecher, ...result.lessonRows.map((r) => r.fach).filter(Boolean)])];
+
   if (planPage) {
     const { week, weeks, fehler } = await parsePlanPage(await children(planPage.id), faecher, children);
     result.week = week || old.week;
@@ -389,11 +396,6 @@ export async function syncFromNotion({ faecher, lessons }) {
     result.gw = await loadWords(db);
     report.push(t('n.words', { n: result.gw.length }));
   } else report.push(t('nt.noGw'));
-
-  if (sorular) {
-    result.lessonRows = await loadLessonRows(sorular);
-    report.push(t('nt.lessonQ', { n: result.lessonRows.length }));
-  } else result.lessonRows = old.lessonRows || [];
 
   if (sinav) {
     result.exams = await parseExamPage(await children(sinav.id), faecher, children);

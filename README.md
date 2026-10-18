@@ -269,6 +269,21 @@ All progress (cards, test history, streak, settings) lives **only in this browse
 - **The Notion key is not part of the backup** (on purpose). Paste it again on the new device.
 - **Data can be lost** if you delete the app, clear the browser's website data, or use a private/incognito window. Make a backup from time to time, e.g. every Saturday.
 
+## Turn your school slides into study material with an AI
+
+Many students don't know how to take good notes. FizyoLern doesn't expect you to. Give your **slides (Folien) and your timetable to any AI** (ChatGPT, Gemini, Claude, Copilot …) together with the **[setup prompt](docs/ai-setup.md)**. The AI builds your Notion workspace in exactly the format the app reads:
+
+- a readable **lesson note** for every slide deck: German summary, terms in bold, short explanations in your language and a "what I must know" checklist;
+- **questions for the app**: key sentences, multiple choice, open exam questions with key terms, vocabulary;
+- your **weekly plan**, with the morning test for each day;
+- later, from your test results and homework lists, **mistake cards** and **homework cards**.
+
+If the AI can write to Notion (e.g. Claude or ChatGPT with the Notion connector), it creates everything directly. Otherwise it gives you text to paste and a CSV file to import, which works with every AI.
+
+*Tested:* an AI that only had the guide, a sample timetable and nine slides about the knee joint produced a weekly plan and 44 questions. The app's own Notion parser read all of them: 12 key sentences, 14 multiple choice, 5 open questions and 13 terms, a complete new lesson and the right morning tests.
+
+➡️ **[Step-by-step guide and copy-paste prompts](docs/ai-setup.md)**
+
 ## Connecting your Notion (step by step)
 
 The app works without Notion. With Notion it also shows **your own** timetable, mistakes, homework and exams, and it updates itself whenever you change your notes. The connection is **read-only**: the app can never change or delete anything in Notion.
