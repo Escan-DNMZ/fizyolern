@@ -6,6 +6,8 @@
 //    sieht nur, was in Notion ausdrücklich mit ihr geteilt wurde.
 //  • Die Content-Security-Policy in index.html erlaubt Verbindungen nur zu 'self' und api.notion.com.
 import { setPrivate, getPrivate, cleanSegments, cleanText, cardFront } from './private.js';
+import { t } from './i18n.js';
+import './strings.js';
 
 const API = 'https://api.notion.com/v1';
 const NOTION_VERSION = '2022-06-28';
@@ -25,7 +27,7 @@ export const looksLikeToken = (t) => /^(ntn_|secret_)[A-Za-z0-9]{20,}$/.test(t.t
 
 async function call(path, { method = 'GET', body } = {}) {
   const token = getToken();
-  if (!token) throw new Error('Notion anahtarı yok');
+  if (!token) throw new Error(t('nt.noKey'));
   const res = await fetch(API + path, {
     method,
     headers: {
@@ -40,7 +42,7 @@ async function call(path, { method = 'GET', body } = {}) {
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const msg = res.status === 401 ? 'Anahtar geçersiz (401)' : res.status === 404 ? 'Sayfa bulunamadı – Notion\'da bağlantıyı (Connections) eklediğinden emin ol' : (json.message || 'HTTP ' + res.status);
+    const msg = res.status === 401 ? t('nt.401') : res.status === 404 ? t('nt.404') : (json.message || 'HTTP ' + res.status);
     throw new Error(msg);
   }
   return json;
@@ -339,7 +341,7 @@ export async function syncFromNotion({ faecher, lessons }) {
     findByTitle('FizyoLern Sorular', 'database'),
     findByTitle('Sınav & Ödev Takibi', 'page'),
   ]);
-  if (!planPage && !db && !dersler && !sorular && !sinav) throw new Error('Hiçbir sayfa görünmüyor – Notion\'da Dashboard sayfasına bu bağlantıyı (Connections) ekle');
+  if (!planPage && !db && !dersler && !sorular && !sinav) throw new Error(t('nt.nothing'));
 
   const old = getPrivate() || {};
   const result = { kind: 'fizyolern-private', version: 2, source: 'notion', syncedAt: new Date().toISOString() };
@@ -350,23 +352,23 @@ export async function syncFromNotion({ faecher, lessons }) {
     result.week = week || old.week;
     result.weeks = weeks.length ? weeks : old.weeks || [];
     result.fehler = fehler.length ? fehler : old.fehler || [];
-    report.push(week ? `KW ${weeks.map((w) => w.kw).join('/')} (bugün: KW ${week.kw})` : 'program bulunamadı', `${fehler.length} hata kartı`);
-  } else report.push('Haftalık Plan görünmüyor');
+    report.push(week ? t('nt.weeks', { list: weeks.map((w) => w.kw).join('/'), kw: week.kw }) : t('nt.noPlan'), t('nt.fehler', { n: fehler.length }));
+  } else report.push(t('nt.noPlanPage'));
 
   if (db) {
     result.gw = await loadWords(db);
-    report.push(`${result.gw.length} kelime`);
-  } else report.push('Grundwortschatz görünmüyor');
+    report.push(t('n.words', { n: result.gw.length }));
+  } else report.push(t('nt.noGw'));
 
   if (sorular) {
     result.lessonRows = await loadLessonRows(sorular);
-    report.push(`${result.lessonRows.length} ders sorusu`);
+    report.push(t('nt.lessonQ', { n: result.lessonRows.length }));
   } else result.lessonRows = old.lessonRows || [];
 
   if (sinav) {
     result.exams = await parseExamPage(await children(sinav.id), faecher, children);
     const n = result.exams.filter((e) => e.typ === 'Sınav' && !e.done).length;
-    report.push(`${n} sınav, ${result.exams.length - n} ödev/diğer`);
+    report.push(t('nt.exams', { n, m: result.exams.length - n }));
   } else result.exams = old.exams || [];
 
   result.notion = dersler ? await loadLessonLinks(dersler, lessons) : old.notion || {};

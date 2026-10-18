@@ -6,6 +6,8 @@ import { UEBUNGEN } from './data/uebungen.js';
 import { LESSONS, FAECHER } from './lessons.js';
 import * as store from './store.js';
 import { week, examFaecher } from './private.js';
+import { t, tx, lang } from './i18n.js';
+import './strings.js';
 
 export function shuffle(arr) {
   const a = [...arr];
@@ -17,6 +19,17 @@ export function shuffle(arr) {
 }
 
 const pick = (arr, n) => shuffle(arr).slice(0, n);
+
+// Übersetzung eines Worts in der Hilfssprache. Notion-Wörter haben nur Türkisch:
+// im Englisch-Modus dann das Englische des mitgelieferten Eintrags mit demselben deutschen Wort, sonst Türkisch.
+let enByDe = null;
+export function vocabTr(v) {
+  if (!v) return '';
+  if (lang() !== 'en') return v.tr || '';
+  if (v.en) return v.en;
+  if (!enByDe) { enByDe = new Map(); for (const x of VOCAB) if (x.en) enByDe.set(x.de, x.en); }
+  return enByDe.get(v.de) || v.tr || '';
+}
 
 // Hauptnerv eines Innervations-Texts, z. B. "N. femoralis (L2–L4)" -> "N. femoralis"
 const nerve = (s) => s.split(/[(,;]| und /)[0].trim();
@@ -57,24 +70,24 @@ function mkMuscle(id, q, m, field, xBase, key = (v) => v) {
   const why = field === 'la'
     ? picks.map((p) => `${p.la} → ${short(p.i, 40)}`).join(' · ')
     : picks.map((p) => `${short(p[field], 40)} → ${p.la}`).join(' · ');
-  return { id, cat: 'Muskeln', q, o: [m[field], ...picks.map((p) => p[field])], a: 0, x: `${xBase} Diğer şıklar: ${why}`, gen: true };
+  return { id, cat: 'Muskeln', q, o: [m[field], ...picks.map((p) => p[field])], a: 0, x: `${xBase} ${t('qg.others')} ${why}`, gen: true };
 }
 
 export function muscleQuestions(m) {
   return [
     mkMuscle(`g:inn:${m.id}`, `Welcher Nerv innerviert den ${m.la}?`, m, 'inn', `${m.la} → ${m.inn}.`, nerve),
-    mkMuscle(`g:ans:${m.id}`, `Wo setzt der ${m.la} an?`, m, 'i', `${m.tr}: ${m.i}.`),
-    mkMuscle(`g:urs:${m.id}`, `Wo entspringt der ${m.la}?`, m, 'o', `${m.tr}: ${m.o}.`),
-    mkMuscle(`g:fkt:${m.id}`, `Welche Funktion hat der ${m.la}?`, m, 'f', m.ftr),
-    mkMuscle(`g:rev:${m.id}`, `Welcher Muskel: Ursprung „${m.o}“, Ansatz „${m.i}“?`, m, 'la', `${m.la} (${m.de}) – ${m.tr}. Aynı bölgedeki kaslarla karıştırma:`),
+    mkMuscle(`g:ans:${m.id}`, `Wo setzt der ${m.la} an?`, m, 'i', `${tx(m)}: ${m.i}.`),
+    mkMuscle(`g:urs:${m.id}`, `Wo entspringt der ${m.la}?`, m, 'o', `${tx(m)}: ${m.o}.`),
+    mkMuscle(`g:fkt:${m.id}`, `Welche Funktion hat der ${m.la}?`, m, 'f', tx(m, 'ftr')),
+    mkMuscle(`g:rev:${m.id}`, `Welcher Muskel: Ursprung „${m.o}“, Ansatz „${m.i}“?`, m, 'la', `${m.la} (${m.de}) – ${tx(m)}. ${t('qg.dontConfuse')}`),
   ].filter(Boolean);
 }
 
 export function boneQuestions(b) {
   const others = BONES.filter((o) => o.id !== b.id);
   return [
-    mk(`g:bla:${b.id}`, 'Knochen', `Wie lautet der lateinische Name für „${b.de}“?`, b.la, others.map((o) => o.la), `${b.de} = ${b.la} (${b.tr})`),
-    mk(`g:btr:${b.id}`, 'Knochen', `Welcher Knochen ist auf Türkisch „${b.tr}“?`, b.de, others.map((o) => o.de), `${b.tr} = ${b.de} / ${b.la}`),
+    mk(`g:bla:${b.id}`, 'Knochen', `Wie lautet der lateinische Name für „${b.de}“?`, b.la, others.map((o) => o.la), `${b.de} = ${b.la} (${tx(b)})`),
+    mk(`g:btr:${b.id}`, 'Knochen', `Welcher Knochen ist auf ${t('qg.boneLang')} „${tx(b)}“?`, b.de, others.map((o) => o.de), `${tx(b)} = ${b.de} / ${b.la}`),
   ].filter(Boolean);
 }
 
@@ -89,8 +102,8 @@ export function jointQuestions(j) {
 export function vocabQuestion(v, pool = VOCAB) {
   const others = pool.filter((o) => o.id !== v.id);
   return Math.random() < 0.5
-    ? mk(`g:vde:${v.id}`, 'Vokabeln', `Was bedeutet „${v.de}“?`, v.tr, others.map((o) => o.tr), v.ex || `${v.de} = ${v.tr}`)
-    : mk(`g:vtr:${v.id}`, 'Vokabeln', `Wie sagt man auf Deutsch: „${v.tr}“?`, v.de, others.map((o) => o.de), v.ex || `${v.tr} = ${v.de}`);
+    ? mk(`g:vde:${v.id}`, 'Vokabeln', `Was bedeutet „${v.de}“?`, vocabTr(v), others.map(vocabTr), v.ex || `${v.de} = ${vocabTr(v)}`)
+    : mk(`g:vtr:${v.id}`, 'Vokabeln', `Wie sagt man auf Deutsch: „${vocabTr(v)}“?`, v.de, others.map((o) => o.de), v.ex || `${vocabTr(v)} = ${v.de}`);
 }
 
 // ───── Studio-Übungen ↔ Muskel ↔ Bewegung ─────
@@ -116,14 +129,14 @@ export function exerciseQuestions() {
       .filter((id, i, arr) => arr.indexOf(id) === i).slice(0, 3);
     if (wrong.length === 3) {
       qs.push({ id: `g:ub:${slug(ex.n)}`, cat: 'Muskeln', gen: true, q: `Beim „${ex.n}“ arbeitet hauptsächlich …?`, o: [mName(right), ...wrong.map(mName)], a: 0,
-        x: `${ex.n} (${ex.tr}) = ${ex.b} → ${ex.muscles.map(mName).join(', ')}. Diğer şıklar: ${wrong.map((id) => `${mName(id)} → ${moves(id)[0]}`).join(' · ')}.` });
+        x: `${ex.n} (${tx(ex)}) = ${ex.b} → ${ex.muscles.map(mName).join(', ')}. ${t('qg.others')} ${wrong.map((id) => `${mName(id)} → ${moves(id)[0]}`).join(' · ')}.` });
     }
     // Bewegung → Übung
     const others = Object.values(byEx).filter((o) => o.b.split(' ')[0] !== ex.b.split(' ')[0]);
     const wrongEx = pick(others, 3);
     if (wrongEx.length === 3) {
       qs.push({ id: `g:ubb:${slug(ex.n)}`, cat: 'Muskeln', gen: true, q: `Welche Übung trainiert vor allem die ${ex.b}?`, o: [ex.n, ...wrongEx.map((o) => o.n)], a: 0,
-        x: `${ex.n} (${ex.tr}) → ${ex.b} (${ex.muscles.map(mName).join(', ')}). Diğer şıklar: ${wrongEx.map((o) => `${o.n} → ${o.b}`).join(' · ')}.` });
+        x: `${ex.n} (${tx(ex)}) → ${ex.b} (${ex.muscles.map(mName).join(', ')}). ${t('qg.others')} ${wrongEx.map((o) => `${o.n} → ${o.b}`).join(' · ')}.` });
     }
   }
   return qs;
@@ -131,7 +144,8 @@ export function exerciseQuestions() {
 
 // ───── Gelenk-Details: Neutral-Null (Folie), ADL, Achsen, Muskelgruppen ─────
 // Funktioniert für jedes Gelenk mit den Feldern rom / adl / muskelGruppen (zurzeit nur die Hüfte)
-const GROUP_TR = { Flexion: 'fleksiyon', Extension: 'ekstansiyon', Abduktion: 'abdüksiyon', Adduktion: 'addüksiyon', Außenrotation: 'dış rotasyon', Innenrotation: 'iç rotasyon' };
+// Bewegungsrichtung in der Hilfssprache (fleksiyon / flexion …)
+const groupTr = (g) => { const s = t('grp.' + g); return s === 'grp.' + g ? g : s; };
 const near = (v, steps = [5, 10, 15, 20, -5, -10, -15, -20]) => shuffle(steps).map((d) => v + d).filter((x) => x > 0 && x !== v).slice(0, 3);
 const joinG = (list) => list.join(', ');
 
@@ -145,13 +159,13 @@ export function jointDetailQuestions(j) {
     const [b1, b2] = r.bew.split(' / ');
     const q1 = near(r.a);
     qs.push({ ...base, id: id('rom-a' + n), q: `Wie viel Grad ${b1} hat das ${name} (Neutral-Null, ${j.romQuelle || 'Folie'})?`, o: [`${r.a}°`, ...q1.map((x) => `${x}°`)], a: 0,
-      x: `Folyo: ${r.bew} ${r.a}° – 0° – ${r.b}°. ${q1.map((x) => x + '°').join(', ')} ders kitabı aralığına yakın ama sınavda folyodaki değer sorulur.` });
+      x: t('qg.romA', { bew: r.bew, a: r.a, b: r.b, nums: q1.map((x) => x + '°').join(', ') }) });
     const q2 = near(r.b, [5, 10, -5, 15]);
     qs.push({ ...base, id: id('rom-b' + n), q: `Wie viel Grad ${b2} hat das ${name} (Neutral-Null)?`, o: [`${r.b}°`, ...q2.map((x) => `${x}°`)], a: 0,
-      x: `${b2} = ${r.b}° (${r.bew}: ${r.a}° – 0° – ${r.b}°). Diğer sayılar yakın ama folyodaki değer değil.` });
+      x: `${b2} = ${r.b}° (${r.bew}: ${r.a}° – 0° – ${r.b}°). ${t('qg.romB')}` });
     const wrong = [[r.a, 0, r.b + 10], [r.a - 10, 0, r.b], [r.b, 0, r.a]].map(([x, y, z]) => `${x}° – ${y}° – ${z}°`);
     qs.push({ ...base, id: id('rom-nn' + n), q: `Welche Neutral-Null-Werte gelten für ${r.bew} im ${name}?`, o: [`${r.a}° – 0° – ${r.b}°`, ...wrong], a: 0,
-      x: `Doğru yazım: önce ${b1}, ortada 0°, sonra ${b2}. Ters sıra (${r.b}° – 0° – ${r.a}°) yanlış.` });
+      x: t('qg.romNn', { b1, b2, rev: `${r.b}° – 0° – ${r.a}°` }) });
     // Achse der Bewegung
     const axes = ['Transversalachse', 'Sagittalachse', 'Longitudinalachse', 'Diagonalachse'];
     qs.push({ ...base, id: id('achse' + n), q: `Um welche Achse findet ${r.bew} im ${name} statt?`, o: [r.achse, ...axes.filter((a) => a !== r.achse).slice(0, 3)], a: 0,
@@ -165,7 +179,7 @@ export function jointDetailQuestions(j) {
     const opts = [...others, ...pad].slice(0, 3);
     if (opts.length < 3) continue;
     qs.push({ ...base, id: id('adl' + n), q: `Wie viel Hüftflexion braucht man für „${a.akt}“ (${j.adlQuelle || 'ADL'})?`, o: [`${a.flex}°`, ...opts.map((x) => `${x}°`)], a: 0,
-      x: `${a.akt}: ${a.w}. Diğer değerler başka günlük aktivitelere ait (${adl.filter((x) => x !== a).map((x) => `${x.akt} ${x.flex}°`).join(', ')}).` });
+      x: `${a.akt}: ${a.w}. ${t('qg.adl', { list: adl.filter((x) => x !== a).map((x) => `${x.akt} ${x.flex}°`).join(', ') })}` });
   }
   // Muskelgruppen nach Bewegungsrichtung
   const G = j.muskelGruppen || {};
@@ -200,18 +214,18 @@ export function jointDetailQuestions(j) {
     // Hauptmuskel – Ablenker: die weiteren Muskeln derselben Gruppe (typische Verwechslung)
     if (G[g].haupt.length === 1 && G[g].weitere.length >= 3) {
       qs.push({ ...base, id: id('haupt-' + g), q: `Welcher Muskel ist der Hauptmuskel der ${g} im ${name}?`, o: [G[g].haupt[0], ...pick(G[g].weitere, 3)], a: 0,
-        x: `Folyo (${j.gruppenQuelle || 'Folie'}): ${g} için ana kas ${G[g].haupt[0]}. ${joinG(G[g].weitere)} de ${GROUP_TR[g] || g} yapar ama yardımcı kaslardır.` });
+        x: t('qg.hauptOne', { src: j.gruppenQuelle || 'Folie', g, m: G[g].haupt[0], others: joinG(G[g].weitere), gtr: groupTr(g) }) });
     } else if (G[g].haupt.length) {
       const h = pick(G[g].haupt, 1)[0];
       const opts = outside.slice(0, 3);
       if (opts.length === 3) qs.push({ ...base, id: id('haupt-' + g + '-' + G[g].haupt.indexOf(h)), q: `Welcher Muskel gehört zu den Hauptmuskeln der ${g} im ${name}?`, o: [h, ...opts], a: 0,
-        x: `${g} ana kasları: ${joinG(G[g].haupt)}. ${joinG(opts)} ise ${ANTAG[g] ? 'genelde karşı hareketi (' + ANTAG[g] + ') yapar' : 'bu hareketin ana kası değildir'}.` });
+        x: t('qg.hauptMany', { g, list: joinG(G[g].haupt), opts: joinG(opts), rest: ANTAG[g] ? t('qg.antag', { a: ANTAG[g] }) : t('qg.notMain') }) });
     }
     // „Welcher gehört NICHT dazu?“ – richtige Antwort aus der Gegenspieler-Gruppe
     if (members.length >= 3 && antagOnly.length) {
       const wrong = pick(antagOnly, 1)[0];
       qs.push({ ...base, id: id('nicht-' + g), q: `Welcher Muskel gehört NICHT zur Gruppe „${g}“ im ${name}?`, o: [wrong, ...pick(members, 3)], a: 0,
-        x: `${wrong} bu gruba ait değil${ANTAG[g] ? ' (daha çok ' + ANTAG[g] + ')' : ''}. ${g} grubu (folyo): ${joinG(members)}.` });
+        x: t('qg.notInGroup', { w: wrong, extra: ANTAG[g] ? t('qg.rather', { a: ANTAG[g] }) : '', g, list: joinG(members) }) });
     }
   }
   // Allrounder: Muskel in ≥ 3 Gruppen → „Welche Bewegung macht er NICHT?“
@@ -220,20 +234,20 @@ export function jointDetailQuestions(j) {
     const not = groups.filter((g) => !does.includes(g));
     if (does.length >= 3 && not.length) {
       qs.push({ ...base, id: id('nicht-bew-' + m.replace(/\W+/g, '')), q: `Welche Bewegung macht der ${m} im ${name} NICHT?`, o: [pick(not, 1)[0], ...pick(does, 3)], a: 0,
-        x: `${m} = ${does.join(' + ')} (folyo). Diğer hareketleri yapmaz.` });
+        x: t('qg.notMove', { m, does: does.join(' + ') }) });
     }
   }
   // Kapselmuster
   if (j.kapsel) {
     qs.push({ ...base, id: id('kapsel'), q: `Wie lautet das Kapselmuster des ${name}s?`, o: [j.kapsel, 'IR > Extension > Abduktion', 'AR > Abduktion > IR', 'Flexion > Abduktion > IR'], a: 0,
-      x: `${j.kapsel}${j.kapselNote ? ' – ' + j.kapselNote : ''}. „AR > Abd > IR“ omzun paternidir; ders kitaplarında kalça için „IR > Ext > Abd“ da geçer, Notion notunu esas al.` });
+      x: `${j.kapsel}${j.kapselNote ? ' – ' + tx(j, 'kapselNote') : ''}. ${t('qg.kapsel')}` });
   }
   return qs;
 }
 export const ALL_JOINT_DETAIL = () => JOINTS.flatMap(jointDetailQuestions);
 
 // Fragen aus den Notion-Ders-Notları
-export const lessonMcq = (l) => l.mcq.map((q, i) => ({ id: q.id || `L:${l.id}:${i}`, cat: l.fach, lesson: l.id, q: q.q, o: q.o, a: 0, x: q.x }));
+export const lessonMcq = (l) => l.mcq.map((q, i) => ({ id: q.id || `L:${l.id}:${i}`, cat: l.fach, lesson: l.id, q: q.q, o: q.o, a: 0, x: q.x, xEn: q.xEn }));
 export const ALL_LESSON_MCQ = () => LESSONS.flatMap(lessonMcq);
 export { FAECHER };
 

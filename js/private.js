@@ -1,5 +1,8 @@
 // Private Daten (Wochenplan, Fehlerliste, Notion-Links) – werden nicht veröffentlicht.
 // Sie kommen aus private/fizyolern-ozel.json und werden nur im Browser des Geräts gespeichert.
+import { t } from './i18n.js';
+import './strings.js';
+
 const KEY = 'fizyo.private';
 
 let data = load();
@@ -76,7 +79,7 @@ export function cardFront(seg) {
       for (const sep of [' = ', ' → ', ': ']) if (full.startsWith(sep, i) && i > 3) return full.slice(0, i) + (sep === ': ' ? ': ?' : ' = ?');
     }
   }
-  return 'Hatırla: ' + (full.length > 60 ? full.slice(0, 60) + '…' : full);
+  return t('remember') + (full.length > 60 ? full.slice(0, 60) + '…' : full);
 }
 
 // Notion-✗-Liste: echte Fehler und Hausaufgaben („Ezber kartları“) getrennt

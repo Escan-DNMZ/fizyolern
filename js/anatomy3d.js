@@ -745,7 +745,7 @@ export class Anatomy3D {
     this._show(kit, { id, kind: 'muscle', parts, deeper, layer: info.layer }, selBox, 2.2, new THREE.Vector3(0.45, 0.12, c.z < -0.02 ? -1 : 1).normalize());
     return {
       kind: 'muscle',
-      parts: parts.map((p) => ({ la: p.la, de: p.de, tr: p.tr, color: '#' + p.mat.color.getHexString() })),
+      parts: parts.map((p) => ({ la: p.la, de: p.de, tr: p.tr, en: p.en || (p.la === muscle.la ? muscle.en : undefined), color: '#' + p.mat.color.getHexString() })),
       deeper, layer: info.layer, markers: markers.length,
       landmarks: ['o', 'i', 'via'].flatMap((r) => lms[r].map((l) => ({ id: l.id, role: r }))),
     };

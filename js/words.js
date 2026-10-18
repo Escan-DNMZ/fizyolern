@@ -3,7 +3,9 @@
 import * as store from './store.js';
 import { GRUNDWORTSCHATZ } from './data/vocab.js';
 import { getPrivate, todayPlan } from './private.js';
-import { shuffle } from './quizgen.js';
+import { shuffle, vocabTr } from './quizgen.js';
+import { t, flag } from './i18n.js';
+import './strings.js';
 import { fold, close, abbreviations } from './fuzzy.js';
 
 export const WORDS_PER_DAY = 5;
@@ -200,7 +202,7 @@ export function questionFor(word, pass) {
     else {
       const wrong = [...new Set(pool.map((w) => lueckentext(w)).filter(Boolean).map((x) => x.gap).filter((g) => g.toLowerCase() !== c.gap.toLowerCase()))].slice(0, 3);
       if (wrong.length < 3) type = 'de2tr';
-      else return { type, prompt: 'Boşluğa hangi kelime gelir?', big: c.text, opts: shuffle([c.gap, ...wrong]), answer: c.gap };
+      else return { type, prompt: t('wq.cloze'), big: c.text, opts: shuffle([c.gap, ...wrong]), answer: c.gap };
     }
   }
   if (type === 'partizip') {
@@ -209,12 +211,13 @@ export function questionFor(word, pass) {
     const right = PARTIZIP[v];
     const stemB = base.replace(/en$|n$/, '');
     const wrong = [...new Set([`ge${pre}${stemB}t`, `${pre}${stemB}t`, `${pre}ge${stemB}t`, `${pre}ge${base}`].filter((x) => x !== right))].slice(0, 3);
-    return { type, prompt: 'Partizip II (Perfekt) nedir?', big: v, sub: `„Das Knie ist … “ · 🇹🇷 ${word.tr}`, opts: shuffle([right, ...wrong]), answer: right };
+    return { type, prompt: t('wq.partizip'), big: v, sub: `„Das Knie ist … “ · ${flag()} ${vocabTr(word)}`, opts: shuffle([right, ...wrong]), answer: right };
   }
   if (type === 'tr2de') {
-    return { type, prompt: 'Almancasını yaz (isimse artikeliyle):', big: word.tr, typed: true, answer: word.de };
+    return { type, prompt: t('wq.tr2de'), big: vocabTr(word), typed: true, answer: word.de };
   }
-  return { type: 'de2tr', prompt: 'Türkçesi nedir?', big: word.de, opts: shuffle([word.tr, ...opts3((w) => w.tr)]), answer: word.tr };
+  return { type: 'de2tr', prompt: t('wq.de2tr'), big: word.de, opts: shuffle([vocabTr(word), ...opts3(vocabTr)]), answer: vocabTr(word) };
 }
 
-export const TYPE_LABEL = { de2tr: 'DE → TR', tr2de: 'TR → DE (yaz)', cloze: 'Lückentext', partizip: 'Partizip II' };
+// Bezeichnung des Fragetyps in der Hilfssprache (DE → TR / DE → EN …)
+export const typeLabel = (type) => t('wt.' + type);

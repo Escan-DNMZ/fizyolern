@@ -27,7 +27,7 @@
 - it schedules memorisation homework before the deadline;
 - it shows any muscle, bone, joint or bony landmark in an interactive 3D model.
 
-Explanations are in my native language, Turkish; the content stays in the German and Latin that the exams require.
+Explanations are in a **helper language you choose in Settings: Turkish or English**. The content always stays in the German and Latin that the exams require.
 
 **The result.** One app replaces flash cards, a quiz book, a vocabulary trainer, an anatomy atlas and a study planner. It works offline on the phone, has no server or account, and my personal data never leaves the device.
 
@@ -88,7 +88,7 @@ The project shows how someone with a clear idea and deep knowledge of a field ca
 
 ## Features
 
-The interface is in Turkish. A short glossary is at the end of this page.
+**Helper language:** in ⚙️ Settings you choose Turkish 🇹🇷 or English 🇬🇧 for the interface, explanations and translations. German content (questions, answers, model answers, terms) never changes. The screenshots below show the Turkish interface; a glossary is at the end of this page.
 
 ### 1. A plan for every day (*Bugün* = Today)
 - Today's and tomorrow's classes, read from my weekly timetable in Notion. If several weeks are planned ahead, the right one is picked by date.
@@ -309,7 +309,7 @@ python tools/bump_sw.py             # after any change, so phones load the new v
 
 ---
 
-## Glossary of the Turkish interface
+## Glossary of the Turkish interface (shown in the screenshots)
 
 | Turkish | English |
 |---|---|

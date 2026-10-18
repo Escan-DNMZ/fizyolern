@@ -6,6 +6,8 @@ import { MUSCLES, JOINTS } from './data/anatomy.js';
 import { containsFuzzy } from './fuzzy.js';
 import { shuffle } from './quizgen.js';
 import { speak, stopSpeaking, canSpeak, canListen, listen, sayBtn, whenVoices } from './speech.js';
+import { t, tx, flag } from './i18n.js';
+import './strings.js';
 
 let ctx = null; // { view, $, $$, esc, toast, allOpen }
 let sess = null;
@@ -17,9 +19,9 @@ export function initOral(deps) { ctx = deps; }
 export const ORAL_N = 5;
 // Höchstdauer der mündlichen Teilprüfungen (PhysTh-APrV § 13)
 export const ORAL_MODES = [
-  { id: 'anatomie', name: 'Anatomie', min: 30, sub: 'Kaslar (Ursprung · Ansatz · Innervation · Funktion), eklemler, açık uçlu sorular' },
-  { id: 'physiologie', name: 'Physiologie', min: 15, sub: 'Ders notlarındaki açık uçlu sorular' },
-  { id: 'krankheitslehre', name: 'Spezielle Krankheitslehre', min: 30, sub: 'Klinik, Neuro, Orthopädie/Chirurgie (O/C)' },
+  { id: 'anatomie', name: 'Anatomie', min: 30, sub: 'oral.subAna' },
+  { id: 'physiologie', name: 'Physiologie', min: 15, sub: 'oral.subPhys' },
+  { id: 'krankheitslehre', name: 'Spezielle Krankheitslehre', min: 30, sub: 'oral.subKrank' },
 ];
 
 // ───── Schlüsselbegriffe aus den Anatomie-Daten ─────
@@ -50,11 +52,11 @@ const JOINT_FOLLOW = {
 const muscleArt = (m) => (/^Mm\./.test(m.la) ? 'die' : /^M\./.test(m.la) ? 'den' : 'das');
 function muscleItem(m) {
   return {
-    id: 'oral:m:' + m.id, kind: 'muscle', topic: 'Kas · ' + m.la,
+    id: 'oral:m:' + m.id, kind: 'muscle', topic: t('kind.muscle') + ' · ' + m.la,
     q: `Stellen Sie ${muscleArt(m)} ${m.la} vor: Ursprung, Ansatz, Innervation und Funktion.`,
     parts: [part('Ursprung', m.o), part('Ansatz', m.i), part('Innervation', m.inn), part('Funktion', m.f)],
     a: `Ursprung: ${m.o}. Ansatz: ${m.i}. Innervation: ${m.inn}. Funktion: ${m.f}.`,
-    tr: m.ftr, follow: MUSCLE_FOLLOW,
+    tr: m.ftr, en: m.fen, follow: MUSCLE_FOLLOW,
   };
 }
 // „Proximales Handgelenk“ → „das proximale Handgelenk“
@@ -63,11 +65,11 @@ function jointItem(j) {
   const bew = j.rom ? j.rom.map((r) => `${r.bew} ${r.a}°–0°–${r.b}°`).join('; ') : j.nn;
   const bewAlts = terms(j.rom ? j.rom.map((r) => r.bew).join(' ') : j.nn).filter((w) => !/^\d/.test(w));
   return {
-    id: 'oral:j:' + j.id, kind: 'joint', topic: 'Eklem · ' + j.de,
+    id: 'oral:j:' + j.id, kind: 'joint', topic: t('kind.joint') + ' · ' + j.de,
     q: `Stellen Sie ${jointName(j)} vor: Gelenktyp, Bänder und Bewegungsausmaß.`,
     parts: [part('Gelenktyp', j.typ, terms(j.typ.split(/[–(;,]/)[0])), part('Bänder', j.baender), part('Bewegungen', bew, bewAlts)].filter((p) => p.alts.length),
     a: `Gelenktyp: ${j.typ}. Bänder: ${j.baender}. Bewegungsausmaß: ${bew}.`,
-    tr: j.tr, follow: JOINT_FOLLOW,
+    tr: j.tr, en: j.en, follow: JOINT_FOLLOW,
   };
 }
 function openItem(q) {
@@ -123,23 +125,23 @@ export function renderOral(args = []) {
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
   view.innerHTML = `
     <div class="card">
-      <div class="eyebrow">🎤 Sözlü sınav provası</div>
-      <h2>Prüfer soruyor, sen Almanca cevaplıyorsun</h2>
-      <p class="small muted" style="margin-bottom:0">${ORAL_N} soru · resmi süre sınırıyla (PhysTh-APrV § 13). Soru Almanca okunur; cevabını <b>sesli</b> ver. Eksik bir şey olursa Prüfer bir kez <b>nachfragt</b>. Sonunda bulunan/eksik kavramlar ve örnek cevap.</p>
+      <div class="eyebrow">${t('sat.oral')}</div>
+      <h2>${t('oral.h')}</h2>
+      <p class="small muted" style="margin-bottom:0">${t('oral.info', { n: ORAL_N })}</p>
     </div>
     <div class="card small">
-      ${voice ? '🔊 Almanca ses: <b>var</b>' : '🔇 Bu cihazda Almanca ses bulunamadı – sorular yazılı gösterilecek.'}<br>
-      ${mic ? '🎙️ Konuşma tanıma: <b>var</b> – mikrofon düğmesiyle konuş.' : `⌨️ Konuşma tanıma yok – ${isIOS ? 'klavyedeki <b>🎤 mikrofon</b> tuşuyla dikte et (klavye dili: Deutsch).' : 'cevabını yaz veya işletim sisteminin dikte özelliğini kullan.'}`}
-      ${mic ? '<div class="muted" style="margin-top:4px">Not: Konuşma tanımayı tarayıcı yapar (Chrome/Safari sesi kendi sunucusunda işleyebilir); uygulama hiçbir yere ses göndermez.</div>' : ''}
+      ${voice ? t('oral.voiceYes') : t('oral.voiceNo')}<br>
+      ${mic ? t('oral.micYes') : t('oral.micNo', { how: isIOS ? t('oral.micIos') : t('oral.micOther') })}
+      ${mic ? `<div class="muted" style="margin-top:4px">${t('oral.micNote')}</div>` : ''}
     </div>
-    <div class="section-title">Ders seç</div>
+    <div class="section-title">${t('mock.choose')}</div>
     <div class="list">
       ${ORAL_MODES.map((m) => {
         const n = poolFor(m.id).size;
-        return `<button data-mode="${m.id}" class="row" style="width:100%;text-align:left" ${n ? '' : 'disabled'}><span class="grow"><b lang="de">${esc(m.name)}</b> <span class="badge">⏱️ ${m.min} dk</span><div class="muted small">${esc(m.sub)} · ${n} soru</div></span><span class="chev">›</span></button>`;
+        return `<button data-mode="${m.id}" class="row" style="width:100%;text-align:left" ${n ? '' : 'disabled'}><span class="grow"><b lang="de">${esc(m.name)}</b> <span class="badge">⏱️ ${t('oral.min', { n: m.min })}</span><div class="muted small">${esc(t(m.sub))} · ${t('n.questions', { n })}</div></span><span class="chev">›</span></button>`;
       }).join('')}
     </div>
-    ${voice ? `<label class="row small" style="margin:12px 4px;gap:8px"><input type="checkbox" id="oralShowText" ${showText() ? 'checked' : ''}> Soruyu yazılı da göster <span class="muted">(kapalı = sadece dinleyerek, gerçek sınav gibi)</span></label>` : ''}`;
+    ${voice ? `<label class="row small" style="margin:12px 4px;gap:8px"><input type="checkbox" id="oralShowText" ${showText() ? 'checked' : ''}> ${t('oral.showText')}</label>` : ''}`;
   const cb = document.getElementById('oralShowText');
   if (cb) cb.addEventListener('change', () => { store.get().settings.oralText = cb.checked; store.save(); });
   $$('[data-mode]').forEach((b) => b.addEventListener('click', () => start(b.dataset.mode)));
@@ -149,7 +151,7 @@ export function renderOral(args = []) {
 function start(mode) {
   const m = ORAL_MODES.find((x) => x.id === mode);
   const qs = poolFor(mode).pick();
-  if (!qs.length) return ctx.toast('Bu derste soru yok');
+  if (!qs.length) return ctx.toast(t('oral.noQ'));
   sess = { mode: m, qs, i: 0, start: Date.now(), end: Date.now() + m.min * 60000, res: [], phase: 'ask', text: '', first: '', done: false, said: '0ask' };
   // Noch im Klick vorlesen: iOS erlaubt Sprachausgabe nur nach einer Nutzeraktion
   speak(qs[0].q);
@@ -166,24 +168,24 @@ function renderQuestion() {
   const prompt = follow ? sess.followQ : q.q;
   const mic = canListen();
   view.innerHTML = `
-    <div class="row mock-head"><span class="badge" lang="de">${esc(sess.mode.name)}</span><span class="muted small" style="margin-left:6px">Soru ${sess.i + 1}/${sess.qs.length}</span><span class="spacer"></span><span class="mock-timer" id="oralTimer">⏱️ ${mmss(leftMs())}</span></div>
+    <div class="row mock-head"><span class="badge" lang="de">${esc(sess.mode.name)}</span><span class="muted small" style="margin-left:6px">${t('q.n', { i: sess.i + 1, n: sess.qs.length })}</span><span class="spacer"></span><span class="mock-timer" id="oralTimer">⏱️ ${mmss(leftMs())}</span></div>
     <div class="progress"><div style="width:${(sess.i / sess.qs.length) * 100}%"></div></div>
     <div class="examiner">
-      <div class="examiner-who">👨‍⚕️ Prüfer${follow ? ' <span class="badge warn">fragt nach</span>' : ''}</div>
+      <div class="examiner-who">👨‍⚕️ Prüfer${follow ? ' <span class="badge warn" lang="de">fragt nach</span>' : ''}</div>
       <div class="examiner-q" lang="de" id="oralQ" ${showText() ? '' : 'hidden'}>${esc(prompt)}</div>
-      ${showText() ? '' : '<div class="muted small" id="oralHidden">🎧 Dinle ve cevapla</div>'}
+      ${showText() ? '' : `<div class="muted small" id="oralHidden">${t('oral.listen')}</div>`}
       <div class="row" style="gap:8px;margin-top:8px">
-        ${canSpeak() ? '<button class="btn ghost" id="oralRepeat" style="min-height:36px;padding:4px 12px">🔊 Tekrar oku</button>' : ''}
-        ${showText() ? '' : '<button class="btn plain" id="oralReveal" style="min-height:36px;padding:4px 12px">📝 Metni göster</button>'}
+        ${canSpeak() ? `<button class="btn ghost" id="oralRepeat" style="min-height:36px;padding:4px 12px">${t('oral.repeat')}</button>` : ''}
+        ${showText() ? '' : `<button class="btn plain" id="oralReveal" style="min-height:36px;padding:4px 12px">${t('oral.reveal')}</button>`}
       </div>
     </div>
-    ${follow ? `<div class="muted small" style="margin:4px 2px">İlk cevabın: <span lang="de">${esc(sess.first)}</span></div>` : ''}
-    <textarea id="oralText" lang="de" placeholder="${mic ? '🎙️ Mikrofona dokun ve konuş – ya da yaz…' : 'Klavyedeki 🎤 ile dikte et ya da yaz (Almanca)…'}">${esc(sess.text)}</textarea>
+    ${follow ? `<div class="muted small" style="margin:4px 2px">${t('oral.first')} <span lang="de">${esc(sess.first)}</span></div>` : ''}
+    <textarea id="oralText" lang="de" placeholder="${mic ? t('oral.phMic') : t('oral.phNoMic')}">${esc(sess.text)}</textarea>
     <div class="grid2" style="margin-top:10px">
-      ${mic ? '<button class="btn ghost" id="oralMic">🎙️ Konuş</button>' : '<span></span>'}
-      <button class="btn" id="oralDone">Cevabı bitir</button>
+      ${mic ? `<button class="btn ghost" id="oralMic">${t('oral.speak')}</button>` : '<span></span>'}
+      <button class="btn" id="oralDone">${t('oral.done')}</button>
     </div>
-    <button class="btn plain block" id="oralSkip" style="margin-top:12px">Bilmiyorum – geç</button>`;
+    <button class="btn plain block" id="oralSkip" style="margin-top:12px">${t('oral.skip')}</button>`;
   const ta = $('#oralText');
   ta.addEventListener('input', () => { sess.text = ta.value; });
   const say = () => speak(prompt);
@@ -200,12 +202,12 @@ function renderQuestion() {
         rec = null;
         ta.value = sess.text;
         if (!document.body.contains(micBtn)) return;
-        micBtn.textContent = '🎙️ Konuş'; micBtn.classList.remove('rec');
-        if (err === 'not-allowed' || err === 'service-not-allowed') ctx.toast('Mikrofon izni yok – klavyeden dikte et');
-        else if (err && err !== 'no-speech' && err !== 'aborted') ctx.toast('Konuşma tanıma çalışmadı – yazarak devam et');
+        micBtn.textContent = t('oral.speak'); micBtn.classList.remove('rec');
+        if (err === 'not-allowed' || err === 'service-not-allowed') ctx.toast(t('oral.noMicPerm'));
+        else if (err && err !== 'no-speech' && err !== 'aborted') ctx.toast(t('oral.srFail'));
       },
     });
-    if (rec) { micBtn.textContent = '⏹️ Durdur'; micBtn.classList.add('rec'); }
+    if (rec) { micBtn.textContent = t('oral.stop'); micBtn.classList.add('rec'); }
   });
   $('#oralDone').addEventListener('click', () => answer(ta.value));
   $('#oralSkip').addEventListener('click', () => answer(ta.value, true));
@@ -222,7 +224,7 @@ function startTick() {
     const ms = leftMs();
     el.textContent = '⏱️ ' + mmss(ms);
     el.classList.toggle('low', ms < 3 * 60000);
-    if (!ms) { ctx.toast('Süre doldu!'); finish(true); }
+    if (!ms) { ctx.toast(t('mock.timeUpToast')); finish(true); }
   }, 1000);
 }
 
@@ -253,7 +255,7 @@ function grade(h1, h2, second) {
   const n = q.parts.length || 1;
   const score = (h1.filter(Boolean).length + 0.5 * h2.filter(Boolean).length) / n;
   if (q.record && (sess.first || second)) store.recordOpen(q.id, score);
-  sess.res.push({ q: q.q, topic: q.topic, a: q.a, tr: q.tr, first: sess.first, followQ: sess.phase === 'follow' ? sess.followQ : '', second, score,
+  sess.res.push({ q: q.q, topic: q.topic, a: q.a, tr: q.tr, en: q.en, first: sess.first, followQ: sess.phase === 'follow' ? sess.followQ : '', second, score,
     parts: q.parts.map((p, k) => ({ label: p.label, fact: p.fact, st: h1[k] ? 'hit' : h2[k] ? 'follow' : 'miss' })) });
   sess.phase = 'result';
   renderFeedback();
@@ -269,20 +271,20 @@ function renderFeedback() {
   const last = sess.i + 1 >= sess.qs.length;
   const missingFacts = r.parts.filter((p) => p.st !== 'hit' && p.fact);
   view.innerHTML = `
-    <div class="row mock-head"><span class="badge" lang="de">${esc(sess.mode.name)}</span><span class="muted small" style="margin-left:6px">Soru ${sess.i + 1}/${sess.qs.length}</span><span class="spacer"></span><span class="mock-timer" id="oralTimer">⏱️ ${mmss(leftMs())}</span></div>
+    <div class="row mock-head"><span class="badge" lang="de">${esc(sess.mode.name)}</span><span class="muted small" style="margin-left:6px">${t('q.n', { i: sess.i + 1, n: sess.qs.length })}</span><span class="spacer"></span><span class="mock-timer" id="oralTimer">⏱️ ${mmss(leftMs())}</span></div>
     <div class="card">
       <div class="muted small" lang="de">${esc(r.q)}</div>
-      <h3 style="margin:8px 0 4px">Anahtar kavramlar · %${Math.round(r.score * 100)}</h3>
+      <h3 style="margin:8px 0 4px">${t('oral.kw', { p: t('pct', { p: Math.round(r.score * 100) }) })}</h3>
       ${chips(r.parts, esc)}
-      <div class="muted small" style="margin-top:4px">✓ ilk cevapta · ↻ Nachfrage'de (yarım puan) · ✗ eksik</div>
+      <div class="muted small" style="margin-top:4px">${t('oral.legend')}</div>
       ${missingFacts.length ? `<dl class="facts" lang="de" style="margin-top:10px">${missingFacts.map((p) => `<dt>${esc(p.label)} ${sayBtn(p.fact, esc)}</dt><dd>${esc(p.fact)}</dd>`).join('')}</dl>` : ''}
-      ${r.first ? `<div class="muted small" style="margin-top:10px">Senin cevabın:</div><p lang="de" style="margin-top:2px;white-space:pre-wrap">${esc(r.first)}</p>` : '<p class="muted small">⚪ Cevap yok</p>'}
+      ${r.first ? `<div class="muted small" style="margin-top:10px">${t('mock.yourAnswer')}</div><p lang="de" style="margin-top:2px;white-space:pre-wrap">${esc(r.first)}</p>` : `<p class="muted small">${t('oral.noAnswer')}</p>`}
       ${r.followQ ? `<div class="muted small">Nachfrage: <i lang="de">${esc(r.followQ)}</i></div><p lang="de" style="margin-top:2px;white-space:pre-wrap">${esc(r.second) || '<span class="muted">–</span>'}</p>` : ''}
-      <h3>Örnek cevap (Musterlösung) ${sayBtn(r.a, esc)}</h3>
+      <h3>${t('open.model')} ${sayBtn(r.a, esc)}</h3>
       <p class="small" lang="de">${esc(r.a)}</p>
-      ${r.tr ? `<div class="tr-box small">🇹🇷 ${esc(r.tr)}</div>` : ''}
+      ${r.tr ? `<div class="tr-box small">${flag()} ${esc(tx(r))}</div>` : ''}
     </div>
-    <button class="btn block" id="oralNext">${last ? 'Sonucu gör' : 'Sonraki soru'}</button>`;
+    <button class="btn block" id="oralNext">${last ? t('quiz.result') : t('quiz.next')}</button>`;
   $('#oralNext').addEventListener('click', () => {
     stopSpeaking();
     if (last) return finish(false);
@@ -309,20 +311,20 @@ function renderSummary() {
   const pct = res.length ? Math.round((res.reduce((n, r) => n + r.score, 0) / sess.qs.length) * 100) : 0;
   view.innerHTML = `
     <div class="card" style="text-align:center">
-      <div class="eyebrow">🎤 Sözlü sınav · <span lang="de">${esc(sess.mode.name)}</span></div>
-      <div class="score">%${pct}</div>
-      <div class="muted">${res.length}/${sess.qs.length} soru · ${sess.min} dk${sess.timeout ? ' · ⏱️ süre doldu' : ''}</div>
-      <div class="small" style="margin-top:6px">${pct >= 75 ? 'Çok iyi – Prüfer memnun! 💪' : pct >= 50 ? 'Geçer – eksik kavramları sesli tekrar et.' : 'Daha çok sesli pratik lazım – örnek cevapları dinleyip tekrar et 👇'}</div>
+      <div class="eyebrow">${t('oral.eyebrow')} · <span lang="de">${esc(sess.mode.name)}</span></div>
+      <div class="score">${t('pct', { p: pct })}</div>
+      <div class="muted">${t('oral.sumLine', { r: res.length, n: sess.qs.length, min: sess.min })}${sess.timeout ? t('oral.timedOut') : ''}</div>
+      <div class="small" style="margin-top:6px">${t(pct >= 75 ? 'oral.great' : pct >= 50 ? 'oral.pass' : 'oral.more')}</div>
     </div>
     ${res.map((r) => `<div class="card small">
-      <div class="muted small">${esc(r.topic)} · %${Math.round(r.score * 100)}</div>
+      <div class="muted small">${esc(r.topic)} · ${t('pct', { p: Math.round(r.score * 100) })}</div>
       <b lang="de">${esc(r.q)}</b>
       <div style="margin:8px 0">${chips(r.parts, esc)}</div>
-      <div class="muted small">Örnek cevap ${sayBtn(r.a, esc)}</div><p lang="de" style="margin-top:2px">${esc(r.a)}</p>
+      <div class="muted small">${t('oral.model')} ${sayBtn(r.a, esc)}</div><p lang="de" style="margin-top:2px">${esc(r.a)}</p>
     </div>`).join('')}
     <div class="grid2">
-      <a class="btn ghost" href="#/sozlu">Ders seç</a>
-      <button class="btn" id="oralAgain">Yeniden başla</button>
+      <a class="btn ghost" href="#/sozlu">${t('mock.choose')}</a>
+      <button class="btn" id="oralAgain">${t('oral.again')}</button>
     </div>`;
   $('#oralAgain').addEventListener('click', () => start(sess.mode.id));
 }

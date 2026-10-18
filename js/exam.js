@@ -5,6 +5,8 @@ import { LESSONS, FAECHER } from './lessons.js';
 import { examPool, prepare, shuffle } from './quizgen.js';
 import { containsFuzzy } from './fuzzy.js';
 import { upcoming } from './private.js';
+import { t, tx, lang } from './i18n.js';
+import './strings.js';
 
 export const MOCK_MCQ = 15;
 export const MOCK_OPEN = 3;
@@ -17,7 +19,7 @@ export function initExam(deps) { ctx = deps; }
 
 const lessonTitle = (id) => (LESSONS.find((l) => l.id === id) || {}).title;
 // Thema einer Frage für die Auswertung: Lektion, sonst Kategorie (Muskeln, Knochen, Gelenke …)
-const topicName = (q) => (q.lesson && lessonTitle(q.lesson)) || (String(q.id).startsWith('g:jx:') ? 'Gelenkdaten (ROM, Achsen, Muskeln)' : q.cat) || 'Diğer';
+const topicName = (q) => (q.lesson && lessonTitle(q.lesson)) || (String(q.id).startsWith('g:jx:') ? 'Gelenkdaten (ROM, Achsen, Muskeln)' : q.cat) || t('other');
 
 // Aus jedem Thema reihum ziehen, damit die Probeklausur das ganze Fach abdeckt
 function spread(pool, n) {
@@ -49,7 +51,7 @@ export const noteFor = (pct) => (pct >= 92 ? 1 : pct >= 81 ? 2 : pct >= 67 ? 3 :
 function startMock(fach) {
   const mcq = spread(examPool(fach), MOCK_MCQ).map((q) => {
     const p = prepare(q);
-    return { id: p.id, cat: p.cat, lesson: p.lesson, q: p.q, opts: p.opts, ans: p.ans, x: p.x, topic: topicName(q) };
+    return { id: p.id, cat: p.cat, lesson: p.lesson, q: p.q, opts: p.opts, ans: p.ans, x: p.x, xEn: p.xEn, topic: topicName(q) };
   });
   const open = spread(openFor(fach), MOCK_OPEN).map((q) => ({ id: q.id, q: q.q, a: q.a, kw: q.kw, topic: topicName(q) }));
   const s = store.get();
@@ -60,7 +62,8 @@ function startMock(fach) {
 
 const run = () => store.get().mockRun;
 const leftMs = () => Math.max(0, run().end - Date.now());
-const mmss = (ms) => { const t = Math.ceil(ms / 1000); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
+const mmss = (ms) => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+const dec = (x) => (lang() === 'en' ? String(x) : String(x).replace('.', ','));
 
 function stopTick() { if (tick) { clearInterval(tick); tick = null; } }
 
@@ -75,23 +78,23 @@ export function renderMock(args = []) {
   const list = mockFaecher();
   const past = (store.get().mocks || []).slice(-5).reverse();
   view.innerHTML = `
-    ${r ? `<a class="card row" href="#/deneme/run" style="text-decoration:none;color:inherit;border:2px solid var(--accent)"><span class="grow"><div class="eyebrow">⏱️ Devam eden sınav</div><h2>${esc(r.fach)}</h2><div class="muted small">${leftMs() ? 'Kalan süre ' + mmss(leftMs()) : 'Süre doldu – sonucu gör'}</div></span><span class="chev">›</span></a>` : ''}
+    ${r ? `<a class="card row" href="#/deneme/run" style="text-decoration:none;color:inherit;border:2px solid var(--accent)"><span class="grow"><div class="eyebrow">${t('mock.running')}</div><h2>${esc(r.fach)}</h2><div class="muted small">${leftMs() ? t('mock.left', { t: mmss(leftMs()) }) : t('mock.timeUp')}</div></span><span class="chev">›</span></a>` : ''}
     <div class="card">
-      <div class="eyebrow">📝 Deneme sınavı</div>
-      <h2>Gerçek sınav gibi çalış</h2>
-      <p class="small muted" style="margin-bottom:0">${MOCK_MCQ} çoktan seçmeli + ${MOCK_OPEN} açık uçlu soru · <b>${MOCK_MIN} dk</b> · cevaplar ve açıklamalar sadece sonunda. Sonuçta konu konu başarın ve yanlışların listelenir.</p>
+      <div class="eyebrow">${t('quiz.mockEyebrow')}</div>
+      <h2>${t('mock.h')}</h2>
+      <p class="small muted" style="margin-bottom:0">${t('mock.info', { m: MOCK_MCQ, o: MOCK_OPEN, min: MOCK_MIN })}</p>
     </div>
-    ${soon.length ? `<div class="section-title">Yaklaşan sınavlar</div><div class="list">${soon.map((e) => {
+    ${soon.length ? `<div class="section-title">${t('mock.upcoming')}</div><div class="list">${soon.map((e) => {
       const ok = list.some((x) => x.fach === e.fach);
-      return `<${ok ? `button data-fach="${esc(e.fach)}"` : 'div'} class="row" style="width:100%;text-align:left"><span class="grow"><b>${esc(e.fach || 'Sınav')}</b>${e.topic ? ` <span class="muted small">· ${esc(e.topic)}</span>` : ''}<div class="muted small">${e.days === 0 ? 'Bugün!' : e.days === 1 ? 'Yarın' : e.days + ' gün sonra'} · ${e.date.slice(8, 10)}.${e.date.slice(5, 7)}.</div></span>${ok ? '<span class="mini">Başlat</span>' : '<span class="muted small">soru yok</span>'}</${ok ? 'button' : 'div'}>`;
+      return `<${ok ? `button data-fach="${esc(e.fach)}"` : 'div'} class="row" style="width:100%;text-align:left"><span class="grow"><b>${esc(e.fach || t('exam.default'))}</b>${e.topic ? ` <span class="muted small">· ${esc(e.topic)}</span>` : ''}<div class="muted small">${e.days === 0 ? t('mock.today') : e.days === 1 ? t('mock.tomorrow') : t('rep.inDays', { n: e.days })} · ${e.date.slice(8, 10)}.${e.date.slice(5, 7)}.</div></span>${ok ? `<span class="mini">${t('mock.start')}</span>` : `<span class="muted small">${t('mock.noQ')}</span>`}</${ok ? 'button' : 'div'}>`;
     }).join('')}</div>` : ''}
-    <div class="section-title">Ders seç</div>
+    <div class="section-title">${t('mock.choose')}</div>
     <div class="list">
-      ${list.map((x) => `<button data-fach="${esc(x.fach)}" class="row" style="width:100%;text-align:left"><span class="grow"><b>${esc(x.fach)}</b><div class="muted small">${x.mcq} test + ${x.open} açık uçlu soru havuzu</div></span><span class="chev">›</span></button>`).join('')}
+      ${list.map((x) => `<button data-fach="${esc(x.fach)}" class="row" style="width:100%;text-align:left"><span class="grow"><b>${esc(x.fach)}</b><div class="muted small">${t('mock.pool', { m: x.mcq, o: x.open })}</div></span><span class="chev">›</span></button>`).join('')}
     </div>
-    ${past.length ? `<div class="section-title">Önceki denemeler</div><div class="list">${past.map((m, k) => `<button data-res="${store.get().mocks.length - 1 - k}" class="row" style="width:100%;text-align:left"><span class="grow"><b>${esc(m.fach)}</b> <span class="muted small">· ${m.date.slice(8, 10)}.${m.date.slice(5, 7)}.</span><div class="muted small">%${m.pct} · tahmini not ${noteFor(m.pct)} · ${m.min} dk</div></span><span class="chev">›</span></button>`).join('')}</div>` : ''}`;
+    ${past.length ? `<div class="section-title">${t('mock.past')}</div><div class="list">${past.map((m, k) => `<button data-res="${store.get().mocks.length - 1 - k}" class="row" style="width:100%;text-align:left"><span class="grow"><b>${esc(m.fach)}</b> <span class="muted small">· ${m.date.slice(8, 10)}.${m.date.slice(5, 7)}.</span><div class="muted small">${t('mock.pastRow', { p: m.pct, n: noteFor(m.pct), min: m.min })}</div></span><span class="chev">›</span></button>`).join('')}</div>` : ''}`;
   $$('[data-fach]').forEach((b) => b.addEventListener('click', () => {
-    if (run() && !confirm('Devam eden sınav silinsin ve yenisi başlasın mı?')) return;
+    if (run() && !confirm(t('mock.confirmNew'))) return;
     startMock(b.dataset.fach);
   }));
   $$('[data-res]').forEach((b) => b.addEventListener('click', () => renderResult(+b.dataset.res)));
@@ -110,17 +113,17 @@ function renderRun() {
   const nAnswered = [...Array(total).keys()].filter(answered).length;
   view.innerHTML = `
     <div class="row mock-head"><span class="badge">${esc(r.fach)}</span><span class="spacer"></span><span class="mock-timer" id="mockTimer">⏱️ ${mmss(leftMs())}</span></div>
-    <div class="mock-nav">${[...Array(total).keys()].map((k) => `<button class="${k === i ? 'on' : ''} ${answered(k) ? 'done' : ''} ${k >= r.mcq.length ? 'open' : ''}" data-go="${k}" aria-label="Soru ${k + 1}">${k + 1}</button>`).join('')}</div>
-    <div class="muted small" style="margin:6px 2px">${isOpen ? 'Açık uçlu soru – Almanca cevap yaz' : 'Çoktan seçmeli'} · ${nAnswered}/${total} cevaplandı</div>
+    <div class="mock-nav">${[...Array(total).keys()].map((k) => `<button class="${k === i ? 'on' : ''} ${answered(k) ? 'done' : ''} ${k >= r.mcq.length ? 'open' : ''}" data-go="${k}" aria-label="${t('mock.qAria', { n: k + 1 })}">${k + 1}</button>`).join('')}</div>
+    <div class="muted small" style="margin:6px 2px">${isOpen ? t('mock.openHint') : t('mock.mc')} · ${t('mock.answered', { a: nAnswered, t: total })}</div>
     <div class="question" lang="de">${escGap(q.q)}</div>
     ${isOpen
-      ? `<textarea id="mockText" lang="de" placeholder="Cevabını buraya yaz (Almanca)…">${esc(r.text[q.id] || '')}</textarea>`
+      ? `<textarea id="mockText" lang="de" placeholder="${t('open.placeholder')}">${esc(r.text[q.id] || '')}</textarea>`
       : q.opts.map((o, k) => `<button class="opt ${r.pick[q.id] === k ? 'picked' : ''}" data-k="${k}">${esc(o)}</button>`).join('')}
     <div class="grid2" style="margin-top:14px">
-      <button class="btn plain" id="prevQ" ${i === 0 ? 'disabled' : ''}>‹ Önceki</button>
-      ${i + 1 < total ? '<button class="btn" id="nextQ">Sonraki ›</button>' : '<button class="btn" id="finishQ">Sınavı bitir</button>'}
+      <button class="btn plain" id="prevQ" ${i === 0 ? 'disabled' : ''}>${t('prev')}</button>
+      ${i + 1 < total ? `<button class="btn" id="nextQ">${t('next')}</button>` : `<button class="btn" id="finishQ">${t('mock.finish')}</button>`}
     </div>
-    ${i + 1 < total ? '<button class="btn plain block" id="finishQ" style="margin-top:16px">Sınavı bitir</button>' : ''}`;
+    ${i + 1 < total ? `<button class="btn plain block" id="finishQ" style="margin-top:16px">${t('mock.finish')}</button>` : ''}`;
   const go = (k) => { r.i = k; store.save(); renderRun(); view.scrollTop = 0; };
   $$('[data-go]').forEach((b) => b.addEventListener('click', () => go(+b.dataset.go)));
   $$('[data-k]').forEach((b) => b.addEventListener('click', () => {
@@ -137,7 +140,7 @@ function renderRun() {
   if (nx) nx.addEventListener('click', () => go(i + 1));
   $('#finishQ').addEventListener('click', () => {
     const missing = total - [...Array(total).keys()].filter(answered).length;
-    if (missing && !confirm(`${missing} soru boş. Yine de bitirilsin mi?`)) return;
+    if (missing && !confirm(t('mock.confirmEmpty', { n: missing }))) return;
     finish();
   });
   stopTick();
@@ -147,7 +150,7 @@ function renderRun() {
     const ms = leftMs();
     el.textContent = '⏱️ ' + mmss(ms);
     el.classList.toggle('low', ms < 5 * 60000);
-    if (!ms) { stopTick(); ctx.toast('Süre doldu!'); finish(); }
+    if (!ms) { stopTick(); ctx.toast(t('mock.timeUpToast')); finish(); }
   }, 1000);
 }
 
@@ -185,7 +188,7 @@ function finish() {
     open: { score: Math.round(open.reduce((n, q) => n + q.score, 0) * 10) / 10, n: open.length },
     topics: Object.fromEntries(Object.entries(topics).map(([t, v]) => [t, { r: Math.round(v.r * 10) / 10, n: v.n }])),
     // Details nur für die Ergebnisseite (falsche Fragen); IDs bleiben lokal
-    wrong: mcq.filter((q) => !q.ok).map((q) => ({ q: q.q, pick: q.pick === undefined ? null : q.opts[q.pick], a: q.opts[q.ans], x: q.x, topic: q.topic })),
+    wrong: mcq.filter((q) => !q.ok).map((q) => ({ q: q.q, pick: q.pick === undefined ? null : q.opts[q.pick], a: q.opts[q.ans], x: q.x, xEn: q.xEn, topic: q.topic })),
     openRes: open.map((q) => ({ q: q.q, text: q.text, a: q.a, hits: q.hits, score: Math.round(q.score * 100) / 100 })),
   });
   history.replaceState(null, '', '#/deneme/sonuc');
@@ -200,25 +203,25 @@ function renderResult(idx) {
   const rows = Object.entries(m.topics).map(([t, v]) => ({ t, p: v.n ? Math.round((v.r / v.n) * 100) : 0, v })).sort((a, b) => a.p - b.p);
   view.innerHTML = `
     <div class="card" style="text-align:center">
-      <div class="eyebrow">📝 Deneme sınavı · ${esc(m.fach)}</div>
-      <div class="score">%${m.pct}</div>
-      <div class="muted">Tahmini not: <b>${note}</b> · ${m.mcq.r}/${m.mcq.n} test doğru · açık uçlu ${String(m.open.score).replace('.', ',')}/${m.open.n} · ${m.min} dk</div>
-      <div class="small" style="margin-top:6px">${note <= 2 ? 'Sınava hazırsın! 💪' : note <= 4 ? 'Geçer – zayıf konuları bir kez daha tekrar et.' : 'Daha çok tekrar lazım – aşağıdaki konulardan başla 👇'}</div>
+      <div class="eyebrow">${t('quiz.mockEyebrow')} · ${esc(m.fach)}</div>
+      <div class="score">${t('pct', { p: m.pct })}</div>
+      <div class="muted">${t('mock.grade', { n: note, r: m.mcq.r, t: m.mcq.n, o: dec(m.open.score), on: m.open.n, min: m.min })}</div>
+      <div class="small" style="margin-top:6px">${t(note <= 2 ? 'mock.ready' : note <= 4 ? 'mock.pass' : 'mock.moreWork')}</div>
     </div>
-    <div class="section-title">Konulara göre</div>
+    <div class="section-title">${t('mock.byTopic')}</div>
     <div class="card">
-      ${rows.map(({ t, p, v }) => `<div class="mock-topic"><div class="row small"><span class="grow" lang="de">${esc(t)}</span><b>%${p}</b><span class="muted" style="margin-left:6px">${String(v.r).replace('.', ',')}/${v.n}</span></div><div class="progress"><div style="width:${p}%;background:${p >= 67 ? 'var(--good)' : p >= 50 ? 'var(--warn)' : 'var(--bad)'}"></div></div></div>`).join('')}
+      ${rows.map(({ t: tp, p, v }) => `<div class="mock-topic"><div class="row small"><span class="grow" lang="de">${esc(tp)}</span><b>${t('pct', { p })}</b><span class="muted" style="margin-left:6px">${dec(v.r)}/${v.n}</span></div><div class="progress"><div style="width:${p}%;background:${p >= 67 ? 'var(--good)' : p >= 50 ? 'var(--warn)' : 'var(--bad)'}"></div></div></div>`).join('')}
     </div>
-    ${m.wrong.length ? `<div class="section-title">Yanlış / boş testler (${m.wrong.length})</div>${m.wrong.map((q) => `<div class="card small"><div class="muted small">${esc(q.topic)}</div><b lang="de">${esc(q.q)}</b>
-      <div class="explain">${q.pick === null ? '⚪ Boş bıraktın' : `❌ Senin cevabın: ${esc(q.pick)}`}<br>✔︎ <b>${esc(q.a)}</b><br><span class="muted">${esc(q.x)}</span></div></div>`).join('')}` : '<div class="card small">✅ Tüm test soruları doğru!</div>'}
-    <div class="section-title">Açık uçlu sorular</div>
+    ${m.wrong.length ? `<div class="section-title">${t('mock.wrongH', { n: m.wrong.length })}</div>${m.wrong.map((q) => `<div class="card small"><div class="muted small">${esc(q.topic)}</div><b lang="de">${esc(q.q)}</b>
+      <div class="explain">${q.pick === null ? t('mock.empty') : t('mock.yours', { x: esc(q.pick) })}<br>✔︎ <b>${esc(q.a)}</b><br><span class="muted">${esc(tx(q, 'x'))}</span></div></div>`).join('')}` : `<div class="card small">${t('mock.allRight')}</div>`}
+    <div class="section-title">${t('note.open')}</div>
     ${m.openRes.map((q) => `<div class="card small"><b lang="de">${esc(q.q)}</b>
       <div style="margin:8px 0">${q.hits.map((h) => `<span class="kw ${h.hit ? 'hit' : 'miss'}">${h.hit ? '✓' : '✗'} ${esc(h.k)}</span>`).join('')}</div>
-      ${q.text.trim() ? `<div class="muted small">Senin cevabın:</div><p lang="de" style="white-space:pre-wrap;margin-top:2px">${esc(q.text)}</p>` : '<p class="muted">⚪ Boş bıraktın</p>'}
-      <div class="muted small">Örnek cevap (Musterlösung):</div><p lang="de" style="margin-top:2px">${esc(q.a)}</p></div>`).join('')}
+      ${q.text.trim() ? `<div class="muted small">${t('mock.yourAnswer')}</div><p lang="de" style="white-space:pre-wrap;margin-top:2px">${esc(q.text)}</p>` : `<p class="muted">${t('mock.empty')}</p>`}
+      <div class="muted small">${t('mock.model')}</div><p lang="de" style="margin-top:2px">${esc(q.a)}</p></div>`).join('')}
     <div class="grid2">
-      <a class="btn ghost" href="#/deneme">Denemeler</a>
-      <button class="btn" id="mockAgain">Yeni deneme</button>
+      <a class="btn ghost" href="#/deneme">${t('mock.list')}</a>
+      <button class="btn" id="mockAgain">${t('mock.again')}</button>
     </div>`;
   $('#mockAgain').addEventListener('click', () => startMock(m.fach));
 }

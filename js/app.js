@@ -1,4 +1,6 @@
 import * as store from './store.js';
+import { t, tx, lang, setLang, flag, locale, LANGS } from './i18n.js';
+import './strings.js';
 import { MUSCLES, BONES, JOINTS, ALL_STRUCTURES, findStructure } from './data/anatomy.js';
 import { GRUNDWORTSCHATZ, BASE_VOCAB } from './data/vocab.js';
 import { OPEN } from './data/questions.js';
@@ -10,10 +12,10 @@ import { renderReport } from './report.js';
 import { containsFuzzy } from './fuzzy.js';
 import { LANDMARKS, findLandmark, shortLa } from './data/landmarks.js';
 import { axesOf } from './data/axes.js';
-import { todaysWords, weekWords, markKnown, recordWord, questionFor, checkTyped, TYPE_LABEL, WORDS_PER_DAY } from './words.js';
-import { MUSCLE3D, LAYER_NAMES, partText } from './data/muscle3d.js';
+import { todaysWords, weekWords, markKnown, recordWord, questionFor, checkTyped, typeLabel, WORDS_PER_DAY } from './words.js';
+import * as M3 from './data/muscle3d.js';
 import { UEBUNGEN } from './data/uebungen.js';
-import { masteredLessons } from './quizgen.js';
+import { masteredLessons, vocabTr } from './quizgen.js';
 import { initExam, renderMock } from './exam.js';
 import { initOral, renderOral, leaveOral } from './oral.js';
 import { initBefund, renderCases } from './befund.js';
@@ -25,7 +27,7 @@ const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const view = $('#view');
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 // Text escapen und Lücken „＿＿＿“ als nicht umbrechendes Kästchen darstellen
-const escGap = (s) => esc(s).replace(/\s*＿+\s*/g, (m) => `${/^\s/.test(m) ? ' ' : ''}<span class="gap" aria-label="Lücke"></span>${/\s$/.test(m) ? ' ' : ''}`);
+const escGap = (s) => esc(s).replace(/\s*＿+\s*/g, (m) => `${/^\s/.test(m) ? ' ' : ''}<span class="gap" aria-label="${t('aria.gap')}"></span>${/\s$/.test(m) ? ' ' : ''}`);
 const norm = (s) => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ı/g, 'i');
 
 function toast(msg) {
@@ -36,7 +38,14 @@ function toast(msg) {
   setTimeout(() => t.remove(), 1800);
 }
 
-const KIND_LABEL = { muscle: 'Kas', bone: 'Kemik', joint: 'Eklem', landmark: 'Kemik noktası' };
+const kindLabel = (k) => t('kind.' + k);
+const { partText } = M3;
+// Schicht-Namen (Yüzeysel / Superficial …); LAYER_NAMES_EN kommt evtl. erst später in die Daten
+const layerName = (n) => ((lang() === 'en' && M3.LAYER_NAMES_EN) || M3.LAYER_NAMES)[n] || '';
+// Kartenintervall „1dk / 10dk / 4g / 2,5ay“ (store.js) in der Hilfssprache
+const ivlLabel = (s) => (lang() === 'en' ? String(s).replace(/dk$/, 'm').replace(/ay$/, 'mo').replace(/g$/, 'd').replace(',', '.') : s);
+// Zahl mit Dezimalkomma (TR) bzw. -punkt (EN)
+const dec = (x) => (lang() === 'en' ? String(x) : String(x).replace('.', ','));
 // Struktur oder Knochenpunkt
 const findAny = (id) => findStructure(id) || (findLandmark(id) ? { ...findLandmark(id), kind: 'landmark' } : null);
 const shortName = (s) => (s.kind === 'landmark' ? shortLa(s) : s.la.replace(/\s*\(.*\)$/, ''));
@@ -78,8 +87,8 @@ function deckCards(deck) {
     return allVocab().filter((v) => !cat || v.cat === cat).map((v) => ({
       id: v.id,
       tag: v.cat, de: v.de,
-      front: rev ? v.tr : v.de,
-      back: `<div class="big">${esc(rev ? v.de : v.tr)}</div>${v.ex ? `<div class="sub">„${esc(v.ex)}“</div>` : ''}`,
+      front: rev ? vocabTr(v) : v.de,
+      back: `<div class="big">${esc(rev ? v.de : vocabTr(v))}</div>${v.ex ? `<div class="sub">„${esc(v.ex)}“</div>` : ''}`,
     }));
   }
   if (deck === 'fehler' || deck.startsWith('fehler:') || deck === 'odev') {
@@ -90,7 +99,7 @@ function deckCards(deck) {
       // Aus Notion: Lückentext-Segmente (fett = Antwort); aus Datei: Frage/Antwort/Türkçe
       back: f.seg
         ? `<div class="detail" style="font-size:15px">${cleanSegments(f.seg).map((x) => (x.b ? `<b style="color:var(--accent)">${esc(x.t)}</b>` : esc(x.t))).join('')}</div>`
-        : `<div class="detail" style="font-size:15px"><b>${esc(f.a)}</b><br><br><span class="muted">🇹🇷 ${esc(f.tr)}</span></div>`,
+        : `<div class="detail" style="font-size:15px"><b>${esc(f.a)}</b><br><br><span class="muted">${flag()} ${esc(f.tr)}</span></div>`,
     }));
   }
   if (deck.startsWith('ders:')) {
@@ -98,41 +107,41 @@ function deckCards(deck) {
     const seen = new Set();
     return lessonVocab((l) => l.fach === fach).filter((v) => !seen.has(v.id) && seen.add(v.id)).map((v) => ({
       id: v.id, tag: fach, de: v.de,
-      front: rev ? v.tr : v.de,
-      back: `<div class="big">${esc(rev ? v.de : v.tr)}</div>${v.ex ? `<div class="sub">„${esc(v.ex)}“</div>` : ''}`,
+      front: rev ? vocabTr(v) : v.de,
+      back: `<div class="big">${esc(rev ? v.de : vocabTr(v))}</div>${v.ex ? `<div class="sub">„${esc(v.ex)}“</div>` : ''}`,
     }));
   }
   if (deck === 'muscles') {
     return MUSCLES.map((m) => ({
-      id: 'm:' + m.id, tag: 'Kas', front: m.la, frontSub: m.de,
-      back: `<div class="detail"><b>${esc(m.la)}</b> · ${esc(m.tr)}<br><br><b>Ursprung:</b> ${esc(m.o)}<br><b>Ansatz:</b> ${esc(m.i)}<br><b>Innervation:</b> ${esc(m.inn)}<br><b>Funktion:</b> ${esc(m.f)}${UEBUNGEN[m.id] ? `<br><br>💪 <b>Übung:</b> ${UEBUNGEN[m.id].map((u) => `${esc(u.n)} <span class="muted">(${esc(u.tr)})</span>`).join(', ')}` : ''}</div>`,
+      id: 'm:' + m.id, tag: kindLabel('muscle'), front: m.la, frontSub: m.de,
+      back: `<div class="detail"><b>${esc(m.la)}</b> · ${esc(tx(m))}<br><br><b>Ursprung:</b> ${esc(m.o)}<br><b>Ansatz:</b> ${esc(m.i)}<br><b>Innervation:</b> ${esc(m.inn)}<br><b>Funktion:</b> ${esc(m.f)}${UEBUNGEN[m.id] ? `<br><br>💪 <b>Übung:</b> ${UEBUNGEN[m.id].map((u) => `${esc(u.n)} <span class="muted">(${esc(tx(u))})</span>`).join(', ')}` : ''}</div>`,
     }));
   }
   if (deck === 'bones') {
     return BONES.map((b) => ({
-      id: 'b:' + b.id, tag: 'Kemik', front: b.de, frontSub: rev ? b.tr : '',
-      back: `<div class="big">${esc(b.la)}</div><div class="sub">${esc(b.tr)}</div><div class="detail" style="margin-top:12px">${esc(b.merk)}</div>`,
+      id: 'b:' + b.id, tag: kindLabel('bone'), front: b.de, frontSub: rev ? tx(b) : '',
+      back: `<div class="big">${esc(b.la)}</div><div class="sub">${esc(tx(b))}</div><div class="detail" style="margin-top:12px">${esc(b.merk)}</div>`,
     }));
   }
   if (deck === 'joints') {
     return JOINTS.map((j) => ({
-      id: 'j:' + j.id, tag: 'Eklem', front: j.de, frontSub: j.la,
-      back: `<div class="detail"><b>${esc(j.tr)}</b><br><br><b>Gelenktyp:</b> ${esc(j.typ)}<br><b>Neutral-Null:</b> ${esc(j.nn)}<br><b>Bänder:</b> ${esc(j.baender)}</div>`,
+      id: 'j:' + j.id, tag: kindLabel('joint'), front: j.de, frontSub: j.la,
+      back: `<div class="detail"><b>${esc(tx(j))}</b><br><br><b>Gelenktyp:</b> ${esc(j.typ)}<br><b>Neutral-Null:</b> ${esc(j.nn)}<br><b>Bänder:</b> ${esc(j.baender)}</div>`,
     }));
   }
   return [];
 }
 
 const DECKS = () => [
-  ...(odevList().length ? [{ id: 'odev', name: '📌 Ödevlerim', sub: 'Ezberlemem gerekenler: ' + [...new Set(odevList().map((f) => f.odev))].join(', ') }] : []),
-  ...(fehlerList().length ? [{ id: 'fehler', name: '✗ Hatalarım', sub: 'Notion testlerinde yanlış yaptıkların (öncelikli)' }] : []),
-  ...FAECHER.map((f) => ({ id: 'ders:' + f, name: 'Ders: ' + f, sub: 'Ders notlarındaki terimler' })),
-  { id: 'vocab', name: 'Tüm kelimeler', sub: `${allVocab().length} kelime` },
-  ...vocabCategories().map((c) => ({ id: 'vocab:' + c, name: c, sub: 'Kelimeler' })),
-  ...(store.get().customVocab.length ? [{ id: 'vocab:Eigene', name: 'Kendi kelimelerim', sub: `${store.get().customVocab.length} kelime` }] : []),
-  { id: 'muscles', name: 'Kaslar', sub: 'Ursprung · Ansatz · Innervation · Funktion' },
-  { id: 'bones', name: 'Kemikler', sub: 'Almanca · Latince · Türkçe' },
-  { id: 'joints', name: 'Eklemler', sub: 'Gelenktyp · Neutral-Null' },
+  ...(odevList().length ? [{ id: 'odev', name: t('deck.odev'), sub: t('deck.odevSub', { list: [...new Set(odevList().map((f) => f.odev))].join(', ') }) }] : []),
+  ...(fehlerList().length ? [{ id: 'fehler', name: t('deck.fehler'), sub: t('deck.fehlerSub') }] : []),
+  ...FAECHER.map((f) => ({ id: 'ders:' + f, name: t('deck.ders', { f }), sub: t('deck.dersSub') })),
+  { id: 'vocab', name: t('deck.allWords'), sub: t('n.words', { n: allVocab().length }) },
+  ...vocabCategories().map((c) => ({ id: 'vocab:' + c, name: c, sub: t('deck.words') })),
+  ...(store.get().customVocab.length ? [{ id: 'vocab:Eigene', name: t('deck.own'), sub: t('n.words', { n: store.get().customVocab.length }) }] : []),
+  { id: 'muscles', name: t('deck.muscles'), sub: 'Ursprung · Ansatz · Innervation · Funktion' },
+  { id: 'bones', name: t('deck.bones'), sub: t('deck.bonesSub') },
+  { id: 'joints', name: t('deck.joints'), sub: 'Gelenktyp · Neutral-Null' },
 ];
 
 // ───────────────────────── Router ─────────────────────────
@@ -146,26 +155,26 @@ initBefund({ view, $, $$, esc, toast, btn3d });
 const say = (t) => sayBtn(t, esc);
 
 const routes = {
-  bugun: { title: 'Bugün', tab: 'bugun', render: renderToday },
-  test: { title: 'Test', tab: 'test', render: renderQuizStart },
-  sorular: { title: 'Açık Uçlu Sorular', tab: 'sorular', render: renderOpenList },
-  soru: { title: 'Soru', tab: 'sorular', render: renderOpenQuestion, back: '#/sorular' },
-  kartlar: { title: 'Kartlar', tab: 'kartlar', render: renderDecks },
-  oturum: { title: 'Kartlar', tab: 'kartlar', render: renderCardSession, back: '#/kartlar' },
-  liste: { title: 'Kelime Listesi', tab: 'kartlar', render: renderWordList, back: '#/kartlar' },
-  '3d': { title: '3D Anatomi', tab: '3d', render: render3D },
-  ders: { title: 'Ders', tab: 'bugun', render: renderLesson, back: 'history' },
-  dersler: { title: 'Ders Notları', tab: 'bugun', render: renderLessonList, back: '#/bugun' },
-  not: { title: 'Ders Notu', tab: 'bugun', render: renderLessonNote, back: '#/dersler' },
-  ayarlar: { title: 'Ayarlar', tab: null, render: renderSettings, back: '#/bugun' },
-  rapor: { title: 'Durum Raporu', tab: 'bugun', render: () => renderReport(view, toast), back: '#/bugun' },
-  kelime: { title: 'Günün Kelimeleri', tab: 'bugun', render: renderWordSession, back: '#/bugun' },
-  donus: { title: 'Dönüş Yolu', tab: 'bugun', render: renderDonus, back: '#/bugun' },
-  oku: { title: 'Ders Notları – Okuma', tab: 'bugun', render: renderReading, back: '#/donus' },
-  cumartesi: { title: 'Haftalık Tekrar', tab: 'bugun', render: renderSaturday, back: '#/bugun' },
-  deneme: { title: 'Deneme Sınavı', tab: 'test', render: renderMock, back: '#/test' },
-  vaka: { title: 'Vaka Çalışması', tab: 'test', render: renderCases, back: 'history' },
-  sozlu: { title: 'Sözlü Sınav', tab: 'sorular', render: renderOral, back: '#/sorular' },
+  bugun: { title: 'route.bugun', tab: 'bugun', render: renderToday },
+  test: { title: 'route.test', tab: 'test', render: renderQuizStart },
+  sorular: { title: 'route.sorular', tab: 'sorular', render: renderOpenList },
+  soru: { title: 'route.soru', tab: 'sorular', render: renderOpenQuestion, back: '#/sorular' },
+  kartlar: { title: 'route.kartlar', tab: 'kartlar', render: renderDecks },
+  oturum: { title: 'route.kartlar', tab: 'kartlar', render: renderCardSession, back: '#/kartlar' },
+  liste: { title: 'route.liste', tab: 'kartlar', render: renderWordList, back: '#/kartlar' },
+  '3d': { title: 'route.3d', tab: '3d', render: render3D },
+  ders: { title: 'route.ders', tab: 'bugun', render: renderLesson, back: 'history' },
+  dersler: { title: 'route.dersler', tab: 'bugun', render: renderLessonList, back: '#/bugun' },
+  not: { title: 'route.not', tab: 'bugun', render: renderLessonNote, back: '#/dersler' },
+  ayarlar: { title: 'route.ayarlar', tab: null, render: renderSettings, back: '#/bugun' },
+  rapor: { title: 'route.rapor', tab: 'bugun', render: () => renderReport(view, toast), back: '#/bugun' },
+  kelime: { title: 'route.kelime', tab: 'bugun', render: renderWordSession, back: '#/bugun' },
+  donus: { title: 'route.donus', tab: 'bugun', render: renderDonus, back: '#/bugun' },
+  oku: { title: 'route.oku', tab: 'bugun', render: renderReading, back: '#/donus' },
+  cumartesi: { title: 'route.cumartesi', tab: 'bugun', render: renderSaturday, back: '#/bugun' },
+  deneme: { title: 'route.deneme', tab: 'test', render: renderMock, back: '#/test' },
+  vaka: { title: 'route.vaka', tab: 'test', render: renderCases, back: 'history' },
+  sozlu: { title: 'route.sozlu', tab: 'sorular', render: renderOral, back: '#/sorular' },
 };
 
 function navigate() {
@@ -177,7 +186,7 @@ function navigate() {
   current = name;
   if (name !== 'sozlu') leaveOral();
 
-  $('#title').textContent = r.title;
+  $('#title').textContent = t(r.title);
   $$('.tabbar a').forEach((a) => a.classList.toggle('active', a.dataset.tab === r.tab));
   const back = $('#backBtn');
   back.hidden = !r.back;
@@ -210,27 +219,27 @@ function renderToday() {
   const fehlerOpen = Math.min(fehlerCards.filter((c) => store.isNew(c.id) || store.isDue(c.id)).length, Math.max(0, FEHLER_PER_DAY - (d.fehlerSeen || []).length));
   const odevOpen = deckCards('odev').filter((c) => store.isNew(c.id) || store.isDue(c.id)).length;
   const tasks = [
-    ...(deckCards('odev').length ? [{ done: !odevOpen, label: `📌 Ödev: <b>${esc([...new Set(odevList().map((f) => f.odev))].join(', '))}</b> <span class="muted">(${odevOpen} kart)</span>`, href: '#/oturum/odev' }] : []),
+    ...(deckCards('odev').length ? [{ done: !odevOpen, label: `${t('task.odev', { list: esc([...new Set(odevList().map((f) => f.odev))].join(', ')) })} <span class="muted">(${t('n.cards', { n: odevOpen })})</span>`, href: '#/oturum/odev' }] : []),
     // Knochenpunkte gehören zur Hausaufgabe (PT Befund) – am 3D-Modell zeigen
-    ...(deckCards('odev').length ? [{ done: !!d.lmQuiz, label: `🎯 Noktayı bul: Becken-Knochenpunkte ${d.lmQuiz ? `<span class="muted">${d.lmQuiz.r}/${d.lmQuiz.n}</span>` : '<span class="muted">(3D, 10 tur)</span>'}`, href: '#/3d?quiz=pelvis' }] : []),
+    ...(deckCards('odev').length ? [{ done: !!d.lmQuiz, label: `${t('task.lmQuiz')} ${d.lmQuiz ? `<span class="muted">${d.lmQuiz.r}/${d.lmQuiz.n}</span>` : `<span class="muted">${t('task.lmQuizSub')}</span>`}`, href: '#/3d?quiz=pelvis' }] : []),
     // erledigte Aufgabe bleibt (abgehakt) stehen, statt zu verschwinden
-    ...(fehlerOpen || (d.fehlerSeen || []).length ? [{ done: !fehlerOpen, label: `✗ Hatalarımı tekrar et <span class="muted">(${fehlerOpen} kart)</span>`, href: '#/oturum/fehler' }] : []),
+    ...(fehlerOpen || (d.fehlerSeen || []).length ? [{ done: !fehlerOpen, label: `${t('task.fehler')} <span class="muted">(${t('n.cards', { n: fehlerOpen })})</span>`, href: '#/oturum/fehler' }] : []),
     // Morgentest: Fächer aus dem Wochenplan + Fächer mit Prüfung in ≤ 7 Tagen (📝)
     ...(morningKat()
-      ? [{ done: !!d.morning, label: `Sabah testi: <b>${esc(morningFaecher().map((f) => (examFaecher(7).includes(f) ? '📝 ' + f : f)).join(' + '))}</b>`, href: `#/test?kat=${encodeURIComponent(morningKat())}` }] : []),
-    { done: !!d.wordsMorning, label: `Sabah kelimeleri (${WORDS_PER_DAY})${d.wordsMorning ? ` <span class="muted">${d.wordsMorning.r}/${d.wordsMorning.n}</span>` : ''}`, href: '#/kelime/sabah' },
-    { done: !!d.wordsReturn, label: `Dönüş kelimeleri (${WORDS_PER_DAY})${d.wordsReturn ? ` <span class="muted">${d.wordsReturn.r}/${d.wordsReturn.n}</span>` : ''}`, href: '#/kelime/donus' },
-    { done: d.lesson, label: `Günün kası: <b>${esc(m.la)}</b>`, href: `#/ders/${m.id}` },
-    { done: d.lesson2, label: `Günün ${b.kind === 'bone' ? 'kemiği' : 'eklemi'}: <b>${esc(b.de)}</b>`, href: `#/ders/${b.id}` },
-    { done: d.cards >= s.settings.cardsGoal, label: `${s.settings.cardsGoal} kart tekrar et <span class="muted">(${d.cards}/${s.settings.cardsGoal})</span>`, href: '#/oturum/vocab' },
-    { done: d.quiz >= s.settings.quizGoal, label: `${s.settings.quizGoal} test sorusu <span class="muted">(${d.quiz}/${s.settings.quizGoal})</span>`, href: '#/test' },
-    { done: d.open >= 1, label: '1 açık uçlu soru cevapla', href: `#/soru/${nextOpenQuestion().id}` },
+      ? [{ done: !!d.morning, label: t('task.morning', { list: esc(morningFaecher().map((f) => (examFaecher(7).includes(f) ? '📝 ' + f : f)).join(' + ')) }), href: `#/test?kat=${encodeURIComponent(morningKat())}` }] : []),
+    { done: !!d.wordsMorning, label: `${t('task.wordsMorning', { n: WORDS_PER_DAY })}${d.wordsMorning ? ` <span class="muted">${d.wordsMorning.r}/${d.wordsMorning.n}</span>` : ''}`, href: '#/kelime/sabah' },
+    { done: !!d.wordsReturn, label: `${t('task.wordsReturn', { n: WORDS_PER_DAY })}${d.wordsReturn ? ` <span class="muted">${d.wordsReturn.r}/${d.wordsReturn.n}</span>` : ''}`, href: '#/kelime/donus' },
+    { done: d.lesson, label: t('task.muscle', { name: esc(m.la) }), href: `#/ders/${m.id}` },
+    { done: d.lesson2, label: t(b.kind === 'bone' ? 'task.bone' : 'task.joint', { name: esc(b.de) }), href: `#/ders/${b.id}` },
+    { done: d.cards >= s.settings.cardsGoal, label: `${t('task.cards', { n: s.settings.cardsGoal })} <span class="muted">(${d.cards}/${s.settings.cardsGoal})</span>`, href: '#/oturum/vocab' },
+    { done: d.quiz >= s.settings.quizGoal, label: `${t('task.quiz', { n: s.settings.quizGoal })} <span class="muted">(${d.quiz}/${s.settings.quizGoal})</span>`, href: '#/test' },
+    { done: d.open >= 1, label: t('task.open'), href: `#/soru/${nextOpenQuestion().id}` },
   ];
   const doneN = tasks.filter((t) => t.done).length;
   const pct = doneN / tasks.length;
   const C = 2 * Math.PI * 26;
   const streak = store.streak();
-  const dateStr = new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const dateStr = new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
   const standalone = window.navigator.standalone || matchMedia('(display-mode: standalone)').matches;
@@ -240,7 +249,7 @@ function renderToday() {
   const weak = weakTopics(3);
 
   view.innerHTML = `
-    ${isIOS && !standalone ? `<div class="card install small">📲 <b>Uygulama olarak yükle:</b> Safari'de alttaki <b>Paylaş</b> düğmesine dokun → <b>Ana Ekrana Ekle</b>. Böylece tam ekran ve çevrimdışı çalışır.</div>` : ''}
+    ${isIOS && !standalone ? `<div class="card install small">${t('install')}</div>` : ''}
     <div class="card">
       <div class="hero">
         <svg class="ring" viewBox="0 0 64 64">
@@ -250,8 +259,8 @@ function renderToday() {
         </svg>
         <div>
           <div class="muted small">${esc(dateStr)}</div>
-          <h2>${doneN === tasks.length ? 'Bugünkü hedefler tamam! 🎉' : 'Merhaba! Bugünkü planın'}</h2>
-          <div class="streak">${streak > 0 ? `🔥 ${streak} gün seri` : 'Bugün ilk adımı at!'}</div>
+          <h2>${doneN === tasks.length ? t('today.allDone') : t('today.hello')}</h2>
+          <div class="streak">${streak > 0 ? t('today.streak', { n: streak }) : t('today.firstStep')}</div>
         </div>
       </div>
     </div>
@@ -259,8 +268,8 @@ function renderToday() {
     ${examCard()}
 
     ${plan ? `<div class="card">
-      <div class="eyebrow">Bugünkü dersler · KW ${week().kw}</div>
-      ${plan.kurse.length ? plan.kurse.map((k) => `<div class="small">📚 ${esc(k)}</div>`).join('') : '<div class="small muted">Bugün ders yok.</div>'}
+      <div class="eyebrow">${t('today.lessons', { kw: week().kw })}</div>
+      ${plan.kurse.length ? plan.kurse.map((k) => `<div class="small">📚 ${esc(k)}</div>`).join('') : `<div class="small muted">${t('today.noLessons')}</div>`}
       ${plan.note ? `<p class="small muted" style="margin-bottom:0">📝 ${esc(plan.note)}</p>` : ''}
       ${tomorrowLine()}
     </div>` : tomorrowLine() ? `<div class="card small">${tomorrowLine()}</div>` : ''}
@@ -269,63 +278,63 @@ function renderToday() {
       ${tasks.map((t) => `<a class="task" href="${t.href}"><span class="check ${t.done ? 'done' : ''}">${t.done ? '✓' : ''}</span><span class="grow">${t.label}</span><span class="chev">›</span></a>`).join('')}
     </div>
 
-    ${weak.length ? `<div class="section-title">Zayıf konular</div>
+    ${weak.length ? `<div class="section-title">${t('today.weak')}</div>
     <div class="list">
-      ${weak.map((t) => `<a href="${t.topic === 'Knochenpunkte' ? '#/3d?quiz=pelvis' : `#/test?kat=${encodeURIComponent(t.topic)}`}"><span class="grow">${esc(topicLabel(t.topic))}<div class="muted small">%${Math.round(t.acc * 100)} doğru · ${t.total} cevap</div></span><span class="mini">Test et</span></a>`).join('')}
+      ${weak.map((w) => `<a href="${w.topic === 'Knochenpunkte' ? '#/3d?quiz=pelvis' : `#/test?kat=${encodeURIComponent(w.topic)}`}"><span class="grow">${esc(topicLabel(w.topic))}<div class="muted small">${t('today.weakStat', { p: Math.round(w.acc * 100), n: w.total })}</div></span><span class="mini">${t('today.testIt')}</span></a>`).join('')}
     </div>` : ''}
 
-    ${LESSONS.length ? `<a class="card row" href="#/dersler" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">Notion'dan</div><h2>Ders notları</h2><div class="muted small">${LESSONS.length} ders · özet, test, terimler</div></span><span class="chev">›</span></a>` : ''}
+    ${LESSONS.length ? `<a class="card row" href="#/dersler" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">${t('today.fromNotion')}</div><h2>${t('today.lessonNotes')}</h2><div class="muted small">${t('today.lessonNotesSub', { n: LESSONS.length })}</div></span><span class="chev">›</span></a>` : ''}
 
     <div class="card">
-      <div class="eyebrow">Günün kası</div>
+      <div class="eyebrow">${t('today.muscleOfDay')}</div>
       <h2>${esc(m.la)}</h2>
-      <div class="muted">${esc(m.de)} · ${esc(m.tr)}</div>
-      <p class="small">${esc(m.ftr)}</p>
+      <div class="muted">${esc(m.de)} · ${esc(tx(m))}</div>
+      <p class="small">${esc(tx(m, 'ftr'))}</p>
       <div class="grid2">
-        <a class="btn" href="#/ders/${m.id}">Dersi aç</a>
-        <a class="btn ghost" href="#/3d?id=${m.id}">3D'de göster</a>
+        <a class="btn" href="#/ders/${m.id}">${t('btn.openLesson')}</a>
+        <a class="btn ghost" href="#/3d?id=${m.id}">${t('btn.show3d')}</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="eyebrow">Günün ${b.kind === 'bone' ? 'kemiği' : 'eklemi'}</div>
+      <div class="eyebrow">${t(b.kind === 'bone' ? 'today.boneOfDay' : 'today.jointOfDay')}</div>
       <h2>${esc(b.de)}</h2>
-      <div class="muted">${esc(b.la)} · ${esc(b.tr)}</div>
+      <div class="muted">${esc(b.la)} · ${esc(tx(b))}</div>
       <p class="small">${esc(b.typ)}</p>
       <div class="grid2">
-        <a class="btn" href="#/ders/${b.id}">Dersi aç</a>
-        <a class="btn ghost" href="#/3d?id=${b.id}">3D'de göster</a>
+        <a class="btn" href="#/ders/${b.id}">${t('btn.openLesson')}</a>
+        <a class="btn ghost" href="#/3d?id=${b.id}">${t('btn.show3d')}</a>
       </div>
     </div>
 
-    ${[6, 0].includes(new Date().getDay()) ? `<a class="card row" href="#/cumartesi" style="text-decoration:none;color:inherit;border:2px solid var(--accent)"><span class="grow"><div class="eyebrow">📆 Haftalık tekrar</div><h2>Bu haftanın yanlışları + ✗ kartları + kelimeler</h2><div class="muted small">Çoğunlukla açık uçlu sorular</div></span><span class="chev">›</span></a>` : ''}
+    ${[6, 0].includes(new Date().getDay()) ? `<a class="card row" href="#/cumartesi" style="text-decoration:none;color:inherit;border:2px solid var(--accent)"><span class="grow"><div class="eyebrow">${t('today.weekly')}</div><h2>${t('today.weeklyH')}</h2><div class="muted small">${t('today.weeklySub')}</div></span><span class="chev">›</span></a>` : ''}
     ${(() => {
       const now = new Date();
       if ([6, 0].includes(now.getDay())) return '';
       if (now.getHours() * 60 + now.getMinutes() < 14 * 60 + 30) return '';
       const { steps, total } = donusInfo();
       const left = steps.filter((x) => x.state === 'open').length;
-      return `<a class="card row" href="#/donus" style="text-decoration:none;color:inherit;border:2px solid var(--accent)"><span class="grow"><div class="eyebrow">🚆 Dönüş yolu</div><h2>${left ? `${left} adım · ≈ ${total} dk` : 'Bugünün tekrarı tamam ✓'}</h2><div class="muted small">Hatalar → kelimeler → bugünün notları + mini test</div></span><span class="chev">›</span></a>`;
+      return `<a class="card row" href="#/donus" style="text-decoration:none;color:inherit;border:2px solid var(--accent)"><span class="grow"><div class="eyebrow">${t('today.donus')}</div><h2>${left ? t('today.donusLeft', { n: left, min: total }) : t('today.donusDone')}</h2><div class="muted small">${t('today.donusSub')}</div></span><span class="chev">›</span></a>`;
     })()}
 
-    <a class="card row" href="#/rapor" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">Claude ile çalış</div><h2>Durum raporu</h2><div class="muted small">Bugünkü durumunu Claude'a gönderilecek bir mesaja çevir</div></span><span class="chev">›</span></a>
+    <a class="card row" href="#/rapor" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">${t('today.claude')}</div><h2>${t('today.report')}</h2><div class="muted small">${t('today.reportSub')}</div></span><span class="chev">›</span></a>
 
-    <div class="section-title">İstatistik</div>
+    <div class="section-title">${t('today.stats')}</div>
     <div class="grid2">
-      <div class="card" style="margin:0"><div class="muted small">Tekrar bekleyen kart</div><h2>${due}</h2></div>
-      <div class="card" style="margin:0"><div class="muted small">Test başarısı</div><h2>${acc === null ? '–' : acc + '%'}</h2></div>
-      <div class="card" style="margin:0"><div class="muted small">Öğrenilen yapı</div><h2>${Object.keys(s.learned).length}/${ALL_STRUCTURES.length}</h2></div>
-      <div class="card" style="margin:0"><div class="muted small">Öğrenilen kart</div><h2>${Object.values(s.srs).filter((c) => c.int >= 1).length}</h2></div>
+      <div class="card" style="margin:0"><div class="muted small">${t('stat.due')}</div><h2>${due}</h2></div>
+      <div class="card" style="margin:0"><div class="muted small">${t('stat.acc')}</div><h2>${acc === null ? '–' : acc + '%'}</h2></div>
+      <div class="card" style="margin:0"><div class="muted small">${t('stat.learned')}</div><h2>${Object.keys(s.learned).length}/${ALL_STRUCTURES.length}</h2></div>
+      <div class="card" style="margin:0"><div class="muted small">${t('stat.cards')}</div><h2>${Object.values(s.srs).filter((c) => c.int >= 1).length}</h2></div>
     </div>
   `;
 }
 
 // „Yarın: Physiologie + AM“ – Kursnamen ohne Lehrer/Raum
 function tomorrowLine() {
-  const t = tomorrowPlan();
-  if (!t) return '';
-  const names = [...new Set((t.kurse || []).flatMap((k) => k.replace(/\([^)]*\)/g, '').split(/\s*\+\s*/)).map((k) => k.replace(/×\s*\d+|·.*$|,.*$/g, '').trim()).filter(Boolean))];
-  return `<div class="small muted" style="margin-top:6px">⏭️ Yarın: ${names.length ? esc(names.join(' + ')) : 'ders yok'}</div>`;
+  const tp = tomorrowPlan();
+  if (!tp) return '';
+  const names = [...new Set((tp.kurse || []).flatMap((k) => k.replace(/\([^)]*\)/g, '').split(/\s*\+\s*/)).map((k) => k.replace(/×\s*\d+|·.*$|,.*$/g, '').trim()).filter(Boolean))];
+  return `<div class="small muted" style="margin-top:6px">${t('tomorrow', { x: names.length ? esc(names.join(' + ')) : t('tomorrow.none') })}</div>`;
 }
 
 // Morgentest-Fächer: Prüfung bald zuerst, dann die Fächer aus dem Wochenplan (nur Fächer mit Fragen)
@@ -339,18 +348,18 @@ function examCard() {
   const ex = upcoming('Sınav', 30).slice(0, 3);
   const hw = upcoming('Ödev', 7).slice(0, 3);
   if (!ex.length && !hw.length) return '';
-  const when = (e) => (e.days === 0 ? 'bugün!' : e.days === 1 ? 'yarın' : e.days + ' gün');
+  const when = (e) => (e.days === 0 ? t('when.today') : e.days === 1 ? t('when.tomorrow') : t('when.days', { n: e.days }));
   const soon = ex.some((e) => e.days <= 7);
   return `<div class="card exam-card${soon ? ' soon' : ''}">
     ${ex.map((e, k) => `<div class="${k ? 'small' : ''}" style="${k ? 'margin-top:6px' : ''}">
-      ${k ? '' : '<div class="eyebrow">Sınav geri sayımı</div>'}
-      ${k ? `📝 ${esc(e.fach || 'Sınav')}: <b>${when(e)}</b>` : `<h2>📝 ${esc(e.fach || 'Sınav')} ${e.days === 0 ? 'sınavı bugün!' : e.days === 1 ? 'sınavı yarın!' : `sınavına ${e.days} gün`}</h2>`}
+      ${k ? '' : `<div class="eyebrow">${t('exam.countdown')}</div>`}
+      ${k ? `📝 ${esc(e.fach || t('exam.default'))}: <b>${when(e)}</b>` : `<h2>${t(e.days === 0 ? 'exam.h.today' : e.days === 1 ? 'exam.h.tomorrow' : 'exam.h.days', { f: esc(e.fach || t('exam.default')), n: e.days })}</h2>`}
       ${e.topic && !k ? `<div class="muted small" lang="de">${esc(e.topic)} · ${e.date.slice(8, 10)}.${e.date.slice(5, 7)}.</div>` : ''}
     </div>`).join('')}
-    ${hw.map((e) => `<div class="small" style="margin-top:6px">📌 Ödev${e.fach ? ' · ' + esc(e.fach) : ''}${e.topic ? ': ' + esc(e.topic) : ''} – <b>${when(e)}</b></div>`).join('')}
+    ${hw.map((e) => `<div class="small" style="margin-top:6px">${t('hw')}${e.fach ? ' · ' + esc(e.fach) : ''}${e.topic ? ': ' + esc(e.topic) : ''} – <b>${when(e)}</b></div>`).join('')}
     ${ex.length ? `<div class="grid2" style="margin-top:10px">
-      <a class="btn" href="#/deneme">Deneme sınavı</a>
-      ${FAECHER.includes(ex[0].fach) ? `<a class="btn ghost" href="#/test?kat=${encodeURIComponent('Ders: ' + ex[0].fach)}">Hızlı test</a>` : '<a class="btn ghost" href="#/test">Test</a>'}
+      <a class="btn" href="#/deneme">${t('btn.mock')}</a>
+      ${FAECHER.includes(ex[0].fach) ? `<a class="btn ghost" href="#/test?kat=${encodeURIComponent('Ders: ' + ex[0].fach)}">${t('btn.quickTest')}</a>` : `<a class="btn ghost" href="#/test">${t('btn.test')}</a>`}
     </div>` : ''}
   </div>`;
 }
@@ -391,8 +400,8 @@ const BONE_TERMS = {
 
 function renderLesson([id]) {
   const s = findStructure(id);
-  if (!s) { view.innerHTML = '<p class="empty">Bulunamadı.</p>'; return; }
-  $('#title').textContent = KIND_LABEL[s.kind];
+  if (!s) { view.innerHTML = `<p class="empty">${t('notFound')}</p>`; return; }
+  $('#title').textContent = kindLabel(s.kind);
   const learned = store.get().learned[id];
 
   let facts = '';
@@ -403,9 +412,9 @@ function renderLesson([id]) {
         <dt>Ansatz (Insertio)</dt><dd>${esc(s.i)}</dd>
         <dt>Innervation</dt><dd>${esc(s.inn)}</dd>
         <dt>Funktion</dt><dd>${esc(s.f)}</dd>
-        ${UEBUNGEN[s.id] ? `<dt>💪 Übung im Studio</dt><dd>${UEBUNGEN[s.id].map((u) => `<b>${esc(u.n)}</b> – ${esc(u.b)} <span class="muted">(🇹🇷 ${esc(u.tr)})</span>`).join('<br>')}</dd>` : ''}
+        ${UEBUNGEN[s.id] ? `<dt>💪 Übung im Studio</dt><dd>${UEBUNGEN[s.id].map((u) => `<b>${esc(u.n)}</b> – ${esc(u.b)} <span class="muted">(${flag()} ${esc(tx(u))})</span>`).join('<br>')}</dd>` : ''}
       </dl>
-      <div class="tr-box small">🇹🇷 ${esc(s.ftr)}</div>`;
+      <div class="tr-box small">${flag()} ${esc(tx(s, 'ftr'))}</div>`;
   } else if (s.kind === 'bone') {
     facts = `
       <dl class="facts" lang="de">
@@ -420,7 +429,7 @@ function renderLesson([id]) {
         ${s.lehrbuch ? `<dt>Lehrbuch (zum Vergleich)</dt><dd class="muted">${esc(s.lehrbuch)}</dd>` : ''}
         ${s.adl ? `<dt>ADL – ${esc(s.adlQuelle || '')}</dt><dd>${s.adl.map((a) => `${esc(a.akt)}: ${esc(a.w)}`).join('<br>')}</dd>` : ''}
         ${s.muskelGruppen ? `<dt>Muskeln nach Bewegungsrichtung – ${esc(s.gruppenQuelle || '')} (fett = Hauptmuskel)</dt><dd>${Object.entries(s.muskelGruppen).map(([g, m]) => `<b>${esc(g)}:</b> ${[...m.haupt.map((x) => `<b>${esc(x)}</b>`), ...m.weitere.map(esc)].join(', ')}`).join('<br>')}</dd>` : ''}
-        ${s.kapsel ? `<dt>Kapselmuster</dt><dd>${esc(s.kapsel)}${s.kapselNote ? ` <span class="badge warn">${esc(s.kapselNote)}</span>` : ''}</dd>` : ''}
+        ${s.kapsel ? `<dt>Kapselmuster</dt><dd>${esc(s.kapsel)}${s.kapselNote ? ` <span class="badge warn">${esc(tx(s, 'kapselNote'))}</span>` : ''}</dd>` : ''}
         <dt>Bänder & Strukturen</dt><dd>${esc(s.baender)}</dd>
       </dl>`;
   }
@@ -434,17 +443,17 @@ function renderLesson([id]) {
 
   view.innerHTML = `
     <div class="card">
-      <span class="badge ${s.kind}">${KIND_LABEL[s.kind]}</span>
+      <span class="badge ${s.kind}">${kindLabel(s.kind)}</span>
       <h2 style="margin-top:8px">${esc(s.de)} ${say(s.de)}</h2>
       <div class="la">${esc(s.la)} ${say(s.la)}</div>
-      <div class="muted small">🇹🇷 ${esc(s.tr)}</div>
+      <div class="muted small">${flag()} ${esc(tx(s))}</div>
       ${facts}
       ${s.k || s.klinik ? `<div class="klinik small">🩺 <b>Klinik:</b> ${esc(s.k || s.klinik)}</div>` : ''}
-      <a class="btn ghost block" style="margin-top:14px" href="#/3d?id=${s.id}">3D modelde göster</a>
+      <a class="btn ghost block" style="margin-top:14px" href="#/3d?id=${s.id}">${t('btn.show3dModel')}</a>
     </div>
-    ${related.length ? `<div class="section-title">Bu kemiğe bağlanan kaslar</div><div class="list">${related.map((m) => `<a href="#/ders/${m.id}"><span class="grow">${esc(m.la)}<div class="muted small">${esc(m.tr)}</div></span><span class="chev">›</span></a>`).join('')}</div>` : ''}
-    ${mini.length ? `<div class="section-title">Mini test</div><div id="miniQuiz"></div>` : ''}
-    <button class="btn block" id="learnedBtn" style="margin-top:12px">${learned ? 'Tekrar ettim ✓' : 'Öğrendim ✓'}</button>
+    ${related.length ? `<div class="section-title">${t('lesson.related')}</div><div class="list">${related.map((m) => `<a href="#/ders/${m.id}"><span class="grow">${esc(m.la)}<div class="muted small">${esc(tx(m))}</div></span><span class="chev">›</span></a>`).join('')}</div>` : ''}
+    ${mini.length ? `<div class="section-title">${t('lesson.mini')}</div><div id="miniQuiz"></div>` : ''}
+    <button class="btn block" id="learnedBtn" style="margin-top:12px">${learned ? t('lesson.reviewed') : t('lesson.learned')}</button>
   `;
 
   const mq = $('#miniQuiz');
@@ -452,14 +461,14 @@ function renderLesson([id]) {
     mini.forEach((q, qi) => {
       const box = document.createElement('div');
       box.className = 'card';
-      box.innerHTML = `<div class="muted small">Soru ${qi + 1}/${mini.length}</div><div class="question" style="font-size:16px">${esc(q.q)}</div>
+      box.innerHTML = `<div class="muted small">${t('q.n', { i: qi + 1, n: mini.length })}</div><div class="question" style="font-size:16px">${esc(q.q)}</div>
         ${q.opts.map((o, i) => `<button class="opt" data-i="${i}">${esc(o)}</button>`).join('')}<div class="ex"></div>`;
       $$('.opt', box).forEach((btn) => btn.addEventListener('click', () => {
         const i = +btn.dataset.i;
         $$('.opt', box).forEach((b2, j) => { b2.disabled = true; if (j === q.ans) b2.classList.add('correct'); });
         if (i !== q.ans) btn.classList.add('wrong');
         store.recordQuiz(q.id, i === q.ans);
-        $('.ex', box).innerHTML = `<div class="explain">${esc(q.x)}</div>${btn3d(`${q.q} ${q.opts[q.ans]} ${q.x}`, { style: 'margin-top:8px' })}`;
+        $('.ex', box).innerHTML = `<div class="explain">${esc(tx(q, 'x'))}</div>${btn3d(`${q.q} ${q.opts[q.ans]} ${q.x}`, { style: 'margin-top:8px' })}`;
       }));
       mq.appendChild(box);
     });
@@ -470,7 +479,7 @@ function renderLesson([id]) {
     const cardId = { muscle: 'm:', bone: 'b:', joint: 'j:' }[s.kind] + s.id;
     store.markIntroduced(cardId);
     store.save();
-    toast('Kaydedildi – kart destene eklendi ✓');
+    toast(t('lesson.savedToast'));
     setTimeout(() => (location.hash = '#/bugun'), 600);
   });
 }
@@ -487,20 +496,20 @@ function renderLessonList() {
   const byFach = {};
   LESSONS.forEach((l) => (byFach[l.fach] = byFach[l.fach] || []).push(l));
   view.innerHTML = `
-    <p class="muted small" style="padding:0 4px">Notion'daki ders notlarından hazırlandı: kısa özet, test, açık uçlu sorular ve terimler.</p>
+    <p class="muted small" style="padding:0 4px">${t('lessons.intro')}</p>
     ${Object.entries(byFach).map(([fach, ls]) => `
       <div class="section-title" lang="de">${esc(fach)}</div>
       <div class="list">${ls.map((l) => {
         const p = lessonProgress(l);
-        const badge = !p.seen ? '<span class="badge">yeni</span>' : `<span class="badge ${p.right / p.total >= 0.8 ? 'good' : 'warn'}">${p.right}/${p.total}</span>`;
+        const badge = !p.seen ? `<span class="badge">${t('badge.new')}</span>` : `<span class="badge ${p.right / p.total >= 0.8 ? 'good' : 'warn'}">${p.right}/${p.total}</span>`;
         return `<a href="#/not/${encodeURIComponent(l.id)}"><span class="grow small" lang="de">${esc(l.title)}</span>${badge}<span class="chev">›</span></a>`;
-      }).join('')}</div>`).join('') || '<p class="empty">Henüz ders notu yok.</p>'}
+      }).join('')}</div>`).join('') || `<p class="empty">${t('lessons.none')}</p>`}
   `;
 }
 
 function renderLessonNote([id]) {
   const l = LESSONS.find((x) => x.id === id);
-  if (!l) { view.innerHTML = '<p class="empty">Bulunamadı.</p>'; return; }
+  if (!l) { view.innerHTML = `<p class="empty">${t('notFound')}</p>`; return; }
   $('#title').textContent = l.fach;
   const opens = allOpen().filter((q) => q.lesson === l.id);
   view.innerHTML = `
@@ -508,17 +517,17 @@ function renderLessonNote([id]) {
       <div class="eyebrow" lang="de">${esc(l.fach)}</div>
       <h2 lang="de">${esc(l.title)}</h2>
       <div class="grid2" style="margin-top:12px">
-        ${l.mcq.length ? `<a class="btn" href="#/test?kat=${encodeURIComponent('Lektion: ' + l.id)}">Test (${l.mcq.length} soru)</a>` : ''}
-        ${notionLink(l.id) ? `<a class="btn ghost" href="${esc(notionLink(l.id))}" target="_blank" rel="noopener">Notion'da aç</a>` : ''}
+        ${l.mcq.length ? `<a class="btn" href="#/test?kat=${encodeURIComponent('Lektion: ' + l.id)}">${t('note.test', { n: l.mcq.length })}</a>` : ''}
+        ${notionLink(l.id) ? `<a class="btn ghost" href="${esc(notionLink(l.id))}" target="_blank" rel="noopener">${t('note.openNotion')}</a>` : ''}
       </div>
-      ${l.fach === 'PT Befund' ? '<a class="btn ghost block" style="margin-top:10px" href="#/vaka">🩺 Vaka çalışması (Befund-Trainer)</a>' : ''}
+      ${l.fach === 'PT Befund' ? `<a class="btn ghost block" style="margin-top:10px" href="#/vaka">${t('vaka.btn')}</a>` : ''}
     </div>
-    <div class="section-title">Özet (Kernaussagen)</div>
-    <div class="list">${l.kern.map((k) => `<div style="display:block"><div lang="de">${esc(k.de)}</div><div class="muted small">🇹🇷 ${esc(k.tr)}</div></div>`).join('')}</div>
-    ${opens.length ? `<div class="section-title">Açık uçlu sorular</div><div class="list">${opens.map((q) => `<a href="#/soru/${encodeURIComponent(q.id)}"><span class="grow small" lang="de">${esc(q.q)}</span><span class="chev">›</span></a>`).join('')}</div>` : ''}
-    <div class="section-title">Terimler</div>
-    <div class="list">${l.vocab.map((v) => `<div><span class="grow"><b lang="de">${esc(v.de)}</b><div class="small">${esc(v.tr)}</div></span>${say(v.de)}</div>`).join('')}</div>
-    <a class="btn ghost block" href="#/oturum/${encodeURIComponent('ders:' + l.fach)}">Terimleri kartlarla çalış</a>
+    <div class="section-title">${t('note.summary')}</div>
+    <div class="list">${l.kern.map((k) => `<div style="display:block"><div lang="de">${esc(k.de)}</div><div class="muted small">${flag()} ${esc(tx(k))}</div></div>`).join('')}</div>
+    ${opens.length ? `<div class="section-title">${t('note.open')}</div><div class="list">${opens.map((q) => `<a href="#/soru/${encodeURIComponent(q.id)}"><span class="grow small" lang="de">${esc(q.q)}</span><span class="chev">›</span></a>`).join('')}</div>` : ''}
+    <div class="section-title">${t('note.terms')}</div>
+    <div class="list">${l.vocab.map((v) => `<div><span class="grow"><b lang="de">${esc(v.de)}</b><div class="small">${esc(vocabTr(v))}</div></span>${say(v.de)}</div>`).join('')}</div>
+    <a class="btn ghost block" href="#/oturum/${encodeURIComponent('ders:' + l.fach)}">${t('note.studyTerms')}</a>
   `;
 }
 
@@ -529,24 +538,24 @@ function renderWordSession([pass = 'sabah']) {
   if (!wordSess || wordSess.pass !== pass || wordSess.date !== store.today()) {
     wordSess = { pass, date: store.today(), i: 0, res: [], answered: false };
   }
-  $('#title').textContent = pass === 'donus' ? 'Dönüş Kelimeleri' : pass === 'hafta' ? 'Haftanın Kelimeleri' : 'Sabah Kelimeleri';
+  $('#title').textContent = t(pass === 'donus' ? 'words.donusTitle' : pass === 'hafta' ? 'words.weekTitle' : 'words.morningTitle');
   const words = pass === 'hafta' ? weekWords() : todaysWords();
-  if (!words.length) { view.innerHTML = '<p class="empty">Bu hafta henüz kelime çalışılmadı.</p><a class="btn block" href="#/bugun">Bugün</a>'; return; }
+  if (!words.length) { view.innerHTML = `<p class="empty">${t('words.noneWeek')}</p><a class="btn block" href="#/bugun">${t('route.bugun')}</a>`; return; }
   if (wordSess.i >= words.length) return renderWordEnd(words);
   const w = words[wordSess.i];
   const q = (wordSess.q && wordSess.q.id === w.id) ? wordSess.q.q : questionFor(w, pass);
   wordSess.q = { id: w.id, q };
   view.innerHTML = `
-    <div class="row"><span class="badge">${esc(w.cat.replace('GW · ', ''))}</span><span class="badge">${TYPE_LABEL[q.type]}</span><span class="spacer"></span><span class="muted small">${wordSess.i + 1} / ${words.length}</span></div>
+    <div class="row"><span class="badge">${esc(w.cat.replace('GW · ', ''))}</span><span class="badge">${typeLabel(q.type)}</span><span class="spacer"></span><span class="muted small">${wordSess.i + 1} / ${words.length}</span></div>
     <div class="progress"><div style="width:${(wordSess.i / words.length) * 100}%"></div></div>
     <p class="muted small" style="margin:4px 0">${esc(q.prompt)}</p>
     <div class="card" style="text-align:center"><div class="big-word" lang="de">${escGap(q.big)}</div>${q.sub ? `<div class="muted small" style="margin-top:6px">${esc(q.sub)}</div>` : ''}</div>
     ${q.typed
-      ? `<input type="text" id="wInput" placeholder="ör. die Schwellung" autocomplete="off" autocapitalize="off" spellcheck="false" lang="de">
-         <button class="btn block" id="wCheck" style="margin-top:8px">Kontrol et</button>`
+      ? `<input type="text" id="wInput" placeholder="${t('words.placeholder')}" autocomplete="off" autocapitalize="off" spellcheck="false" lang="de">
+         <button class="btn block" id="wCheck" style="margin-top:8px">${t('check')}</button>`
       : q.opts.map((o, n) => `<button class="opt" data-n="${n}" lang="de">${esc(o)}</button>`).join('')}
     <div id="wAfter"></div>
-    ${pass === 'hafta' ? '' : '<button class="btn plain block" id="wKnown" style="margin-top:14px">Biliyorum ✓ <span class="muted small">(seyrek tekrar, yerine yeni kelime)</span></button>'}`;
+    ${pass === 'hafta' ? '' : `<button class="btn plain block" id="wKnown" style="margin-top:14px">${t('words.known')}</button>`}`;
   // ok: true/false; near: fast richtig (Artikel falsch/fehlt) = halber Punkt; note darf HTML enthalten
   const finish = (ok, note = '', near = false) => {
     if (wordSess.answered) return;
@@ -559,8 +568,8 @@ function renderWordSession([pass = 'sabah']) {
     store.save();
     wordSess.res.push({ id: w.id, ok, near });
     if ($('#wKnown')) $('#wKnown').hidden = true;
-    $('#wAfter').innerHTML = `<div class="explain">${ok ? '✅ Doğru' : near ? '⚠️ Neredeyse' : '❌ Yanlış'}${note ? ' · ' + note : ''}<br><b lang="de">${esc(w.de)}</b> = ${esc(w.tr)}${w.ex ? `<br><span class="muted" lang="de">„${esc(w.ex)}“</span>` : ''}${q.type === 'partizip' ? `<br>Partizip II: <b lang="de">${esc(q.answer)}</b>` : ''}</div>${btn3d(w.de, { style: 'margin:0 0 10px' })}
-      <button class="btn block" id="wNext">${wordSess.i + 1 < words.length ? 'Sonraki kelime' : 'Bitir'}</button>`;
+    $('#wAfter').innerHTML = `<div class="explain">${t(ok ? 'res.right' : near ? 'res.near' : 'res.wrong')}${note ? ' · ' + note : ''}<br><b lang="de">${esc(w.de)}</b> = ${esc(vocabTr(w))}${w.ex ? `<br><span class="muted" lang="de">„${esc(w.ex)}“</span>` : ''}${q.type === 'partizip' ? `<br>Partizip II: <b lang="de">${esc(q.answer)}</b>` : ''}</div>${btn3d(w.de, { style: 'margin:0 0 10px' })}
+      <button class="btn block" id="wNext">${wordSess.i + 1 < words.length ? t('words.next') : t('finish')}</button>`;
     $('#wNext').addEventListener('click', () => { wordSess.i++; wordSess.answered = false; wordSess.q = null; renderWordSession([pass]); });
   };
   if (q.typed) {
@@ -568,10 +577,11 @@ function renderWordSession([pass = 'sabah']) {
     const check = () => {
       const r = checkTyped(w, input.value);
       input.disabled = true; $('#wCheck').hidden = true;
-      const note = r.ok && r.abbr ? `kısaltma kabul edildi – tam yazılışı: <b lang="de">${esc(r.target)}</b>`
-        : r.ok && !r.exact ? `küçük yazım farkı – doğru yazılışı: <b lang="de">${esc(r.target)}</b>`
-        : r.hint === 'Artikel falsch' ? `Artikel yanlış: <b lang="de">${esc(r.art)}</b>`
-        : r.hint === 'Artikel fehlt' ? `Artikel eksik: <b lang="de">${esc(r.art)}</b>` : '';
+      const b = (x) => `<b lang="de">${esc(x)}</b>`;
+      const note = r.ok && r.abbr ? t('words.abbr', { x: b(r.target) })
+        : r.ok && !r.exact ? t('words.typo', { x: b(r.target) })
+        : r.hint === 'Artikel falsch' ? t('words.artWrong', { x: b(r.art) })
+        : r.hint === 'Artikel fehlt' ? t('words.artMissing', { x: b(r.art) }) : '';
       finish(r.ok, note, !!r.close);
     };
     $('#wCheck').addEventListener('click', check);
@@ -586,7 +596,7 @@ function renderWordSession([pass = 'sabah']) {
   }
   if ($('#wKnown')) $('#wKnown').addEventListener('click', () => {
     const next = markKnown(w.id);
-    toast(next ? `Tamam – yerine: ${next.de}` : 'Tamam – başka yeni kelime yok');
+    toast(next ? t('words.knownToast', { w: next.de }) : t('words.knownNone'));
     wordSess.q = null;
     renderWordSession([pass]);
   });
@@ -599,9 +609,9 @@ function renderWordEnd(words) {
   d[pass === 'donus' ? 'wordsReturn' : pass === 'hafta' ? 'wordsWeek' : 'wordsMorning'] = { r, n: words.length };
   store.save();
   view.innerHTML = `
-    <div class="card" style="text-align:center"><div class="score">${r}/${words.length}</div><div class="muted">${pass === 'donus' ? 'Dönüş tekrarı tamam 🎉' : pass === 'hafta' ? 'Haftanın kelimeleri tamam 🎉' : 'Sabah kelimeleri tamam – dönüşte aynı kelimeler başka soru tipiyle gelecek'}</div></div>
-    <div class="list">${words.map((w) => { const ok = (d.wordRes || {})[w.id]; return `<div><span class="grow"><b lang="de">${esc(w.de)}</b><div class="small">${esc(w.tr)}</div></span><span class="badge ${ok === 'close' ? 'warn' : ok ? 'good' : ok === false ? 'bad' : ''}">${ok === 'close' ? '½' : ok ? '✓' : ok === false ? '✗' : '–'}</span></div>`; }).join('')}</div>
-    <a class="btn block" href="#/bugun">Bugün'e dön</a>`;
+    <div class="card" style="text-align:center"><div class="score">${r}/${words.length}</div><div class="muted">${t(pass === 'donus' ? 'words.endDonus' : pass === 'hafta' ? 'words.endWeek' : 'words.endMorning')}</div></div>
+    <div class="list">${words.map((w) => { const ok = (d.wordRes || {})[w.id]; return `<div><span class="grow"><b lang="de">${esc(w.de)}</b><div class="small">${esc(vocabTr(w))}</div></span><span class="badge ${ok === 'close' ? 'warn' : ok ? 'good' : ok === false ? 'bad' : ''}">${ok === 'close' ? '½' : ok ? '✓' : ok === false ? '✗' : '–'}</span></div>`; }).join('')}</div>
+    <a class="btn block" href="#/bugun">${t('backToday')}</a>`;
   wordSess = null;
 }
 
@@ -666,7 +676,7 @@ function structuresInText(text, max = 8) {
 function btn3d(text, { style = 'margin-top:10px', stop = false, block = true } = {}) {
   const ss = structuresInText(text);
   if (!ss.length) return '';
-  const label = ss.length > 1 ? `🦴 3D'de göster (${ss.length} yapı)` : `🦴 3D'de göster: ${esc(shortName(ss[0]))}`;
+  const label = ss.length > 1 ? t('btn3d.many', { n: ss.length }) : t('btn3d.one', { x: esc(shortName(ss[0])) });
   return `<a class="btn ghost${block ? ' block' : ''}" style="${style}" href="#/3d?ids=${ss.map((x) => x.id).join(',')}"${stop ? ' onclick="event.stopPropagation()"' : ''}>${label}</a>`;
 }
 
@@ -680,15 +690,15 @@ function renderSaturday() {
   const opens = allOpen().filter((q) => weekFaecher.includes(q.cat)).slice(0, 8);
   const d = store.day();
   view.innerHTML = `
-    <div class="card"><div class="eyebrow">📆 Haftalık tekrar</div><h2>Bu hafta: yanlışlar, ✗ kartlar, kelimeler, açık uçlu sorular</h2>
-      <div class="muted small">Çoğunlukla açık uçlu – sınav pratiği. ${weekFaecher.length ? 'Bu haftanın dersleri: ' + esc(weekFaecher.join(', ')) : ''}</div></div>
+    <div class="card"><div class="eyebrow">${t('today.weekly')}</div><h2>${t('sat.h')}</h2>
+      <div class="muted small">${t('sat.sub')} ${weekFaecher.length ? t('sat.subjects', { x: esc(weekFaecher.join(', ')) }) : ''}</div></div>
     <div class="list">
-      <a href="#/test?kat=${encodeURIComponent('Hatalar: hafta')}"><span class="grow"><b>❌ Bu hafta yanlış yaptıkların</b><div class="muted small">${wrong} soru</div></span><span class="chev">›</span></a>
-      <a href="#/oturum/fehler"><span class="grow"><b>✗ Tüm ✗ kartları</b><div class="muted small">${fehler} kart (Notion)</div></span><span class="chev">›</span></a>
-      <a href="#/sozlu"><span class="grow"><b>🎤 Sözlü sınav provası</b><div class="muted small">5 soru · Prüfer Almanca sorar, sen sesli cevaplarsın</div></span><span class="chev">›</span></a>
-      <a href="#/kelime/hafta"><span class="grow"><b>🔤 Haftanın kelimeleri</b><div class="muted small">${words.length} kelime · çoğunlukla yazarak${d.wordsWeek ? ` · bugün ${d.wordsWeek.r}/${d.wordsWeek.n}` : ''}</div></span><span class="chev">›</span></a>
+      <a href="#/test?kat=${encodeURIComponent('Hatalar: hafta')}"><span class="grow"><b>${t('sat.wrong')}</b><div class="muted small">${t('n.questions', { n: wrong })}</div></span><span class="chev">›</span></a>
+      <a href="#/oturum/fehler"><span class="grow"><b>${t('sat.fehler')}</b><div class="muted small">${t('sat.fehlerSub', { n: fehler })}</div></span><span class="chev">›</span></a>
+      <a href="#/sozlu"><span class="grow"><b>${t('sat.oral')}</b><div class="muted small">${t('sat.oralSub')}</div></span><span class="chev">›</span></a>
+      <a href="#/kelime/hafta"><span class="grow"><b>${t('sat.words')}</b><div class="muted small">${t('sat.wordsSub', { n: words.length })}${d.wordsWeek ? t('sat.today', { r: d.wordsWeek.r, n: d.wordsWeek.n }) : ''}</div></span><span class="chev">›</span></a>
     </div>
-    ${opens.length ? `<div class="section-title">Açık uçlu sorular (bu haftanın dersleri)</div><div class="list">${opens.map((q) => `<a href="#/soru/${encodeURIComponent(q.id)}"><span class="grow small" lang="de">${esc(q.q)}</span><span class="badge">${esc(q.cat)}</span></a>`).join('')}</div>` : ''}`;
+    ${opens.length ? `<div class="section-title">${t('sat.open')}</div><div class="list">${opens.map((q) => `<a href="#/soru/${encodeURIComponent(q.id)}"><span class="grow small" lang="de">${esc(q.q)}</span><span class="badge">${esc(q.cat)}</span></a>`).join('')}</div>` : ''}`;
 }
 
 // ───────────────────────── Dönüş yolu (Rückweg) ─────────────────────────
@@ -725,11 +735,11 @@ function donusInfo() {
   const kern = lessons.reduce((n, l) => n + l.kern.length, 0);
   const steps = [
     // Test „Hatalar: bugün“ fragt höchstens 30 Fragen
-    { key: 'hatalar', icon: '❌', title: 'Bugünün hataları', sub: wrong ? `Bugün yanlış yaptığın ${wrong} soru${wrong > 30 ? ' · en fazla 30 tanesi sorulur' : ''}` : 'Bugün yanlış soru yok', min: Math.ceil(Math.min(wrong, 30) * 1.5), href: '#/test?kat=' + encodeURIComponent('Hatalar: bugün'), empty: !wrong },
-    { key: 'fehler', icon: '✗', title: 'Notion ✗ kartları', sub: fs.length ? `${fehlerCards} kart · ${fs.join(' + ')}` : 'Bugün ders yok', min: fehlerCards, href: '#/oturum/' + encodeURIComponent('fehler:' + fs.join(',')), empty: !fehlerCards },
-    ...(odevOpen ? [{ key: 'odev', icon: '📌', title: 'Ödev kartları', sub: `${odevOpen} kart · ${[...new Set(odevList().map((f) => f.odev))].join(', ')}`, min: Math.ceil(Math.min(odevOpen, 20) * 0.75), href: '#/oturum/odev' }] : []),
-    { key: 'kelime', icon: '🔤', title: 'Dönüş kelimeleri', sub: `${WORDS_PER_DAY} kelime, başka soru tipiyle`, min: 8, href: '#/kelime/donus', done: !!d.wordsReturn },
-    { key: 'notlar', icon: '📖', title: 'Bugünün ders notları', sub: lessons.length ? `${lessons.length} ders · ${kern} cümle + 5 soruluk mini test` : 'Bugünün dersi için not yok', min: lessons.length ? Math.ceil(kern * 0.75) + 6 : 0, href: '#/oku', empty: !lessons.length },
+    { key: 'hatalar', icon: '❌', title: t('don.hatalar'), sub: wrong ? `${t('don.hatalarSub', { n: wrong })}${wrong > 30 ? t('don.max30') : ''}` : t('don.noWrong'), min: Math.ceil(Math.min(wrong, 30) * 1.5), href: '#/test?kat=' + encodeURIComponent('Hatalar: bugün'), empty: !wrong },
+    { key: 'fehler', icon: '✗', title: t('don.fehler'), sub: fs.length ? `${t('n.cards', { n: fehlerCards })} · ${fs.join(' + ')}` : t('don.noClass'), min: fehlerCards, href: '#/oturum/' + encodeURIComponent('fehler:' + fs.join(',')), empty: !fehlerCards },
+    ...(odevOpen ? [{ key: 'odev', icon: '📌', title: t('don.odev'), sub: `${t('n.cards', { n: odevOpen })} · ${[...new Set(odevList().map((f) => f.odev))].join(', ')}`, min: Math.ceil(Math.min(odevOpen, 20) * 0.75), href: '#/oturum/odev' }] : []),
+    { key: 'kelime', icon: '🔤', title: t('don.words'), sub: t('don.wordsSub', { n: WORDS_PER_DAY }), min: 8, href: '#/kelime/donus', done: !!d.wordsReturn },
+    { key: 'notlar', icon: '📖', title: t('don.notes'), sub: lessons.length ? t('don.notesSub', { n: lessons.length, k: kern }) : t('don.noNotes'), min: lessons.length ? Math.ceil(kern * 0.75) + 6 : 0, href: '#/oku', empty: !lessons.length },
   ];
   for (const s of steps) s.state = s.done ? 'done' : st[s.key] || (s.empty ? 'empty' : 'open');
   return { steps, total: steps.filter((s) => s.state === 'open').reduce((n, s) => n + s.min, 0), fs };
@@ -745,18 +755,18 @@ function renderDonus() {
   const { steps, total, fs } = donusInfo();
   view.innerHTML = `
     <div class="card">
-      <div class="eyebrow">🚆 Dönüş yolu</div>
-      <h2>Bugünün tekrarı · ≈ ${total} dk</h2>
-      <div class="muted small">${fs.length ? 'Bugünkü dersler: ' + esc(fs.join(' + ')) : 'Bugün için program yok'} · her adım tek dokunuşla atlanabilir</div>
+      <div class="eyebrow">${t('today.donus')}</div>
+      <h2>${t('don.h', { min: total })}</h2>
+      <div class="muted small">${fs.length ? t('don.subjects', { x: esc(fs.join(' + ')) }) : t('don.noPlan')} · ${t('don.skipHint')}</div>
     </div>
     <div class="list">
       ${steps.map((s, n) => `<div style="display:block">
         <div class="row"><span class="check ${s.state === 'done' || s.state === 'skip' ? 'done' : ''}">${s.state === 'done' ? '✓' : s.state === 'skip' ? '–' : n + 1}</span>
-          <span class="grow"><b>${s.icon} ${esc(s.title)}</b><div class="muted small">${esc(s.sub)}${s.min && s.state === 'open' ? ` · ≈ ${s.min} dk` : ''}</div></span></div>
-        ${s.state === 'open' ? `<div class="grid2" style="margin-top:8px"><a class="btn" href="${s.href}">Başla</a><button class="btn plain" data-skip="${s.key}">Atla</button></div>` : ''}
+          <span class="grow"><b>${s.icon} ${esc(s.title)}</b><div class="muted small">${esc(s.sub)}${s.min && s.state === 'open' ? ` · ${t('min', { n: s.min })}` : ''}</div></span></div>
+        ${s.state === 'open' ? `<div class="grid2" style="margin-top:8px"><a class="btn" href="${s.href}">${t('don.start')}</a><button class="btn plain" data-skip="${s.key}">${t('don.skip')}</button></div>` : ''}
       </div>`).join('')}
     </div>
-    <a class="btn ghost block" href="#/rapor">Durum raporunu Claude'a gönder</a>`;
+    <a class="btn ghost block" href="#/rapor">${t('don.report')}</a>`;
   $$('[data-skip]').forEach((b) => b.addEventListener('click', () => { markDonus(b.dataset.skip, 'skip'); renderDonus(); }));
 }
 
@@ -764,14 +774,14 @@ function renderDonus() {
 function renderReading() {
   const fs = todayFaecher();
   const lessons = readingLessons(fs);
-  if (!lessons.length) { view.innerHTML = '<p class="empty">Bugünün dersleri için not yok.</p><a class="btn block" href="#/donus">Geri</a>'; return; }
+  if (!lessons.length) { view.innerHTML = `<p class="empty">${t('read.none')}</p><a class="btn block" href="#/donus">${t('backPlain')}</a>`; return; }
   view.innerHTML = `
-    <p class="muted small" style="padding:0 4px">Kaydırarak oku · Almanca cümle, altında Türkçesi</p>
+    <p class="muted small" style="padding:0 4px">${t('read.intro')}</p>
     ${lessons.map((l) => `
       <div class="section-title" lang="de">${esc(l.fach)} · ${esc(l.title)}</div>
-      ${l.kern.map((k) => `<div class="card read-card"><div lang="de">${esc(k.de)}</div><div class="muted">🇹🇷 ${esc(k.tr)}</div>${btn3d(k.de, { style: 'margin-top:10px', block: false })}</div>`).join('')}`).join('')}
-    <button class="btn block" id="readDone" style="margin-top:12px">Okudum ✓ → Mini test (5 soru)</button>
-    <button class="btn plain block" id="readSkip" style="margin-top:8px">Testi atla</button>`;
+      ${l.kern.map((k) => `<div class="card read-card"><div lang="de">${esc(k.de)}</div><div class="muted">${flag()} ${esc(tx(k))}</div>${btn3d(k.de, { style: 'margin-top:10px', block: false })}</div>`).join('')}`).join('')}
+    <button class="btn block" id="readDone" style="margin-top:12px">${t('read.done')}</button>
+    <button class="btn plain block" id="readSkip" style="margin-top:8px">${t('read.skip')}</button>`;
   const markRead = () => { lessons.forEach((l) => { store.get().learned['les:' + l.id] = store.today(); }); markDonus('notlar'); };
   $('#readDone').addEventListener('click', () => { markRead(); location.hash = '#/test?kat=' + encodeURIComponent('Lektion: ' + lessons.map((l) => l.id).join(',')) + '&donus=1'; });
   $('#readSkip').addEventListener('click', () => { markRead(); location.hash = '#/donus'; });
@@ -780,7 +790,9 @@ function renderReading() {
 // ───────────────────────── Quiz ─────────────────────────
 let quiz = null;
 
-const topicLabel = (t) => (t.startsWith('Ders: ') ? t.slice(6) + ' (ders)' : t === 'Gemischt' ? 'Karışık' : t === 'Knochenpunkte' ? 'Kemik noktaları (Knochenpunkte)' : t);
+const topicLabel = (c) => (c.startsWith('Ders: ') ? t('topic.ders', { f: c.slice(6) }) : c === 'Knochenpunkte' ? t('topic.lm') : catLabel(c));
+// Beschriftung einer Test-Kategorie (die Kategorie selbst bleibt der interne Schlüssel)
+const catLabel = (c) => (c === 'Gemischt' ? t('cat.mixed') : c === 'Hatalar: bugün' ? t('cat.wrongToday') : c === 'Hatalar: hafta' ? t('cat.wrongWeek') : c);
 let quizCat = 'Gemischt';
 
 function renderQuizStart(_, params = new URLSearchParams()) {
@@ -792,22 +804,22 @@ function renderQuizStart(_, params = new URLSearchParams()) {
     const donus = params.get('donus') === '1' || kat.startsWith('Dönüş: ');
     const n = donus ? 5 : kat.startsWith('Hatalar: ') ? 30 : store.get().settings.quizGoal;
     quiz = { qs: buildQuiz(kat, n, store.get().customVocab), i: 0, right: 0, wrong: [], finished: false, cat: kat, donus };
-    if (!quiz.qs.length) { quiz = null; toast('Bu kategori için soru yok'); } else return renderQuizQuestion();
+    if (!quiz.qs.length) { quiz = null; toast(t('quiz.none')); } else return renderQuizQuestion();
   }
   if (quiz && !quiz.finished) return renderQuizQuestion();
   const stats = store.get().quiz;
   const weak = Object.entries(stats).filter(([, v]) => v.w > v.r).length;
   view.innerHTML = `
     <div class="card">
-      <h2>Kategori seç</h2>
+      <h2>${t('quiz.choose')}</h2>
       <div class="chips" style="margin-top:10px">
-        ${[...quizCategories(), ...(quizCategories().includes(quizCat) ? [] : [quizCat])].map((c) => `<button class="chip ${c === quizCat ? 'on' : ''}" data-cat="${esc(c)}">${c === 'Gemischt' ? 'Karışık' : esc(c)}</button>`).join('')}
+        ${[...quizCategories(), ...(quizCategories().includes(quizCat) ? [] : [quizCat])].map((c) => `<button class="chip ${c === quizCat ? 'on' : ''}" data-cat="${esc(c)}">${esc(catLabel(c))}</button>`).join('')}
       </div>
-      <button class="btn block" id="startQuiz" style="margin-top:16px">${store.get().settings.quizGoal} soruluk testi başlat</button>
+      <button class="btn block" id="startQuiz" style="margin-top:16px">${t('quiz.start', { n: store.get().settings.quizGoal })}</button>
     </div>
-    <a class="card row" href="#/deneme" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">📝 Deneme sınavı</div><h2>Sınav provası</h2><div class="muted small">15 test + 3 açık uçlu · 30 dk · sonuç sonunda</div></span><span class="chev">›</span></a>
-    <a class="card row" href="#/vaka" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">🩺 Vaka çalışması</div><h2>Befund-Trainer</h2><div class="muted small">Hasta vakası · muayene seç · Befundbogen · tedavi planı</div></span><span class="chev">›</span></a>
-    <p class="muted small" style="padding:0 4px">Sorular Almanca, açıklamalar Türkçe. Kas/kemik/eklem soruları anatomi verilerinden her seferinde yeniden üretilir; yanlış yaptıkların ve uzun süredir görmediklerin daha sık gelir. Kas seviyesi: <b>${muscleLevel()}/3</b>${romUnlocked() ? ' · ROM soruları açık' : ''}.${weak ? ` Şu ana kadar <b>${weak}</b> soruda daha çok hata yaptın.` : ''}</p>
+    <a class="card row" href="#/deneme" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">${t('quiz.mockEyebrow')}</div><h2>${t('quiz.mockH')}</h2><div class="muted small">${t('quiz.mockSub')}</div></span><span class="chev">›</span></a>
+    <a class="card row" href="#/vaka" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">${t('vaka.eyebrow')}</div><h2>Befund-Trainer</h2><div class="muted small">${t('vaka.sub')}</div></span><span class="chev">›</span></a>
+    <p class="muted small" style="padding:0 4px">${t('quiz.info', { lvl: muscleLevel() })}${romUnlocked() ? t('quiz.romOpen') : ''}.${weak ? t('quiz.weakInfo', { n: weak }) : ''}</p>
   `;
   $$('[data-cat]').forEach((b) => b.addEventListener('click', () => { quizCat = b.dataset.cat; renderQuizStart(); }));
   $('#startQuiz').addEventListener('click', () => {
@@ -826,7 +838,7 @@ function renderQuizQuestion() {
     <div class="question">${escGap(q.q)}</div>
     ${q.opts.map((o, i) => `<button class="opt" data-i="${i}">${esc(o)}</button>`).join('')}
     <div id="after"></div>
-    <button class="btn plain block" id="quitQuiz" style="margin-top:20px">Testi bitir</button>
+    <button class="btn plain block" id="quitQuiz" style="margin-top:20px">${t('quiz.quit')}</button>
   `;
   $$('.opt').forEach((btn) => btn.addEventListener('click', () => {
     const i = +btn.dataset.i;
@@ -835,7 +847,7 @@ function renderQuizQuestion() {
     if (!ok) { btn.classList.add('wrong'); quiz.wrong.push(q); } else quiz.right++;
     if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(ok ? 15 : [30, 40, 30]);
     store.recordQuiz(q.id, ok);
-    $('#after').innerHTML = `<div class="explain">${ok ? '✅ Doğru! ' : '❌ Yanlış. '}${esc(q.x)}</div>${btn3d(`${q.q} ${q.opts[q.ans]} ${q.x}`, { style: 'margin:0 0 10px' })}<button class="btn block" id="next">${quiz.i + 1 < quiz.qs.length ? 'Sonraki soru' : 'Sonucu gör'}</button>`;
+    $('#after').innerHTML = `<div class="explain">${ok ? t('quiz.right') : t('quiz.wrong')}${esc(tx(q, 'x'))}</div>${btn3d(`${q.q} ${q.opts[q.ans]} ${q.x}`, { style: 'margin:0 0 10px' })}<button class="btn block" id="next">${quiz.i + 1 < quiz.qs.length ? t('quiz.next') : t('quiz.result')}</button>`;
     $('#next').addEventListener('click', () => { quiz.i++; renderQuizQuestion(); });
     $('#next').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }));
@@ -858,13 +870,13 @@ function renderQuizEnd() {
   view.innerHTML = `
     <div class="card" style="text-align:center">
       <div class="score">${quiz.right}/${n}</div>
-      <div class="muted">${pct >= 80 ? 'Harika! 💪' : pct >= 50 ? 'İyi gidiyor, devam!' : 'Tekrar zamanı – yanlışlara bak 👇'}</div>
+      <div class="muted">${t(pct >= 80 ? 'quiz.great' : pct >= 50 ? 'quiz.good' : 'quiz.review')}</div>
     </div>
-    ${quiz.wrong.length ? `<div class="section-title">Yanlışların</div>${quiz.wrong.map((q) => `<div class="card small"><b>${esc(q.q)}</b><div class="explain">✔︎ ${esc(q.opts[q.ans])}<br><span class="muted">${esc(q.x)}</span></div>${btn3d(`${q.q} ${q.opts[q.ans]} ${q.x}`, { style: 'margin-top:8px' })}</div>`).join('')}` : ''}
-    ${upgrade.map(({ l, q }) => `<a class="card row" href="#/soru/${encodeURIComponent(q.id)}" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">⬆️ Seviye atla</div><b lang="de">${esc(l.title)}</b><div class="muted small">Bu dersin soruları 2× üst üste doğru → şimdi açık uçlu soru</div></span><span class="chev">›</span></a>`).join('')}
+    ${quiz.wrong.length ? `<div class="section-title">${t('yourWrong')}</div>${quiz.wrong.map((q) => `<div class="card small"><b>${esc(q.q)}</b><div class="explain">✔︎ ${esc(q.opts[q.ans])}<br><span class="muted">${esc(tx(q, 'x'))}</span></div>${btn3d(`${q.q} ${q.opts[q.ans]} ${q.x}`, { style: 'margin-top:8px' })}</div>`).join('')}` : ''}
+    ${upgrade.map(({ l, q }) => `<a class="card row" href="#/soru/${encodeURIComponent(q.id)}" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">${t('quiz.levelUp')}</div><b lang="de">${esc(l.title)}</b><div class="muted small">${t('quiz.levelUpSub')}</div></span><span class="chev">›</span></a>`).join('')}
     <div class="grid2">
-      ${quiz.wrong.length ? '<button class="btn ghost" id="retryWrong">Yanlışları tekrarla</button>' : ''}
-      <button class="btn" id="again">Yeni test</button>
+      ${quiz.wrong.length ? `<button class="btn ghost" id="retryWrong">${t('retryWrong')}</button>` : ''}
+      <button class="btn" id="again">${t('quiz.again')}</button>
     </div>
   `;
   $('#again').addEventListener('click', () => { quiz = null; renderQuizStart(); });
@@ -883,14 +895,14 @@ function renderOpenList() {
   const all = allOpen();
   const cats = [...new Set(all.map((q) => q.cat))];
   view.innerHTML = `
-    <a class="card row" href="#/sozlu" style="text-decoration:none;color:inherit;border:2px solid var(--accent)"><span class="grow"><div class="eyebrow">🎤 Sözlü sınav provası</div><h2>Prüfer sorar, sen Almanca konuşursun</h2><div class="muted small">Anatomie 30 dk · Physiologie 15 dk · Krankheitslehre 30 dk</div></span><span class="chev">›</span></a>
-    <p class="muted small" style="padding:0 4px">Cevabını Almanca yaz (sınav pratiği!). Uygulama anahtar kavramları kontrol eder, sonra örnek cevabı gösterir ve kendini değerlendirirsin.</p>
+    <a class="card row" href="#/sozlu" style="text-decoration:none;color:inherit;border:2px solid var(--accent)"><span class="grow"><div class="eyebrow">${t('sat.oral')}</div><h2>${t('oral.cardH')}</h2><div class="muted small">${t('oral.cardSub')}</div></span><span class="chev">›</span></a>
+    <p class="muted small" style="padding:0 4px">${t('open.intro')}</p>
     ${cats.map((c) => `
       <div class="section-title" lang="de">${esc(c)}</div>
       <div class="list">
         ${all.filter((q) => q.cat === c).map((q) => {
           const r = st[q.id];
-          const badge = !r ? '<span class="badge">yeni</span>' : r.score >= 0.75 ? '<span class="badge good">iyi</span>' : r.score >= 0.4 ? '<span class="badge warn">kısmen</span>' : '<span class="badge bad">tekrar</span>';
+          const badge = !r ? `<span class="badge">${t('badge.new')}</span>` : r.score >= 0.75 ? `<span class="badge good">${t('badge.good')}</span>` : r.score >= 0.4 ? `<span class="badge warn">${t('badge.partial')}</span>` : `<span class="badge bad">${t('badge.again')}</span>`;
           return `<a href="#/soru/${q.id}"><span class="grow small">${esc(q.q)}</span>${badge}</a>`;
         }).join('')}
       </div>`).join('')}
@@ -904,8 +916,8 @@ function renderOpenQuestion([id]) {
     <div class="card">
       <span class="badge">${esc(q.cat)}</span>
       <div class="question" style="margin-top:8px" lang="de">${esc(q.q)} ${say(q.q)}</div>
-      <textarea id="answer" placeholder="Cevabını buraya yaz (Almanca)…">${esc(drafts[q.id] || '')}</textarea>
-      <button class="btn block" id="check" style="margin-top:10px">Kontrol et</button>
+      <textarea id="answer" placeholder="${t('open.placeholder')}">${esc(drafts[q.id] || '')}</textarea>
+      <button class="btn block" id="check" style="margin-top:10px">${t('check')}</button>
     </div>
     <div id="result"></div>
   `;
@@ -917,22 +929,22 @@ function renderOpenQuestion([id]) {
     const score = hits.filter((h) => h.hit).length / hits.length;
     $('#result').innerHTML = `
       <div class="card">
-        <h3 style="margin-top:0">Anahtar kavramlar (${hits.filter((h) => h.hit).length}/${hits.length})</h3>
+        <h3 style="margin-top:0">${t('open.kw', { h: hits.filter((h) => h.hit).length, n: hits.length })}</h3>
         ${hits.map((h) => `<span class="kw ${h.hit ? 'hit' : 'miss'}">${h.hit ? '✓' : '✗'} ${esc(h.k.split('|')[0])}</span>`).join('')}
-        <h3>Örnek cevap (Musterlösung)</h3>
+        <h3>${t('open.model')}</h3>
         <p class="small">${esc(q.a)}</p>${btn3d(`${q.q} ${q.a}`, { style: 'margin-bottom:10px' })}
-        <h3>Kendini değerlendir</h3>
+        <h3>${t('open.rate')}</h3>
         <div class="grid2" style="grid-template-columns:1fr 1fr 1fr">
-          <button class="btn danger" data-s="0">Bilmedim</button>
-          <button class="btn plain" data-s="0.5">Kısmen</button>
-          <button class="btn" data-s="1">İyi bildim</button>
+          <button class="btn danger" data-s="0">${t('open.no')}</button>
+          <button class="btn plain" data-s="0.5">${t('open.partly')}</button>
+          <button class="btn" data-s="1">${t('open.yes')}</button>
         </div>
       </div>`;
     $$('[data-s]').forEach((b) => b.addEventListener('click', () => {
       // Mittelwert aus Schlüsselbegriffen und Selbsteinschätzung
       store.recordOpen(q.id, (score + +b.dataset.s) / 2);
       delete drafts[q.id];
-      toast('Kaydedildi ✓');
+      toast(t('saved'));
       location.hash = '#/sorular';
     }));
     $('#result').scrollIntoView({ behavior: 'smooth' });
@@ -946,34 +958,35 @@ function renderDecks() {
     const due = store.dueCount(cards);
     const fresh = cards.filter((c) => store.isNew(c.id)).length;
     return `<a href="#/oturum/${encodeURIComponent(d.id)}"><span class="grow"><b>${esc(d.name)}</b><div class="muted small">${esc(d.sub)}</div></span>
-      ${due ? `<span class="badge warn">${due} tekrar</span>` : ''}<span class="badge">${fresh} ${d.id.startsWith('fehler') ? 'hata' : 'yeni'}</span></a>`;
+      ${due ? `<span class="badge warn">${t('decks.due', { n: due })}</span>` : ''}<span class="badge">${t(d.id.startsWith('fehler') ? 'decks.fehlerN' : 'decks.newN', { n: fresh })}</span></a>`;
   });
   view.innerHTML = `
-    <div class="section-title">Desteler</div>
+    <div class="section-title">${t('decks.title')}</div>
     <div class="list">${rows.join('')}</div>
     <div class="grid2">
-      <a class="btn ghost" href="#/liste">Kelime listesi</a>
-      <button class="btn ghost" id="revBtn">${store.get().settings.reverse ? 'Yön: TR → DE' : 'Yön: DE → TR'}</button>
+      <a class="btn ghost" href="#/liste">${t('decks.list')}</a>
+      <button class="btn ghost" id="revBtn">${store.get().settings.reverse ? t('decks.dirRev') : t('decks.dir')}</button>
     </div>
     <div class="card">
-      <h2>Kendi kelimeni ekle</h2>
-      <p class="muted small">Derste/staj yerinde duyduğun yeni kelimeleri ekle.</p>
-      <input type="text" id="newDe" placeholder="Almanca (z. B. der Oberschenkel)" style="margin-top:8px">
-      <input type="text" id="newTr" placeholder="Türkçe (ör. uyluk)" style="margin-top:8px">
-      <input type="text" id="newEx" placeholder="Örnek cümle (isteğe bağlı)" style="margin-top:8px">
-      <button class="btn block" id="addWord" style="margin-top:10px">Ekle</button>
+      <h2>${t('decks.addH')}</h2>
+      <p class="muted small">${t('decks.addSub')}</p>
+      <input type="text" id="newDe" placeholder="${t('decks.phDe')}" style="margin-top:8px">
+      <input type="text" id="newTr" placeholder="${t('decks.phTr')}" style="margin-top:8px">
+      <input type="text" id="newEx" placeholder="${t('decks.phEx')}" style="margin-top:8px">
+      <button class="btn block" id="addWord" style="margin-top:10px">${t('decks.add')}</button>
     </div>
   `;
   $('#revBtn').addEventListener('click', () => { store.get().settings.reverse = !store.get().settings.reverse; store.save(); renderDecks(); });
   $('#addWord').addEventListener('click', () => {
     const de = $('#newDe').value.trim();
     const tr = $('#newTr').value.trim();
-    if (!de || !tr) { toast('Almanca ve Türkçe gerekli'); return; }
+    if (!de || !tr) { toast(t('decks.need')); return; }
     const s = store.get();
-    if (allVocab().some((v) => v.de === de)) { toast('Bu kelime zaten var'); return; }
-    s.customVocab.push({ id: 'v:' + de, de, tr, ex: $('#newEx').value.trim(), cat: 'Eigene' });
+    if (allVocab().some((v) => v.de === de)) { toast(t('decks.exists')); return; }
+    // Im Englisch-Modus eingegebene Übersetzung gilt auch als englisches Feld
+    s.customVocab.push({ id: 'v:' + de, de, tr, ...(lang() === 'en' ? { en: tr } : {}), ex: $('#newEx').value.trim(), cat: 'Eigene' });
     store.save();
-    toast('Kelime eklendi ✓');
+    toast(t('decks.added'));
     renderDecks();
   });
 }
@@ -1002,41 +1015,41 @@ function renderCardSession([deckId]) {
     session = { deck: deckId, queue, done: 0, flipped: false, later };
   }
   const deck = DECKS().find((d) => d.id === deckId);
-  $('#title').textContent = deck ? deck.name : 'Kartlar';
+  $('#title').textContent = deck ? deck.name : t('route.kartlar');
   const card = session.queue[0];
   if (!card) {
     if (deckId.startsWith('fehler:')) markDonus('fehler');
     if (deckId === 'odev') markDonus('odev');
     view.innerHTML = `
-      <div class="empty"><div style="font-size:48px">🎉</div><h2>Bu deste için bugünlük bitti!</h2>
-      <p>${session.done} kart tekrar edildi.</p>${session.later ? `<p class="muted">Kalan ${session.later} hata kartı yarın gelecek (günde en fazla ${FEHLER_PER_DAY}).</p>` : ''}</div>
-      <div class="grid2"><a class="btn ghost" href="#/kartlar">Destelere dön</a><a class="btn" href="#/bugun">Bugün</a></div>`;
+      <div class="empty"><div style="font-size:48px">🎉</div><h2>${t('cards.doneH')}</h2>
+      <p>${t('cards.doneN', { n: session.done })}</p>${session.later ? `<p class="muted">${t('cards.later', { n: session.later, max: FEHLER_PER_DAY })}</p>` : ''}</div>
+      <div class="grid2"><a class="btn ghost" href="#/kartlar">${t('cards.backDecks')}</a><a class="btn" href="#/bugun">${t('route.bugun')}</a></div>`;
     session = null;
     return;
   }
   store.markIntroduced(card.id);
   const c = store.get().srs[card.id];
   const isNewCard = c.reps === 0;
-  const ivl = (r) => store.nextInterval(c, r).label;
+  const ivl = (r) => ivlLabel(store.nextInterval(c, r).label);
   // Vorderseite deutsch/lateinisch? Bei „TR → DE“ steht das deutsche Wort hinten
   const deFront = !(store.get().settings.reverse && card.de);
   view.innerHTML = `
-    <div class="row"><span class="muted small">Kalan: ${session.queue.length}</span><span class="spacer"></span>${deckId.startsWith('fehler') ? '<span class="badge bad">✗ hata</span>' : deckId === 'odev' ? '<span class="badge warn">📌 ödev</span>' : isNewCard ? '<span class="badge good">yeni</span>' : ''}</div>
+    <div class="row"><span class="muted small">${t('cards.left', { n: session.queue.length })}</span><span class="spacer"></span>${deckId.startsWith('fehler') ? `<span class="badge bad">${t('cards.badgeFehler')}</span>` : deckId === 'odev' ? `<span class="badge warn">${t('cards.badgeOdev')}</span>` : isNewCard ? `<span class="badge good">${t('badge.new')}</span>` : ''}</div>
     <div class="flash ${session.flipped ? 'flipped' : ''}" id="flash">
       <div class="flash-inner">
-        <div class="face front"><span class="badge tag">${esc(card.tag)}</span><div class="big">${escGap(card.front)}</div>${deFront ? say(card.de || card.front) : ''}${card.frontSub ? `<div class="sub">${esc(card.frontSub)}</div>` : ''}<div class="sub" style="margin-top:24px">Çevirmek için dokun</div></div>
+        <div class="face front"><span class="badge tag">${esc(card.tag)}</span><div class="big">${escGap(card.front)}</div>${deFront ? say(card.de || card.front) : ''}${card.frontSub ? `<div class="sub">${esc(card.frontSub)}</div>` : ''}<div class="sub" style="margin-top:24px">${t('cards.tap')}</div></div>
         <div class="face back">${deFront ? '' : say(card.de)}${card.back}${btn3d(card.front + ' ' + card.back.replace(/<[^>]+>/g, ' '), { style: 'margin-top:12px', stop: true, block: false })}</div>
       </div>
     </div>
     <div id="rateBox" ${session.flipped ? '' : 'hidden'}>
       <div class="rate">
-        <button class="r0" data-r="0">Tekrar<small>${ivl(0)}</small></button>
-        <button class="r1" data-r="1">Zor<small>${ivl(1)}</small></button>
-        <button class="r2" data-r="2">İyi<small>${ivl(2)}</small></button>
-        <button class="r3" data-r="3">Kolay<small>${ivl(3)}</small></button>
+        <button class="r0" data-r="0">${t('rate.0')}<small>${ivl(0)}</small></button>
+        <button class="r1" data-r="1">${t('rate.1')}<small>${ivl(1)}</small></button>
+        <button class="r2" data-r="2">${t('rate.2')}<small>${ivl(2)}</small></button>
+        <button class="r3" data-r="3">${t('rate.3')}<small>${ivl(3)}</small></button>
       </div>
     </div>
-    <button class="btn block" id="showBtn" ${session.flipped ? 'hidden' : ''}>Cevabı göster</button>
+    <button class="btn block" id="showBtn" ${session.flipped ? 'hidden' : ''}>${t('cards.show')}</button>
   `;
   const flip = () => {
     session.flipped = !session.flipped;
@@ -1062,17 +1075,17 @@ function renderCardSession([deckId]) {
 
 function renderWordList() {
   view.innerHTML = `
-    <input type="search" id="wq" placeholder="Ara (Almanca veya Türkçe)…" style="margin-top:8px">
+    <input type="search" id="wq" placeholder="${t('list.search')}" style="margin-top:8px">
     <div id="wl"></div>`;
   const draw = () => {
     const q = norm($('#wq').value);
-    const list = allVocab().filter((v) => !q || norm(v.de + ' ' + v.tr).includes(q));
+    const list = allVocab().filter((v) => !q || norm(v.de + ' ' + v.tr + ' ' + vocabTr(v)).includes(q));
     const byCat = {};
     list.forEach((v) => (byCat[v.cat] = byCat[v.cat] || []).push(v));
     $('#wl').innerHTML = Object.entries(byCat).map(([cat, vs]) => `
       <div class="section-title" lang="de">${esc(cat)}</div>
-      <div class="list">${vs.map((v) => `<div><span class="grow"><b>${esc(v.de)}</b><div class="small">${esc(v.tr)}</div>${v.ex ? `<div class="muted small">${esc(v.ex)}</div>` : ''}</span>
-        ${v.cat === 'Eigene' ? `<button class="btn danger" style="min-height:32px;padding:4px 10px" data-del="${esc(v.id)}">Sil</button>` : ''}</div>`).join('')}</div>`).join('') || '<p class="empty">Sonuç yok</p>';
+      <div class="list">${vs.map((v) => `<div><span class="grow"><b>${esc(v.de)}</b><div class="small">${esc(vocabTr(v))}</div>${v.ex ? `<div class="muted small">${esc(v.ex)}</div>` : ''}</span>
+        ${v.cat === 'Eigene' ? `<button class="btn danger" style="min-height:32px;padding:4px 10px" data-del="${esc(v.id)}">${t('list.del')}</button>` : ''}</div>`).join('')}</div>`).join('') || `<p class="empty">${t('noResults')}</p>`;
     $$('[data-del]').forEach((b) => b.addEventListener('click', () => {
       const s = store.get();
       s.customVocab = s.customVocab.filter((v) => v.id !== b.dataset.del);
@@ -1090,16 +1103,16 @@ let threeLoading = null;
 async function render3D(_, params) {
   if (!viewer) {
     if (!threeLoading) {
-      $('#hint3d').textContent = '3D model yükleniyor…';
+      $('#hint3d').textContent = t('h3d.loading');
       threeLoading = import('./anatomy3d.js').then(({ Anatomy3D }) => {
         viewer = new Anatomy3D($('#canvas3d'), { onSelect: (sid, o) => (o && o.focus ? openFrom(sid) : showSheet(sid)) });
         viewer.onPart = (k) => (k && k.group ? showTourStep(tour.ids.indexOf(k.group)) : renderFocusSheet(k));
         viewer.onLandmark = (lid) => (focusState ? openFrom(lid) : startFocus(lid));
         viewer.onQuizTap = onQuizTap;
-        $('#hint3d').textContent = 'Döndürmek için sürükle · yakınlaştırmak için iki parmak · seçmek için dokun';
+        $('#hint3d').textContent = t('h3d.hint');
         setup3DControls();
       }).catch((e) => {
-        $('#hint3d').textContent = '3D yüklenemedi: ' + e.message;
+        $('#hint3d').textContent = t('h3d.fail', { msg: e.message });
         threeLoading = null;
         throw e;
       });
@@ -1110,16 +1123,16 @@ async function render3D(_, params) {
   viewer.start();
   // #/3d?quiz=pelvis – „Noktayı bul“
   if (params.get('quiz')) {
-    $('#hint3d').textContent = '3D model hazırlanıyor…';
+    $('#hint3d').textContent = t('h3d.preparing');
     await viewer.ready;
-    $('#hint3d').textContent = 'Döndürmek için sürükle · yakınlaştırmak için iki parmak · seçmek için dokun';
+    $('#hint3d').textContent = t('h3d.hint');
     if (current === '3d') startPointQuiz(params.get('quiz'));
     return;
   }
   // #/3d?ids=a,b,c (mehrere Strukturen nacheinander) – altes #/3d?id=a funktioniert weiter
   const ids = (params.get('ids') || params.get('id') || '').split(',').map((x) => x.trim()).filter((x) => findAny(x));
   if (!ids.length) return;
-  $('#hint3d').textContent = '3D model hazırlanıyor…';
+  $('#hint3d').textContent = t('h3d.preparing');
   await viewer.ready;
   if (current !== '3d') return;
   focusHistory = [];
@@ -1180,12 +1193,12 @@ function exitFocus() {
 }
 
 function stepperHtml() {
-  const back = focusHistory.length ? `<button class="chip" id="fBack">‹ Geri</button>` : '';
+  const back = focusHistory.length ? `<button class="chip" id="fBack">${t('back')}</button>` : '';
   if (!tour) return back ? `<div class="stepper">${back}</div>` : '';
   const n = tour.ids.length, k = tour.k;
-  return `<div class="stepper">${back}<button class="chip" id="stPrev" ${k === 0 ? 'disabled' : ''}>‹ Önceki</button>
-    <span class="count">${k < n ? `${k + 1}/${n}` : 'Hepsi'}</span>
-    <button class="chip" id="stNext" ${k >= n ? 'disabled' : ''}>${k === n - 1 ? 'Hepsi ›' : 'Sonraki ›'}</button></div>`;
+  return `<div class="stepper">${back}<button class="chip" id="stPrev" ${k === 0 ? 'disabled' : ''}>${t('prev')}</button>
+    <span class="count">${k < n ? `${k + 1}/${n}` : t('all')}</span>
+    <button class="chip" id="stNext" ${k >= n ? 'disabled' : ''}>${k === n - 1 ? t('allNext') : t('next')}</button></div>`;
 }
 
 const lmChip = (l, prefix = '') => `<button class="chip lm-go" data-go="${l.id}">${prefix}${esc(shortLa(l))}</button>`;
@@ -1199,13 +1212,13 @@ function renderFocusSheet(k) {
   sheet.hidden = false;
   sheet.classList.remove('collapsed');
   const head = (badge, cls) => `${stepperHtml()}
-    <button class="close" aria-label="Tüm vücut">✕</button>
+    <button class="close" aria-label="${t('f.allBody')}">✕</button>
     <span class="badge ${cls}">${badge}</span>
     <h2 style="margin:6px 0 0;font-size:18px">${esc(s.la)}</h2>
-    <div class="muted small">${esc(s.de)} · 🇹🇷 ${esc(s.tr)}</div>`;
+    <div class="muted small">${esc(s.de)} · ${flag()} ${esc(tx(s))}</div>`;
   const foot = (lesson = true) => `<div class="grid2" style="margin-top:8px">
-      <button class="btn plain" id="exitFocus">Tüm vücut</button>
-      ${lesson && s && findStructure(s.id) ? `<a class="btn" href="#/ders/${s.id}">Dersi aç</a>` : `<button class="btn" onclick="history.back()">↩ Geri dön</button>`}
+      <button class="btn plain" id="exitFocus">${t('f.allBody')}</button>
+      ${lesson && s && findStructure(s.id) ? `<a class="btn" href="#/ders/${s.id}">${t('btn.openLesson')}</a>` : `<button class="btn" onclick="history.back()">${t('f.goBack')}</button>`}
     </div>`;
   let body = '';
   if (info.kind === 'muscle') {
@@ -1214,47 +1227,47 @@ function renderFocusSheet(k) {
     const i = part ? partText(s.i, part.la) : s.i;
     const lmRole = (r) => info.landmarks.filter((x) => x.role === r).map((x) => findLandmark(x.id));
     const lmLine = [...lmRole('o').map((l) => lmChip(l, '🟢 ')), ...lmRole('i').map((l) => lmChip(l, '🔵 ')), ...lmRole('via').map((l) => lmChip(l, '🟠 '))].join('');
-    body = `${head('Kas', 'muscle')} <span class="badge">${LAYER_NAMES[info.layer] || ''} katman</span>
+    body = `${head(kindLabel('muscle'), 'muscle')} <span class="badge">${t('f.layer', { x: layerName(info.layer) })}</span>
     ${info.parts.length > 1 ? `<div class="chips" style="margin-top:10px">${info.parts.map((p, n) => `<button class="chip part-chip ${n === k ? 'on' : ''}" data-part="${n}"><span class="dot" style="background:${p.color}"></span>${esc(p.la)}</button>`).join('')}</div>` : ''}
-    ${part ? `<div class="small" style="margin-top:8px"><b lang="de">${esc(part.la)}</b> · ${esc(part.de)} · 🇹🇷 ${esc(part.tr)}</div>` : ''}
+    ${part ? `<div class="small" style="margin-top:8px"><b lang="de">${esc(part.la)}</b> · ${esc(part.de)} · ${flag()} ${esc(part.en && lang() === 'en' ? part.en : part.la === s.la ? tx(s) : part.tr)}</div>` : ''}
     <dl class="facts small" lang="de">
       <dt>🟢 Ursprung</dt><dd>${esc(o)}</dd>
       <dt>🔵 Ansatz</dt><dd>${esc(i)}</dd>
       ${part ? '' : `<dt>Innervation</dt><dd>${esc(s.inn)}</dd><dt>Funktion</dt><dd>${esc(s.f)}</dd>`}
     </dl>
-    ${lmLine ? `<div class="small muted" style="margin-top:6px">Kemik noktaları (dokun):</div><div class="lm-list">${lmLine}</div>` : ''}
-    <p class="muted small" style="margin:8px 0 0">🟢 Ursprung · 🔵 Ansatz${lmRole('via').length ? ' · 🟠 Umlenkung (tendon buradan geçer)' : ''} · soluk kırmızı = altındaki derin kaslar (dokununca onlara geçer)${tour && tour.k ? ' · gri = önceki adımlar' : ''}${info.parts.length > 1 ? ' · parçaya dokunarak seç' : ''}</p>
+    ${lmLine ? `<div class="small muted" style="margin-top:6px">${t('f.lmTap')}</div><div class="lm-list">${lmLine}</div>` : ''}
+    <p class="muted small" style="margin:8px 0 0">🟢 Ursprung · 🔵 Ansatz${lmRole('via').length ? t('f.legend.via') : ''}${t('f.legend.deep')}${tour && tour.k ? t('f.legend.grey') : ''}${info.parts.length > 1 ? t('f.legend.parts') : ''}</p>
     ${foot()}`;
   } else if (info.kind === 'bone') {
     const lms = info.landmarks.map(findLandmark);
-    body = `${head('Kemik', 'bone')}
+    body = `${head(kindLabel('bone'), 'bone')}
     <p class="small" style="margin:6px 0">${esc(s.typ || '')}</p>
     ${s.merk ? `<dl class="facts small" lang="de"><dt>Wichtige Strukturen</dt><dd>${esc(s.merk)}</dd></dl>` : ''}
-    ${lms.length ? `<div class="small muted" style="margin-top:6px">🟣 Kemik noktaları – dokununca hangi kasların başladığı/bittiği görünür:</div><div class="lm-list">${lms.map((l) => lmChip(l)).join('')}</div>` : ''}
+    ${lms.length ? `<div class="small muted" style="margin-top:6px">${t('f.boneLms')}</div><div class="lm-list">${lms.map((l) => lmChip(l)).join('')}</div>` : ''}
     ${foot()}`;
   } else if (info.kind === 'joint') {
-    body = `${head('Eklem', 'joint')}
+    body = `${head(kindLabel('joint'), 'joint')}
     <p class="small" style="margin:6px 0">${esc(s.typ || '')}</p>
     <dl class="facts small" lang="de"><dt>Neutral-Null</dt><dd>${esc(s.nn || '')}</dd>${s.baender ? `<dt>Bänder</dt><dd>${esc(s.baender)}</dd>` : ''}</dl>
-    ${info.axes.length ? `<button class="btn ghost block" id="axesBtn" style="margin-top:8px">${focusState.axes ? '📐 Eksenleri gizle' : '📐 Hareket eksenlerini göster'}</button>
-      ${focusState.axes ? `<div class="small" style="margin-top:8px" lang="de">${info.axes.map((a) => `<div style="margin:4px 0"><span class="dot" style="background:${a.color}"></span><b>${esc(a.la)}</b> <span class="muted">(${esc(a.tr)})</span> → ${esc(a.mv)} <span class="muted">· in der ${esc(a.ebene)}</span></div>`).join('')}</div>` : ''}` : ''}
+    ${info.axes.length ? `<button class="btn ghost block" id="axesBtn" style="margin-top:8px">${focusState.axes ? t('f.axesHide') : t('f.axesShow')}</button>
+      ${focusState.axes ? `<div class="small" style="margin-top:8px" lang="de">${info.axes.map((a) => `<div style="margin:4px 0"><span class="dot" style="background:${a.color}"></span><b>${esc(a.la)}</b> <span class="muted">(${esc(tx(a))})</span> → ${esc(a.mv)} <span class="muted">· in der ${esc(a.ebene)}</span></div>`).join('')}</div>` : ''}` : ''}
     ${foot()}`;
   } else if (info.kind === 'landmark') {
     const bone = findStructure(s.bone);
     const list = (ids, title) => (ids.length ? `<div class="small" style="margin-top:8px"><b>${title}</b></div><div class="lm-list">${ids.map(muscleChip).join('')}</div>` : '');
-    body = `${head('Kemik noktası', 'landmark')}
-    <div class="small" style="margin-top:4px">Kemik: <b lang="de">${esc(bone ? bone.la : s.bone)}</b>${s.note ? ` · <span lang="de">${esc(s.note)}</span>` : ''}</div>
-    ${list(info.o, '🟢 Buradan başlayan kaslar (Ursprung)')}
-    ${list(info.i, '🔵 Burada biten kaslar (Ansatz)')}
-    ${list(info.via, '🟠 Tendonu buradan geçen / yön değiştiren')}
-    ${!info.o.length && !info.i.length && !info.via.length ? '<p class="muted small">Bu noktaya listede kas bağlanmıyor.</p>' : ''}
-    ${s.approx ? `<p class="muted small">BodyParts3D modelinde koksiks yok – nokta sakrumun alt ucunda yaklaşık gösteriliyor.</p>` : ''}
+    body = `${head(kindLabel('landmark'), 'landmark')}
+    <div class="small" style="margin-top:4px">${t('f.bone')} <b lang="de">${esc(bone ? bone.la : s.bone)}</b>${s.note ? ` · <span lang="de">${esc(s.note)}</span>` : ''}</div>
+    ${list(info.o, t('f.lmO'))}
+    ${list(info.i, t('f.lmI'))}
+    ${list(info.via, t('f.lmVia'))}
+    ${!info.o.length && !info.i.length && !info.via.length ? `<p class="muted small">${t('f.lmNone')}</p>` : ''}
+    ${s.approx ? `<p class="muted small">${t('f.coccyx')}</p>` : ''}
     ${foot(false)}`;
   } else if (info.kind === 'group') {
-    body = `${stepperHtml()}<button class="close" aria-label="Tüm vücut">✕</button>
-    <h2 style="margin:2px 0 0;font-size:18px">Hepsi birlikte (${info.legend.length} yapı)</h2>
-    <div class="legend">${info.legend.map((x) => { const st = findAny(x.id); return `<button data-step="${tour.ids.indexOf(x.id)}"><span class="dot" style="background:${x.color}"></span><span class="grow"><b lang="de">${esc(shortName(st))}</b> <span class="muted small">· ${esc(st.tr)}</span></span><span class="badge ${st.kind}">${KIND_LABEL[st.kind]}</span></button>`; }).join('')}</div>
-    <p class="muted small" style="margin:8px 0 0">Bir yapıya dokun → o adıma geç</p>
+    body = `${stepperHtml()}<button class="close" aria-label="${t('f.allBody')}">✕</button>
+    <h2 style="margin:2px 0 0;font-size:18px">${t('f.groupH', { n: info.legend.length })}</h2>
+    <div class="legend">${info.legend.map((x) => { const st = findAny(x.id); return `<button data-step="${tour.ids.indexOf(x.id)}"><span class="dot" style="background:${x.color}"></span><span class="grow"><b lang="de">${esc(shortName(st))}</b> <span class="muted small">· ${esc(tx(st))}</span></span><span class="badge ${st.kind}">${kindLabel(st.kind)}</span></button>`; }).join('')}</div>
+    <p class="muted small" style="margin:8px 0 0">${t('f.groupHint')}</p>
     ${foot(false)}`;
   }
   sheet.innerHTML = body;
@@ -1308,7 +1321,7 @@ function buildPointQuiz(set, only = null) {
 function startPointQuiz(set = 'pelvis', only = null) {
   if (focusState) exitFocus();
   const info = viewer.enterPointQuiz(PQ_SETS[set] || PQ_SETS.pelvis);
-  if (!info) { toast('3D model henüz hazır değil'); return; }
+  if (!info) { toast(t('pq.notReady')); return; }
   pq = { set, qs: buildPointQuiz(set, only), k: 0, results: [], answer: null };
   focusState = { id: null, s: null, info };
   document.body.classList.add('focus3d');
@@ -1316,7 +1329,7 @@ function startPointQuiz(set = 'pelvis', only = null) {
   renderPointQuizSheet();
 }
 
-const pqCm = (d) => (d * 100).toFixed(1).replace('.', ',') + ' cm';
+const pqCm = (d) => dec((d * 100).toFixed(1)) + ' cm';
 
 function onQuizTap(hit, ray) {
   if (!pq || pq.answer || pq.k >= pq.qs.length) return;
@@ -1326,9 +1339,9 @@ function onQuizTap(hit, ray) {
     const r = viewer.judgePoint(l, hit, ray, PQ_TOL[l.id]);
     if (!best || r.d < best.d) best = { ...r, l };
   }
-  if (!hit && !best.ok) { toast('Kemiğin üzerine dokun'); return; }
+  if (!hit && !best.ok) { toast(t('pq.tapBone')); return; }
   // knapp daneben, aber so weit herausgezoomt, dass 2 cm kaum ein Fingertipp sind → nicht werten
-  if (!best.ok && best.d < 0.05 && viewer.pxPer(best.pos, 0.02) < 22) { toast('🔍 Çok yakın! Yakınlaştırıp tekrar dokun'); return; }
+  if (!best.ok && best.d < 0.05 && viewer.pxPer(best.pos, 0.02) < 22) { toast(t('pq.zoom')); return; }
   answerPoint(q, best.ok, { tap: hit, best });
 }
 
@@ -1362,13 +1375,13 @@ function pqPrompt(q) {
   if (q.kind === 'point') {
     const l = q.ans[0];
     return `<h2 style="margin:4px 0 0;font-size:18px" lang="la">${esc(l.la)}</h2>
-      <div class="muted small"><span lang="de">${esc(l.de)}</span> · 🇹🇷 ${esc(l.tr)}</div>
-      <div class="small" style="margin-top:6px">Bu noktayı modelde göster.</div>`;
+      <div class="muted small"><span lang="de">${esc(l.de)}</span> · ${flag()} ${esc(tx(l))}</div>
+      <div class="small" style="margin-top:6px">${t('pq.showPoint')}</div>`;
   }
-  const verb = q.kind === 'o' ? 'nereden başlar?' : 'nerede biter?';
+  const verb = q.kind === 'o' ? t('pq.origin') : t('pq.insert');
   return `<div class="small muted" style="margin-top:2px" lang="de">${q.kind === 'o' ? '🟢 Ursprung' : '🔵 Ansatz'}</div>
     <h2 style="margin:2px 0 0;font-size:18px"><span lang="la">${esc(q.m.la.replace(/\s*\(.*\)$/, ''))}</span> ${verb}</h2>
-    <div class="small" style="margin-top:6px">Kemik noktasını modelde göster.${q.ans.length > 1 ? ' <span class="muted">(Birden fazla doğru nokta var – biri yeterli.)</span>' : ''}</div>`;
+    <div class="small" style="margin-top:6px">${t('pq.showLm')}${q.ans.length > 1 ? ` <span class="muted">${t('pq.multi')}</span>` : ''}</div>`;
 }
 
 function renderPointQuizSheet() {
@@ -1377,20 +1390,20 @@ function renderPointQuizSheet() {
   sheet.classList.remove('collapsed');
   const n = pq.qs.length;
   sheet.classList.toggle('pq-end', pq.k >= n);
-  const close = `<button class="close" aria-label="Kapat">✕</button>`;
+  const close = `<button class="close" aria-label="${t('close')}">✕</button>`;
   let body;
   if (pq.k >= n) {
     const r = pq.results.filter((x) => x.ok).length;
     const wrong = pq.results.filter((x) => !x.ok).map((x) => x.q);
-    body = `${close}<div class="eyebrow">🎯 Noktayı bul · Sonuç</div>
-      <h2 style="margin:6px 0 0;font-size:22px">${r}/${n} doğru ${r === n ? '🎉' : r >= n * 0.7 ? '👍' : '💪'}</h2>
-      <div class="muted small">${r === n ? 'Bütün noktaları buldun!' : r >= n * 0.7 ? 'Çok iyi – yanlışları bir kez daha göster.' : 'Yanlışları tekrar et, sonra yeni bir tur dene.'}</div>
-      ${wrong.length ? `<div class="small" style="margin-top:10px"><b>Yanlışların</b></div><div class="small" style="margin-top:4px">${wrong.map((q) => `<div style="margin:4px 0">• ${q.kind === 'point' ? `<b lang="la">${esc(shortLa(q.ans[0]))}</b> <span class="muted">· ${esc(q.ans[0].tr)}</span>` : `<span lang="de">${q.kind === 'o' ? 'Ursprung' : 'Ansatz'}</span> ${esc(q.m.la.replace(/\s*\(.*\)$/, ''))} → <b lang="la">${q.ans.map((l) => esc(shortLa(l))).join(', ')}</b>`}</div>`).join('')}</div>` : ''}
+    body = `${close}<div class="eyebrow">${t('pq.title')} · ${t('pq.result')}</div>
+      <h2 style="margin:6px 0 0;font-size:22px">${t('pq.nCorrect', { r, n })} ${r === n ? '🎉' : r >= n * 0.7 ? '👍' : '💪'}</h2>
+      <div class="muted small">${t(r === n ? 'pq.all' : r >= n * 0.7 ? 'pq.good' : 'pq.more')}</div>
+      ${wrong.length ? `<div class="small" style="margin-top:10px"><b>${t('yourWrong')}</b></div><div class="small" style="margin-top:4px">${wrong.map((q) => `<div style="margin:4px 0">• ${q.kind === 'point' ? `<b lang="la">${esc(shortLa(q.ans[0]))}</b> <span class="muted">· ${esc(tx(q.ans[0]))}</span>` : `<span lang="de">${q.kind === 'o' ? 'Ursprung' : 'Ansatz'}</span> ${esc(q.m.la.replace(/\s*\(.*\)$/, ''))} → <b lang="la">${q.ans.map((l) => esc(shortLa(l))).join(', ')}</b>`}</div>`).join('')}</div>` : ''}
       <div class="grid2" style="margin-top:10px">
-        ${wrong.length ? '<button class="btn ghost" id="pqRetry">Yanlışları tekrarla</button>' : '<button class="btn plain" id="pqExit">Bitir</button>'}
-        <button class="btn" id="pqAgain">Yeni tur</button>
+        ${wrong.length ? `<button class="btn ghost" id="pqRetry">${t('retryWrong')}</button>` : `<button class="btn plain" id="pqExit">${t('finish')}</button>`}
+        <button class="btn" id="pqAgain">${t('pq.again')}</button>
       </div>
-      ${wrong.length ? '<button class="btn plain block" id="pqExit" style="margin-top:8px">Bitir</button>' : ''}`;
+      ${wrong.length ? `<button class="btn plain block" id="pqExit" style="margin-top:8px">${t('finish')}</button>` : ''}`;
   } else {
     const q = pq.qs[pq.k];
     const a = pq.answer;
@@ -1398,16 +1411,16 @@ function renderPointQuizSheet() {
     if (a) {
       const where = q.ans.map((l) => `<b lang="la">${esc(shortLa(l))}</b>`).join(', ');
       fb = a.ok
-        ? `<div class="pq-fb ok">✓ Doğru! ${a.hitLm && q.ans.length > 1 ? `<b lang="la">${esc(shortLa(a.hitLm))}</b> · ` : ''}<span class="muted">${pqCm(a.d)} uzaklık</span></div>`
-        : `<div class="pq-fb bad">${a.skipped ? 'Doğru nokta' : `✗ Yanlış – ${a.d < 1 ? pqCm(a.d) + ' uzakta. ' : ''}Doğru nokta`}${q.ans.length > 1 ? 'lar' : ''}: ${where} (🟣 işaretli)</div>`;
+        ? `<div class="pq-fb ok">${t('pq.ok')} ${a.hitLm && q.ans.length > 1 ? `<b lang="la">${esc(shortLa(a.hitLm))}</b> · ` : ''}<span class="muted">${t('pq.dist', { d: pqCm(a.d) })}</span></div>`
+        : `<div class="pq-fb bad">${a.skipped ? '' : a.d < 1 ? t('pq.wrongD', { d: pqCm(a.d) }) : t('pq.wrongX')}${t(q.ans.length > 1 ? 'pq.rights' : 'pq.right')}: ${where} ${t('pq.marked')}</div>`;
       if (q.kind !== 'point') fb += `<div class="muted small" style="margin-top:4px">${q.ans.map((l) => `<span lang="de">${esc(l.de)}</span>`).join(' · ')}</div>`;
     }
-    body = `${close}<div class="stepper"><span class="eyebrow" style="flex:1">🎯 Noktayı bul · ${pq.k + 1}/${n}</span><span class="muted small">${pq.results.filter((x) => x.ok).length} ✓</span></div>
+    body = `${close}<div class="stepper"><span class="eyebrow" style="flex:1">${t('pq.title')} · ${pq.k + 1}/${n}</span><span class="muted small">${pq.results.filter((x) => x.ok).length} ✓</span></div>
       ${pqPrompt(q)}
       ${fb}
       <div class="grid2" style="margin-top:8px">
-        ${a ? '<span></span>' : '<button class="btn plain" id="pqSkip">Bilmiyorum</button>'}
-        ${a ? `<button class="btn" id="pqNext">${pq.k + 1 < n ? 'Sonraki ›' : 'Sonuç ›'}</button>` : '<span class="muted small" style="align-self:center">👆 Modele dokun · sürükleyerek döndür</span>'}
+        ${a ? '<span></span>' : `<button class="btn plain" id="pqSkip">${t('pq.skip')}</button>`}
+        ${a ? `<button class="btn" id="pqNext">${pq.k + 1 < n ? t('next') : t('pq.resultBtn')}</button>` : `<span class="muted small" style="align-self:center">${t('pq.tapHint')}</span>`}
       </div>`;
   }
   sheet.innerHTML = body;
@@ -1430,7 +1443,7 @@ function setup3DControls() {
     const on = !e.currentTarget.classList.contains('on');
     e.currentTarget.classList.toggle('on', on);
     viewer.setLandmarks(on);
-    if (on) toast('🟣 Kemik noktaları: yakınlaştır ve noktaya dokun');
+    if (on) toast(t('toast.lm'));
   });
   $('#isolateBtn').addEventListener('click', (e) => {
     const on = !e.currentTarget.classList.contains('on');
@@ -1452,12 +1465,12 @@ function setup3DControls() {
   input.addEventListener('input', () => {
     const q = norm(input.value.trim());
     if (!q) { results.hidden = true; return; }
-    const found = [...ALL_STRUCTURES, ...LANDMARKS.map((l) => ({ ...l, kind: 'landmark' }))].filter((s) => norm(`${s.de} ${s.la} ${s.tr}`).includes(q)).slice(0, 12);
+    const found = [...ALL_STRUCTURES, ...LANDMARKS.map((l) => ({ ...l, kind: 'landmark' }))].filter((s) => norm(`${s.de} ${s.la} ${s.tr} ${s.en || ''}`).includes(q)).slice(0, 12);
     results.hidden = false;
     results.className = 'search-results list';
     results.innerHTML = found.length
-      ? found.map((s) => `<button data-id="${s.id}"><span class="badge ${s.kind}">${KIND_LABEL[s.kind]}</span><span class="grow">${esc(s.la)}<div class="muted small">${esc(s.de)} · ${esc(s.tr)}</div></span></button>`).join('')
-      : '<div class="muted small">Sonuç yok</div>';
+      ? found.map((s) => `<button data-id="${s.id}"><span class="badge ${s.kind}">${kindLabel(s.kind)}</span><span class="grow">${esc(s.la)}<div class="muted small">${esc(s.de)} · ${esc(tx(s))}</div></span></button>`).join('')
+      : `<div class="muted small">${t('noResults')}</div>`;
     $$('button', results).forEach((b) => b.addEventListener('click', () => {
       if (focusState) exitFocus();
       const hit = findAny(b.dataset.id);
@@ -1476,22 +1489,22 @@ function showSheet(id) {
   $('#hint3d').hidden = true;
   sheet.hidden = false;
   sheet.classList.add('collapsed');
-  const summary = s.kind === 'muscle' ? s.ftr : s.kind === 'bone' ? s.typ : `${s.typ}`;
+  const summary = s.kind === 'muscle' ? tx(s, 'ftr') : s.kind === 'bone' ? s.typ : `${s.typ}`;
   const more = s.kind === 'muscle'
     ? `<dl class="facts" lang="de"><dt>Ursprung</dt><dd>${esc(s.o)}</dd><dt>Ansatz</dt><dd>${esc(s.i)}</dd><dt>Innervation</dt><dd>${esc(s.inn)}</dd><dt>Funktion</dt><dd>${esc(s.f)}</dd></dl>`
     : s.kind === 'bone'
       ? `<dl class="facts" lang="de"><dt>Wichtige Strukturen</dt><dd>${esc(s.merk)}</dd></dl>`
       : `<dl class="facts" lang="de"><dt>Neutral-Null</dt><dd>${esc(s.nn)}</dd><dt>Bänder</dt><dd>${esc(s.baender)}</dd></dl>`;
   sheet.innerHTML = `
-    <button class="close" aria-label="Kapat">✕</button>
-    <span class="badge ${s.kind}">${KIND_LABEL[s.kind]}</span>
+    <button class="close" aria-label="${t('close')}">✕</button>
+    <span class="badge ${s.kind}">${kindLabel(s.kind)}</span>
     <h2 style="margin:6px 0 0;font-size:18px">${esc(s.la)}</h2>
-    <div class="muted small">${esc(s.de)} · 🇹🇷 ${esc(s.tr)}</div>
+    <div class="muted small">${esc(s.de)} · ${flag()} ${esc(tx(s))}</div>
     <p class="small" style="margin:6px 0">${esc(summary)}</p>
     <div class="more small">${more}${s.k || s.klinik ? `<div class="klinik">🩺 ${esc(s.k || s.klinik)}</div>` : ''}</div>
     <div class="grid2" style="margin-top:8px">
-      <button class="btn plain" id="moreBtn">Detaylar</button>
-      <a class="btn" href="#/ders/${s.id}">Dersi aç</a>
+      <button class="btn plain" id="moreBtn">${t('sheet.details')}</button>
+      <a class="btn" href="#/ders/${s.id}">${t('btn.openLesson')}</a>
     </div>`;
   $('.close', sheet).addEventListener('click', () => viewer.select(null));
   $('#moreBtn').addEventListener('click', (e) => {
@@ -1503,42 +1516,53 @@ function showSheet(id) {
 function renderSettings() {
   const s = store.get().settings;
   view.innerHTML = `
-    <div class="section-title">Günlük hedefler</div>
+    <div class="section-title">${t('set.lang')}</div>
+    <div class="card small" style="margin-top:0">
+      <div class="chips">${Object.entries(LANGS).map(([k, v]) => `<button class="chip ${lang() === k ? 'on' : ''}" data-lang="${k}">${v.flag} ${v.name}</button>`).join('')}</div>
+      <div class="muted" style="margin-top:8px">${t('set.langNote')}</div>
+    </div>
+    <div class="section-title">${t('set.goals')}</div>
     <div class="list">
-      <label><span class="grow">Kart tekrarı / gün</span><input type="number" min="5" max="200" id="cardsGoal" value="${s.cardsGoal}" style="width:80px"></label>
-      <label><span class="grow">Test sorusu / tur</span><input type="number" min="5" max="50" id="quizGoal" value="${s.quizGoal}" style="width:80px"></label>
-      <label><span class="grow">Yeni kart / gün</span><input type="number" min="0" max="100" id="newPerDay" value="${s.newPerDay}" style="width:80px"></label>
+      <label><span class="grow">${t('set.cardsGoal')}</span><input type="number" min="5" max="200" id="cardsGoal" value="${s.cardsGoal}" style="width:80px"></label>
+      <label><span class="grow">${t('set.quizGoal')}</span><input type="number" min="5" max="50" id="quizGoal" value="${s.quizGoal}" style="width:80px"></label>
+      <label><span class="grow">${t('set.newPerDay')}</span><input type="number" min="0" max="100" id="newPerDay" value="${s.newPerDay}" style="width:80px"></label>
     </div>
-    <div class="section-title">Yedekleme</div>
-    <p class="muted small" style="padding:0 4px">İlerlemen sadece bu cihazda saklanır. Telefon değiştirirken veya güvenlik için yedek al.</p>
+    <div class="section-title">${t('set.backup')}</div>
+    <p class="muted small" style="padding:0 4px">${t('set.backupNote')}</p>
     <div class="grid2">
-      <button class="btn ghost" id="exportBtn">Yedeği indir</button>
-      <label class="btn ghost">Yedeği yükle<input type="file" id="importFile" accept="application/json" hidden></label>
+      <button class="btn ghost" id="exportBtn">${t('set.export')}</button>
+      <label class="btn ghost">${t('set.import')}<input type="file" id="importFile" accept="application/json" hidden></label>
     </div>
-    <div class="section-title">Notion bağlantısı</div>
+    <div class="section-title">${t('set.notion')}</div>
     <div class="card small" style="margin-top:0">
       ${getToken()
-        ? `🔒 Bağlı · ${getPrivate() && getPrivate().syncedAt ? 'son güncelleme: ' + esc(new Date(getPrivate().syncedAt).toLocaleString('tr-TR')) : 'henüz güncellenmedi'}
-           <div class="grid2" style="margin-top:10px"><button class="btn" id="nSync">Şimdi güncelle</button><button class="btn danger" id="nDisconnect">Bağlantıyı sil</button></div>`
-        : `Haftalık programın, hata listen, Grundwortschatz ve yeni ders soruları (FizyoLern Sorular) doğrudan Notion'dan okunur. Anahtar <b>sadece bu telefonda</b> saklanır ve sadece api.notion.com'a gönderilir.
+        ? `${t('set.connected')} · ${getPrivate() && getPrivate().syncedAt ? t('set.lastSync', { d: esc(new Date(getPrivate().syncedAt).toLocaleString(locale())) }) : t('set.neverSync')}
+           <div class="grid2" style="margin-top:10px"><button class="btn" id="nSync">${t('set.syncNow')}</button><button class="btn danger" id="nDisconnect">${t('set.disconnect')}</button></div>`
+        : `${t('set.notionInfo')}
            <input type="password" id="nToken" placeholder="ntn_… (Notion Internal Integration Secret)" autocomplete="off" autocapitalize="off" spellcheck="false" style="margin-top:10px">
-           <button class="btn block" id="nConnect" style="margin-top:8px">Bağlan ve güncelle</button>`}
+           <button class="btn block" id="nConnect" style="margin-top:8px">${t('set.connect')}</button>`}
       <div id="nStatus" class="muted" style="margin-top:8px"></div>
     </div>
-    <div class="section-title">Özel veriler</div>
-    <p class="muted small" style="padding:0 4px">Haftalık program, hata listen ve Notion linklerin herkese açık uygulamada yok. <b>fizyolern-ozel.json</b> dosyasını buradan yükle; sadece bu telefonda saklanır.</p>
-    <div class="card small" style="margin-top:0">${getPrivate() ? `✅ Yüklü: KW ${esc(week()?.kw ?? '–')} · ${fehlerList().length} hata kartı${odevList().length ? ` · ${odevList().length} ödev kartı` : ''}` : '⚠️ Henüz yüklenmedi'}</div>
+    <div class="section-title">${t('set.private')}</div>
+    <p class="muted small" style="padding:0 4px">${t('set.privateNote')}</p>
+    <div class="card small" style="margin-top:0">${getPrivate() ? `${t('set.loaded', { kw: esc(week()?.kw ?? '–'), n: fehlerList().length })}${odevList().length ? t('set.odevN', { n: odevList().length }) : ''}` : t('set.notLoaded')}</div>
     <div class="grid2">
-      <label class="btn ghost">Özel verileri yükle<input type="file" id="privFile" accept="application/json,.json" hidden></label>
-      <button class="btn plain" id="privClear" ${getPrivate() ? '' : 'disabled'}>Kaldır</button>
+      <label class="btn ghost">${t('set.loadPrivate')}<input type="file" id="privFile" accept="application/json,.json" hidden></label>
+      <button class="btn plain" id="privClear" ${getPrivate() ? '' : 'disabled'}>${t('set.remove')}</button>
     </div>
-    <div class="section-title">Diğer</div>
-    <button class="btn danger block" id="resetBtn">Tüm ilerlemeyi sıfırla</button>
-    <p class="muted small" style="margin-top:24px;padding:0 4px">3D kemik ve kas modelleri: <b>BodyParts3D</b>, © The Database Center for Life Science (DBCLS), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> – Sinew (sinew.pin.games) oyunuyla aynı kaynak. BodyParts3D'de olmayan 4 kas (M. latissimus dorsi, M. rectus abdominis, M. transversus abdominis, M. quadratus lumborum) gerçek iskeletteki ölçüm noktalarına göre uygulama tarafından çizilir. İçerik ders kitapları (ör. Prometheus, Schünke) ile kontrol edilmelidir.</p>
+    <div class="section-title">${t('set.other')}</div>
+    <button class="btn danger block" id="resetBtn">${t('set.reset')}</button>
+    <p class="muted small" style="margin-top:24px;padding:0 4px">${t('set.credits', { lic: '<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>' })}</p>
   `;
   ['cardsGoal', 'quizGoal', 'newPerDay'].forEach((k) => $('#' + k).addEventListener('change', (e) => {
     const v = parseInt(e.target.value, 10);
-    if (!isNaN(v)) { s[k] = v; store.save(); toast('Kaydedildi'); }
+    if (!isNaN(v)) { s[k] = v; store.save(); toast(t('savedPlain')); }
+  }));
+  $$('[data-lang]').forEach((b) => b.addEventListener('click', () => {
+    if (b.dataset.lang === lang()) return;
+    setLang(b.dataset.lang);
+    applyStatic();
+    navigate();
   }));
   $('#exportBtn').addEventListener('click', () => {
     const blob = new Blob([JSON.stringify(store.get(), null, 2)], { type: 'application/json' });
@@ -1555,25 +1579,25 @@ function renderSettings() {
       const data = JSON.parse(await f.text());
       if (!data.srs || !data.days) throw new Error('format');
       store.replace(data);
-      toast('Yedek yüklendi ✓');
-    } catch { toast('Geçersiz yedek dosyası'); }
+      toast(t('set.backupLoaded'));
+    } catch { toast(t('set.backupBad')); }
   });
   const nStatus = $('#nStatus');
   const runSync = async () => {
-    nStatus.textContent = "Notion'dan okunuyor…";
+    nStatus.textContent = t('set.reading');
     try {
       const r = await syncFromNotion({ faecher: FAECHER, lessons: LESSONS });
       refreshLessons();
-      toast("Notion'dan güncellendi ✓");
+      toast(t('set.synced'));
       renderSettings();
       $('#nStatus').textContent = '✅ ' + r;
     } catch (err) { nStatus.textContent = '⚠️ ' + err.message; }
   };
   const nConnect = $('#nConnect');
   if (nConnect) nConnect.addEventListener('click', () => {
-    const t = $('#nToken').value.trim();
-    if (!looksLikeToken(t)) { nStatus.textContent = '⚠️ Bu bir Notion anahtarına benzemiyor (ntn_… ile başlamalı).'; return; }
-    setToken(t);
+    const tok = $('#nToken').value.trim();
+    if (!looksLikeToken(tok)) { nStatus.textContent = t('set.badToken'); return; }
+    setToken(tok);
     $('#nToken').value = '';
     runSync();
   });
@@ -1581,23 +1605,32 @@ function renderSettings() {
   if (nSync) nSync.addEventListener('click', runSync);
   const nDisc = $('#nDisconnect');
   if (nDisc) nDisc.addEventListener('click', () => {
-    if (!confirm('Notion anahtarı bu telefondan silinsin mi?')) return;
+    if (!confirm(t('set.confirmDisc'))) return;
     clearToken();
-    toast('Anahtar silindi');
+    toast(t('set.keyDeleted'));
     renderSettings();
   });
   $('#privFile').addEventListener('change', async (e) => {
     const f = e.target.files[0];
     if (!f) return;
-    try { setPrivate(JSON.parse(await f.text())); refreshLessons(); toast('Özel veriler yüklendi ✓'); renderSettings(); } catch { toast('Bu dosya özel veri dosyası değil'); }
+    try { setPrivate(JSON.parse(await f.text())); refreshLessons(); toast(t('set.privLoaded')); renderSettings(); } catch { toast(t('set.privBad')); }
   });
-  $('#privClear').addEventListener('click', () => { clearPrivate(); refreshLessons(); toast('Kaldırıldı'); renderSettings(); });
+  $('#privClear').addEventListener('click', () => { clearPrivate(); refreshLessons(); toast(t('set.removed')); renderSettings(); });
   $('#resetBtn').addEventListener('click', () => {
-    if (confirm('Tüm ilerleme silinsin mi? Bu geri alınamaz.')) { store.reset(); toast('Sıfırlandı'); location.hash = '#/bugun'; }
+    if (confirm(t('set.confirmReset'))) { store.reset(); toast(t('set.resetDone')); location.hash = '#/bugun'; }
   });
 }
 
 $('#settingsBtn').addEventListener('click', () => (location.hash = '#/ayarlar'));
+
+// Feste Beschriftungen in index.html (Tab-Leiste, 3D-HUD, Platzhalter) in die Hilfssprache übersetzen
+function applyStatic() {
+  document.documentElement.lang = lang();
+  $$('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+  $$('[data-i18n-placeholder]').forEach((el) => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+  $$('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+}
+applyStatic();
 
 // ───────────────────────── Start ─────────────────────────
 navigate();
@@ -1608,7 +1641,7 @@ if (getToken() && navigator.onLine) {
   const last = getPrivate() && getPrivate().syncedAt ? Date.parse(getPrivate().syncedAt) : 0;
   if (Date.now() - last > 3 * 3600 * 1000) {
     syncFromNotion({ faecher: FAECHER, lessons: LESSONS })
-      .then(() => { refreshLessons(); toast("Notion'dan güncellendi ✓"); if (['bugun', 'kartlar', 'dersler'].includes(current)) navigate(); })
+      .then(() => { refreshLessons(); toast(t('set.synced')); if (['bugun', 'kartlar', 'dersler'].includes(current)) navigate(); })
       .catch(() => { /* offline oder Token ungültig – alte Daten bleiben */ });
   }
 }

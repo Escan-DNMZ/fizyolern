@@ -1,9 +1,9 @@
 // Bewegungsachsen der Gelenke (Neutral-Null-Stellung, aufrechter Stand).
 // v = Richtung im 3D-Modell (x = links–rechts, y = oben–unten, z = vorne–hinten)
 export const AXIS_DEF = {
-  t: { la: 'Transversalachse', tr: 'enine eksen (sağ–sol)', ebene: 'Sagittalebene', v: [1, 0, 0], color: '#ef4444' },
-  s: { la: 'Sagittalachse', tr: 'ön–arka eksen', ebene: 'Frontalebene', v: [0, 0, 1], color: '#16a34a' },
-  l: { la: 'Longitudinalachse', tr: 'uzun (dikey) eksen', ebene: 'Transversalebene', v: [0, 1, 0], color: '#2563eb' },
+  t: { la: 'Transversalachse', tr: 'enine eksen (sağ–sol)', en: 'transverse axis (right–left)', ebene: 'Sagittalebene', v: [1, 0, 0], color: '#ef4444' },
+  s: { la: 'Sagittalachse', tr: 'ön–arka eksen', en: 'front–back axis', ebene: 'Frontalebene', v: [0, 0, 1], color: '#16a34a' },
+  l: { la: 'Longitudinalachse', tr: 'uzun (dikey) eksen', en: 'long (vertical) axis', ebene: 'Transversalebene', v: [0, 1, 0], color: '#2563eb' },
 };
 
 // Pro Gelenk: welche Achsen es hat und welche Bewegung um die Achse stattfindet

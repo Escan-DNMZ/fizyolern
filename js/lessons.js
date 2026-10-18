@@ -58,7 +58,10 @@ export function mergeLessons(builtin, rows = []) {
     // (mitgelieferte Fragen haben keine eigene id, sondern „L:<lektion>:<index>“ – daher die Notion-id dann weglassen)
     if (i >= 0) {
       const { id, ...rest } = item;
-      l[arr][i] = l[arr][i].id ? { ...rest, id: l[arr][i].id } : rest;
+      // englische Hilfstexte (en, xEn) der mitgelieferten Fassung behalten, die Notion-Zeile hat nur Türkisch
+      const { en, xEn } = l[arr][i];
+      const keep = { ...(en ? { en } : {}), ...(xEn ? { xEn } : {}) };
+      l[arr][i] = l[arr][i].id ? { ...keep, ...rest, id: l[arr][i].id } : { ...keep, ...rest };
     } else l[arr].push(item);
   }
   return { lessons: list, skipped };

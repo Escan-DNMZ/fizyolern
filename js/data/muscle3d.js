@@ -61,42 +61,43 @@ export const MUSCLE3D = {
 };
 
 export const LAYER_NAMES = { 1: 'Yüzeysel', 2: 'Orta', 3: 'Derin' };
+export const LAYER_NAMES_EN = { 1: 'Superficial', 2: 'Middle', 3: 'Deep' };
 
-const CAPUT = { Long: ['Caput longum', 'Langer Kopf', 'uzun baş'], Short: ['Caput breve', 'Kurzer Kopf', 'kısa baş'], Lateral: ['Caput laterale', 'Seitlicher Kopf', 'dış baş'], Medial: ['Caput mediale', 'Innerer Kopf', 'iç baş'] };
+const CAPUT = { Long: ['Caput longum', 'Langer Kopf', 'uzun baş', 'long head'], Short: ['Caput breve', 'Kurzer Kopf', 'kısa baş', 'short head'], Lateral: ['Caput laterale', 'Seitlicher Kopf', 'dış baş', 'lateral head'], Medial: ['Caput mediale', 'Innerer Kopf', 'iç baş', 'medial head'] };
 const PARS = {
-  Clavicular: ['Pars clavicularis', 'Schlüsselbeinteil', 'köprücük kısmı'],
-  Acromial: ['Pars acromialis', 'Schulterhöhenteil', 'akromiyal kısım'],
-  Spinal: ['Pars spinalis', 'Gräteteil', 'spina kısmı'],
-  Sternocostal: ['Pars sternocostalis', 'Brustbein-Rippen-Teil', 'sternokostal kısım'],
-  Abdominal: ['Pars abdominalis', 'Bauchteil', 'karın kısmı'],
-  Descending: ['Pars descendens', 'Absteigender Teil', 'inen kısım'],
-  Transverse: ['Pars transversa', 'Querer Teil', 'yatay kısım'],
-  Ascending: ['Pars ascendens', 'Aufsteigender Teil', 'çıkan kısım'],
+  Clavicular: ['Pars clavicularis', 'Schlüsselbeinteil', 'köprücük kısmı', 'clavicular part'],
+  Acromial: ['Pars acromialis', 'Schulterhöhenteil', 'akromiyal kısım', 'acromial part'],
+  Spinal: ['Pars spinalis', 'Gräteteil', 'spina kısmı', 'spinal part'],
+  Sternocostal: ['Pars sternocostalis', 'Brustbein-Rippen-Teil', 'sternokostal kısım', 'sternocostal part'],
+  Abdominal: ['Pars abdominalis', 'Bauchteil', 'karın kısmı', 'abdominal part'],
+  Descending: ['Pars descendens', 'Absteigender Teil', 'inen kısım', 'descending part'],
+  Transverse: ['Pars transversa', 'Querer Teil', 'yatay kısım', 'transverse part'],
+  Ascending: ['Pars ascendens', 'Aufsteigender Teil', 'çıkan kısım', 'ascending part'],
 };
 const NAMED = {
-  'rhomboid major': ['M. rhomboideus major', 'Großer Rautenmuskel', 'büyük romboid'],
-  'rhomboid minor': ['M. rhomboideus minor', 'Kleiner Rautenmuskel', 'küçük romboid'],
-  'psoas major': ['M. psoas major', 'Großer Lendenmuskel', 'büyük psoas'],
-  iliacus: ['M. iliacus', 'Darmbeinmuskel', 'iliak kas'],
-  'tensor fasciae latae': ['M. tensor fasciae latae', 'Schenkelbindenspanner', 'tensor fasya lata'],
-  'iliotibial tract': ['Tractus iliotibialis', 'Iliotibialband', 'iliotibial bant'],
-  'calcaneal tendon': ['Tendo calcaneus', 'Achillessehne', 'Aşil tendonu'],
-  'iliocostalis lumborum': ['M. iliocostalis lumborum', 'Lenden-Darmbein-Rippen-Muskel', 'iliokostalis (bel)'],
-  'iliocostalis thoracis': ['M. iliocostalis thoracis', 'Brust-Darmbein-Rippen-Muskel', 'iliokostalis (göğüs)'],
-  'longissimus thoracis': ['M. longissimus thoracis', 'Längster Brustmuskel', 'longissimus (göğüs)'],
-  'spinalis thoracis': ['M. spinalis thoracis', 'Dornmuskel der Brust', 'spinalis (göğüs)'],
+  'rhomboid major': ['M. rhomboideus major', 'Großer Rautenmuskel', 'büyük romboid', 'rhomboid major'],
+  'rhomboid minor': ['M. rhomboideus minor', 'Kleiner Rautenmuskel', 'küçük romboid', 'rhomboid minor'],
+  'psoas major': ['M. psoas major', 'Großer Lendenmuskel', 'büyük psoas', 'psoas major'],
+  iliacus: ['M. iliacus', 'Darmbeinmuskel', 'iliak kas', 'iliacus muscle'],
+  'tensor fasciae latae': ['M. tensor fasciae latae', 'Schenkelbindenspanner', 'tensor fasya lata', 'tensor fasciae latae'],
+  'iliotibial tract': ['Tractus iliotibialis', 'Iliotibialband', 'iliotibial bant', 'iliotibial band'],
+  'calcaneal tendon': ['Tendo calcaneus', 'Achillessehne', 'Aşil tendonu', 'Achilles tendon'],
+  'iliocostalis lumborum': ['M. iliocostalis lumborum', 'Lenden-Darmbein-Rippen-Muskel', 'iliokostalis (bel)', 'iliocostalis (lumbar)'],
+  'iliocostalis thoracis': ['M. iliocostalis thoracis', 'Brust-Darmbein-Rippen-Muskel', 'iliokostalis (göğüs)', 'iliocostalis (thoracic)'],
+  'longissimus thoracis': ['M. longissimus thoracis', 'Längster Brustmuskel', 'longissimus (göğüs)', 'longissimus (thoracic)'],
+  'spinalis thoracis': ['M. spinalis thoracis', 'Dornmuskel der Brust', 'spinalis (göğüs)', 'spinalis (thoracic)'],
 };
 
-// BodyParts3D-Teilname → { la, de, tr } (Name des Muskelteils)
+// BodyParts3D-Teilname → { la, de, tr, en } (Name des Muskelteils)
 export function partNames(enName, muscle) {
   const n = (enName || '').replace(/#\d+$/, '');
   let m = n.match(/^(Long|Short|Lateral|Medial) head of/i);
-  if (m) { const [la, de, tr] = CAPUT[m[1][0].toUpperCase() + m[1].slice(1).toLowerCase()]; return { la, de, tr }; }
+  if (m) { const [la, de, tr, en] = CAPUT[m[1][0].toUpperCase() + m[1].slice(1).toLowerCase()]; return { la, de, tr, en }; }
   m = n.match(/^(\w+) part of/i);
-  if (m && PARS[m[1]]) { const [la, de, tr] = PARS[m[1]]; return { la, de, tr }; }
+  if (m && PARS[m[1]]) { const [la, de, tr, en] = PARS[m[1]]; return { la, de, tr, en }; }
   const key = n.replace(/^(left|right)\s+/i, '').toLowerCase();
-  if (NAMED[key]) { const [la, de, tr] = NAMED[key]; return { la, de, tr }; }
-  return { la: muscle.la, de: muscle.de, tr: muscle.tr };
+  if (NAMED[key]) { const [la, de, tr, en] = NAMED[key]; return { la, de, tr, en }; }
+  return { la: muscle.la, de: muscle.de, tr: muscle.tr, en: muscle.en };
 }
 
 // Ursprung/Ansatz-Text eines Teils aus dem Gesamttext herausschneiden („Pars clavicularis: …; Pars acromialis: …“)

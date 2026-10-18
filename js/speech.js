@@ -1,5 +1,7 @@
 // Sprachausgabe (speechSynthesis, de-DE) und Spracherkennung (SpeechRecognition, de-DE).
 // Beides stellt der Browser bzw. das Betriebssystem bereit – die App selbst baut keine Netzverbindung auf.
+import { t as tr } from './i18n.js';
+import './strings.js';
 
 const synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
 let voice = null;
@@ -55,7 +57,7 @@ export const stopSpeaking = () => { if (synth) synth.cancel(); };
 // 🔊-Knopf: data-say enthält den Text; der Klick wird in der Capture-Phase abgefangen,
 // damit z. B. die Karteikarte darunter nicht umdreht.
 export function sayBtn(text, esc, cls = '') {
-  return `<button type="button" class="say-btn ${cls}" data-say="${esc(text)}" aria-label="Sesli oku">🔊</button>`;
+  return `<button type="button" class="say-btn ${cls}" data-say="${esc(text)}" aria-label="${tr('say.aria')}">🔊</button>`;
 }
 if (typeof document !== 'undefined') {
   document.addEventListener('click', (e) => {
@@ -63,7 +65,7 @@ if (typeof document !== 'undefined') {
     if (!b) return;
     e.preventDefault();
     e.stopPropagation();
-    if (!canSpeak()) { b.title = 'Bu cihazda Almanca ses yok'; b.classList.add('off'); return; }
+    if (!canSpeak()) { b.title = tr('say.noVoice'); b.classList.add('off'); return; }
     speak(b.dataset.say);
   }, true);
 }

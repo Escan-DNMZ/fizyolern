@@ -7,6 +7,8 @@ import { MUSCLES, BONES, JOINTS } from './data/anatomy.js';
 import { fehlerList, odevList, todayPlan, week, upcoming } from './private.js';
 import { muscleQuestions, boneQuestions, jointQuestions, ALL_JOINT_DETAIL, exerciseQuestions } from './quizgen.js';
 import { todaysWords } from './words.js';
+import { t, locale } from './i18n.js';
+import './strings.js';
 
 const pct = (r, w) => (r + w ? Math.round((r / (r + w)) * 100) : null);
 
@@ -54,7 +56,7 @@ function questionIndex() {
       if (kind.startsWith('v')) return { text: `Vokabel: ${ref.replace(/^(v|gw|lv):/, '')}`, fach: 'Vokabeln' };
       if (kind.startsWith('ub')) return { text: `Fitnessübung: ${ref.replace(/-/g, ' ')}`, fach: 'Muskeln' };
     }
-    return { text: '(soru artık uygulamada yok)', fach: '?', missing: true };
+    return { text: t('rep.missing'), fach: '?', missing: true };
   };
 }
 
@@ -107,76 +109,76 @@ export function buildReport() {
   const openWeak = Object.entries(s.open).filter(([, v]) => v.score < 0.5).length;
 
   const lines = [];
-  lines.push(`Merhaba şefim! FizyoLern'den günlük durum raporum (${new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}):`);
-  lines.push(`ℹ️ Bağlam: Uygulama ${trDate(start)}'dan beri kullanımda (bugün ${dayN}. gün).${dayN <= 14 ? ' Düşük gün sayıları ve yüksek kart sayıları başlangıç döneminden kaynaklanıyor, düzensizlik anlamına gelmiyor.' : ''}`);
+  lines.push(t('rep.hello', { date: new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' }) }));
+  lines.push(t('rep.context', { start: trDate(start), n: dayN }) + (dayN <= 14 ? t('rep.contextEarly') : ''));
   lines.push('');
-  lines.push(`🔥 Seri: ${store.streak()} gün · Kurulumdan beri (${trDate(start)}, ${dayN}. gün): ${activeSinceStart}/${dayN} gün aktif${dayN > 7 ? ` · son 7 gün: ${activeDays}/7` : ''}`);
-  lines.push(`📊 Bu hafta test: ${weekQuiz.n} soru, ${weekQuiz.n ? Math.round((weekQuiz.r / weekQuiz.n) * 100) + '% doğru' : '–'}`);
-  lines.push(`🗂️ Kartlar: ${Object.values(s.srs).filter((c) => c.int >= 1).length} öğrenildi · bugün ${reviewRatings} tekrar + ${newSeen} yeni (bugün ilk kez gördüğüm kartlar)${d.cards ? ` · toplam ${d.cards} değerlendirme` : ''}`);
-  lines.push(`✅ Bugün: ${d.quiz || 0} test sorusu (${d.quizRight || 0} doğru), ${d.open || 0} açık uçlu soru${d.morning ? ', sabah testi yapıldı' : ''}${d.lesson ? ', günün kası tamam' : ''}`);
+  lines.push(t('rep.streak', { s: store.streak(), start: trDate(start), n: dayN, a: activeSinceStart }) + (dayN > 7 ? t('rep.last7', { a: activeDays }) : ''));
+  lines.push(t('rep.weekQuiz', { n: weekQuiz.n, p: weekQuiz.n ? t('rep.pctRight', { p: Math.round((weekQuiz.r / weekQuiz.n) * 100) }) : '–' }));
+  lines.push(t('rep.cards', { l: Object.values(s.srs).filter((c) => c.int >= 1).length, r: reviewRatings, nw: newSeen }) + (d.cards ? t('rep.cardsTotal', { n: d.cards }) : ''));
+  lines.push(t('rep.today', { q: d.quiz || 0, r: d.quizRight || 0, o: d.open || 0 }) + (d.morning ? t('rep.morningDone') : '') + (d.lesson ? t('rep.muscleDone') : ''));
   const tw = todaysWords();
   if (tw.length) {
     const wr = d.wordRes || {};
-    const fmt = (x) => (x ? `${x.r}/${x.n}` : 'yapılmadı');
-    lines.push(`🔤 Kelimeler: sabah ${fmt(d.wordsMorning)}, dönüş ${fmt(d.wordsReturn)} · ${tw.map((x) => `${x.de}${wr[x.id] === 'close' ? ' ½' : wr[x.id] === false ? ' ✗' : wr[x.id] ? ' ✓' : ''}`).join(', ')}`);
+    const fmt = (x) => (x ? `${x.r}/${x.n}` : t('rep.notDone'));
+    lines.push(t('rep.words', { m: fmt(d.wordsMorning), d: fmt(d.wordsReturn), list: tw.map((x) => `${x.de}${wr[x.id] === 'close' ? ' ½' : wr[x.id] === false ? ' ✗' : wr[x.id] ? ' ✓' : ''}`).join(', ') }));
   }
   // Prüfungen & Hausaufgaben (Notion „Sınav & Ödev Takibi“) + letzte Probeklausuren
   const exams = upcoming('Sınav', 60);
   const hw = upcoming('Ödev', 14);
-  const when = (e) => `${trDate(e.date).slice(0, 6)}, ${e.days === 0 ? 'bugün' : e.days === 1 ? 'yarın' : e.days + ' gün sonra'}`;
-  if (exams.length) lines.push(`📝 Yaklaşan sınavlar: ${exams.map((e) => `${e.fach || 'Sınav'}${e.topic ? ' (' + e.topic + ')' : ''} – ${when(e)}`).join(' · ')}`);
-  if (hw.length) lines.push(`📌 Teslim edilecek ödevler: ${hw.map((e) => `${e.fach ? e.fach + ': ' : ''}${e.topic || 'Ödev'} – ${when(e)}`).join(' · ')}`);
+  const when = (e) => `${trDate(e.date).slice(0, 6)}, ${e.days === 0 ? t('rep.today0') : e.days === 1 ? t('rep.tomorrow') : t('rep.inDays', { n: e.days })}`;
+  if (exams.length) lines.push(t('rep.exams', { x: exams.map((e) => `${e.fach || t('exam.default')}${e.topic ? ' (' + e.topic + ')' : ''} – ${when(e)}`).join(' · ') }));
+  if (hw.length) lines.push(t('rep.hw', { x: hw.map((e) => `${e.fach ? e.fach + ': ' : ''}${e.topic || t('hw.default')} – ${when(e)}`).join(' · ') }));
   const mocks = (s.mocks || []).filter((m) => m.date >= daysAgo(14));
   if (mocks.length) {
-    lines.push(`🧪 Deneme sınavları (son 14 gün): ${mocks.slice(-4).map((m) => `${m.fach} %${m.pct} (${trDate(m.date).slice(0, 6)})`).join(' · ')}`);
+    lines.push(t('rep.mocks', { x: mocks.slice(-4).map((m) => `${m.fach} ${t('pct', { p: m.pct })} (${trDate(m.date).slice(0, 6)})`).join(' · ') }));
     const last = mocks[mocks.length - 1];
-    const weakT = Object.entries(last.topics).filter(([, v]) => v.n && v.r / v.n < 0.6).sort(([, a], [, b]) => a.r / a.n - b.r / b.n).slice(0, 3).map(([t, v]) => `${t} %${Math.round((v.r / v.n) * 100)}`);
-    if (weakT.length) lines.push(`   Son denemede zayıf konular (${last.fach}): ${weakT.join(', ')}`);
+    const weakT = Object.entries(last.topics).filter(([, v]) => v.n && v.r / v.n < 0.6).sort(([, a], [, b]) => a.r / a.n - b.r / b.n).slice(0, 3).map(([tp, v]) => `${tp} ${t('pct', { p: Math.round((v.r / v.n) * 100) })}`);
+    if (weakT.length) lines.push(t('rep.mockWeak', { f: last.fach, x: weakT.join(', ') }));
   }
-  if (w) lines.push(`📅 Program: KW ${w.kw}${plan && plan.kurse.length ? ' · bugün: ' + plan.kurse.join(' / ') : ''}${plan && plan.test.length ? ' · sabah testi: ' + plan.test.join(' + ') : ''}`);
+  if (w) lines.push(t('rep.plan', { kw: w.kw }) + (plan && plan.kurse.length ? t('rep.planToday', { x: plan.kurse.join(' / ') }) : '') + (plan && plan.test.length ? t('rep.planMorning', { x: plan.test.join(' + ') }) : ''));
 
   const fachRows = Object.entries(byFach).map(([f, v]) => [f, pct(v.r, v.w), v.r + v.w]).filter((x) => x[2] >= 2).sort((a, b) => a[1] - b[1]);
   if (fachRows.length) {
     lines.push('');
-    lines.push('📉 Derslere göre başarı (son 7 gün, zayıftan güçlüye):');
-    fachRows.forEach(([f, p, n]) => lines.push(`- ${f}: %${p} (${n} cevap)`));
+    lines.push(t('rep.byFach'));
+    fachRows.forEach(([f, p, n]) => lines.push(t('rep.fachRow', { f, p, n })));
   }
 
   if (wrongRecent.length) {
     lines.push('');
-    lines.push('❌ Son günlerde en çok yanlış yaptığım sorular:');
-    wrongRecent.slice(0, 8).forEach((q) => lines.push(`- [${q.fach}] ${q.text}${q.answer ? ' → doğru: ' + q.answer : ''} (${q.w}× yanlış)`));
+    lines.push(t('rep.wrong'));
+    wrongRecent.slice(0, 8).forEach((q) => lines.push(`- [${q.fach}] ${q.text}${q.answer ? t('rep.correct', { a: q.answer }) : ''}${t('rep.wrongN', { n: q.w })}`));
   }
 
   if (fehler.length) {
     lines.push('');
-    lines.push(`✗ Hata listem: ${fehler.length} kart, ${fehlerOpen.length} tanesi tekrar bekliyor.`);
+    lines.push(t('rep.fehler', { n: fehler.length, o: fehlerOpen.length }));
     if (fehlerHard.length) {
-      lines.push('Hâlâ unuttuklarım:');
+      lines.push(t('rep.stillForget'));
       fehlerHard.slice(0, 5).forEach((f) => lines.push(`- [${f.fach}] ${f.q}`));
     }
   }
   if (odev.length) {
     // Hausaufgaben zum Auswendiglernen – bewusst getrennt von der Fehlerliste
     lines.push('');
-    lines.push('📌 Ödevlerim (ezber ödevi – hata değil):');
-    for (const t of [...new Set(odev.map((f) => f.odev))]) {
-      const cs = odev.filter((f) => f.odev === t);
+    lines.push(t('rep.odev'));
+    for (const ot of [...new Set(odev.map((f) => f.odev))]) {
+      const cs = odev.filter((f) => f.odev === ot);
       const learned = cs.filter((f) => s.srs[f.id] && s.srs[f.id].int >= 1).length;
       const unseen = cs.filter((f) => !s.srs[f.id] || !s.srs[f.id].reps).length;
-      lines.push(`- ${t}: ${cs.length} kart · ${learned} öğrenildi · ${cs.length - learned - unseen} çalışılıyor · ${unseen} henüz görülmedi`);
+      lines.push(t('rep.odevRow', { t: ot, n: cs.length, l: learned, w: cs.length - learned - unseen, u: unseen }));
     }
   }
-  if (openWeak) lines.push(`📝 ${openWeak} açık uçlu soruda kendimi zayıf değerlendirdim.`);
+  if (openWeak) lines.push(t('rep.openWeak', { n: openWeak }));
 
   lines.push('');
-  lines.push('Bu verilere göre benden şunları istiyorum:');
-  lines.push('1. Kısa bir motivasyon ve bugünkü durumumun yorumu');
-  lines.push('2. En zayıf 2 konumu Türkçe kısaca açıkla (Almanca terimlerle)');
-  lines.push('3. Bu konulardan 5 soruluk mini sınav yap (Almanca, cevapları ben yazayım)');
+  lines.push(t('rep.ask'));
+  lines.push(t('rep.ask1'));
+  lines.push(t('rep.ask2'));
+  lines.push(t('rep.ask3'));
   const examSoon = exams.length && exams[0].days <= 7;
-  if (examSoon) lines.push(`4. ${exams[0].fach || 'Sınav'} sınavına ${exams[0].days} gün kaldı: o derse öncelik ver, kısa bir sınav planı öner`);
-  lines.push(`${examSoon ? 5 : 4}. Gerekirse Notion'daki Haftalık Plan'da ✗ listemi güncelle`);
+  if (examSoon) lines.push(t('rep.ask4exam', { f: exams[0].fach || t('exam.default'), n: exams[0].days }));
+  lines.push(t('rep.askNotion', { k: examSoon ? 5 : 4 }));
   return lines.join('\n');
 }
 
@@ -185,20 +187,20 @@ export function renderReport(view, toast) {
   const text = buildReport();
   const esc = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   view.innerHTML = `
-    <p class="muted small" style="padding:0 4px">Bu metni kopyalayıp Claude'a gönder; durumuna göre seni çalıştırsın. İçinde Notion anahtarın <b>yok</b>, sadece çalışma istatistiğin var.</p>
+    <p class="muted small" style="padding:0 4px">${t('rep.intro')}</p>
     <textarea id="reportText" readonly style="min-height:360px;font-size:14px">${esc(text)}</textarea>
     <div class="grid2" style="margin-top:10px">
-      <button class="btn" id="copyReport">Kopyala</button>
-      <button class="btn ghost" id="shareReport">Paylaş</button>
+      <button class="btn" id="copyReport">${t('rep.copy')}</button>
+      <button class="btn ghost" id="shareReport">${t('rep.share')}</button>
     </div>`;
   view.querySelector('#copyReport').addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(text);
-      toast('Kopyalandı – şimdi Claude\'a yapıştır ✓');
+      toast(t('rep.copied'));
     } catch {
       const ta = view.querySelector('#reportText');
       ta.focus(); ta.select();
-      toast('Metni seçtim, "Kopyala"ya bas');
+      toast(t('rep.selected'));
     }
   });
   const share = view.querySelector('#shareReport');

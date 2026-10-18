@@ -17,12 +17,12 @@ export function setLang(l) {
   document.documentElement.lang = lang();
 }
 
-// Übersetzung eines Datenfelds: tr → en, ftr → fen, x → xEn (sonst <feld>En); fehlt Englisch, bleibt Türkisch
+// Übersetzung eines Datenfelds: tr → en, ftr → fen, x → xEn, …Tr → …En (sonst <feld>En); fehlt Englisch, bleibt Türkisch
 const EN_FIELD = { tr: 'en', ftr: 'fen', x: 'xEn' };
 export function tx(obj, field = 'tr') {
   if (!obj) return '';
   if (lang() === 'en') {
-    const v = obj[EN_FIELD[field] || field + 'En'];
+    const v = obj[EN_FIELD[field] || (field.endsWith('Tr') ? field.slice(0, -2) + 'En' : field + 'En')]; // anamneseTr → anamneseEn
     if (v) return v;
   }
   return obj[field] ?? '';

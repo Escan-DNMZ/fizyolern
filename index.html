@@ -23,11 +23,11 @@
 <body>
   <div id="app">
     <header class="topbar">
-      <button class="icon-btn" id="backBtn" aria-label="Geri" hidden>
+      <button class="icon-btn" id="backBtn" aria-label="Geri" data-i18n-aria="aria.back" hidden>
         <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" /></svg>
       </button>
       <h1 id="title">Bugün</h1>
-      <button class="icon-btn" id="settingsBtn" aria-label="Ayarlar">
+      <button class="icon-btn" id="settingsBtn" aria-label="Ayarlar" data-i18n-aria="route.ayarlar">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
       </button>
     </header>
@@ -39,58 +39,58 @@
       <div id="canvas3d"></div>
       <div class="hud-top">
         <div class="search-wrap">
-          <input id="search3d" type="search" placeholder="Kas, kemik, eklem ara…" autocomplete="off">
+          <input id="search3d" type="search" placeholder="Kas, kemik, eklem ara…" data-i18n-placeholder="hud.search" autocomplete="off">
           <div id="searchResults" class="search-results" hidden></div>
         </div>
         <div class="chips">
-          <button class="chip on" data-layer="bone">Kemik</button>
-          <button class="chip on" data-layer="muscle">Kas</button>
-          <button class="chip" data-layer="joint">Eklem</button>
-          <button class="chip" id="lmBtn">Noktalar</button>
-          <button class="chip" id="isolateBtn">İzole</button>
-          <button class="chip" id="pqBtn">🎯 Noktayı bul</button>
+          <button class="chip on" data-layer="bone" data-i18n="kind.bone">Kemik</button>
+          <button class="chip on" data-layer="muscle" data-i18n="kind.muscle">Kas</button>
+          <button class="chip" data-layer="joint" data-i18n="kind.joint">Eklem</button>
+          <button class="chip" id="lmBtn" data-i18n="hud.points">Noktalar</button>
+          <button class="chip" id="isolateBtn" data-i18n="hud.isolate">İzole</button>
+          <button class="chip" id="pqBtn" data-i18n="pq.title">🎯 Noktayı bul</button>
         </div>
         <div class="chips depth-chips">
-          <span class="depth-label">Katman</span>
-          <button class="chip on" data-depth="1">Yüzey</button>
-          <button class="chip" data-depth="2">Orta</button>
-          <button class="chip" data-depth="3">Derin</button>
+          <span class="depth-label" data-i18n="hud.layer">Katman</span>
+          <button class="chip on" data-depth="1" data-i18n="hud.surface">Yüzey</button>
+          <button class="chip" data-depth="2" data-i18n="hud.middle">Orta</button>
+          <button class="chip" data-depth="3" data-i18n="hud.deep">Derin</button>
         </div>
-        <label class="slider">Kas opaklığı
+        <label class="slider"><span data-i18n="hud.opacity">Kas opaklığı</span>
           <input id="opacity3d" type="range" min="0" max="1" step="0.05" value="1">
         </label>
-        <button class="chip focus-exit" id="focusExitBtn">← Tüm vücut</button>
+        <button class="chip focus-exit" id="focusExitBtn" data-i18n="hud.exit">← Tüm vücut</button>
       </div>
       <div class="hud-side">
-        <button class="mini" data-view="front">Ön</button>
-        <button class="mini" data-view="back">Arka</button>
-        <button class="mini" data-view="left">Yan</button>
+        <button class="mini" data-view="front" data-i18n="hud.front">Ön</button>
+        <button class="mini" data-view="back" data-i18n="hud.back">Arka</button>
+        <button class="mini" data-view="left" data-i18n="hud.side">Yan</button>
         <button class="mini" id="resetView">⟲</button>
       </div>
       <div id="sheet3d" class="sheet" hidden></div>
-      <div id="hint3d" class="hint3d">Döndürmek için sürükle · yakınlaştırmak için iki parmak · seçmek için dokun</div>
+      <div id="hint3d" class="hint3d" data-i18n="h3d.hint">Döndürmek için sürükle · yakınlaştırmak için iki parmak · seçmek için dokun</div>
     </section>
 
     <nav class="tabbar">
       <a href="#/bugun" data-tab="bugun">
         <svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>
-        <span>Bugün</span>
+        <span data-i18n="route.bugun">Bugün</span>
       </a>
       <a href="#/test" data-tab="test">
         <svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8" /><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9" /></svg>
-        <span>Test</span>
+        <span data-i18n="route.test">Test</span>
       </a>
       <a href="#/sorular" data-tab="sorular">
         <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /><path d="M9.5 8.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5" /><path d="M12 14.5h.01" /></svg>
-        <span>Sorular</span>
+        <span data-i18n="tab.sorular">Sorular</span>
       </a>
       <a href="#/kartlar" data-tab="kartlar">
         <svg viewBox="0 0 24 24"><rect x="3" y="6" width="14" height="14" rx="2" /><path d="M7 3h12a2 2 0 0 1 2 2v12" /></svg>
-        <span>Kartlar</span>
+        <span data-i18n="route.kartlar">Kartlar</span>
       </a>
       <a href="#/3d" data-tab="3d">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2" /><path d="M12 7v7M7 9.5l5 1.5 5-1.5M9 21l3-7 3 7" /></svg>
-        <span>3D Anatomi</span>
+        <span data-i18n="route.3d">3D Anatomi</span>
       </a>
     </nav>
   </div>

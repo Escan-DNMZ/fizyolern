@@ -4,6 +4,8 @@
 import * as store from './store.js';
 import { CASES, FIELDS, STADIEN, INDIKATION } from './data/cases.js';
 import { containsFuzzy } from './fuzzy.js';
+import { t, tx, flag } from './i18n.js';
+import './strings.js';
 
 let ctx = null; // { view, $, $$, esc, toast, btn3d }
 
@@ -33,7 +35,7 @@ export function renderCases(args = []) {
   const id = args[0];
   if (!id) return renderList();
   const c = caseById(id);
-  if (!c) { ctx.view.innerHTML = '<p class="empty">Vaka bulunamadı.</p>'; return; }
+  if (!c) { ctx.view.innerHTML = `<p class="empty">${t('case.notFound')}</p>`; return; }
   const s = store.get();
   if (!s.caseRun || s.caseRun.id !== id) {
     s.caseRun = { id, step: 'anamnese', seen: [], f: {}, stadium: '', indik: '' };
@@ -59,26 +61,26 @@ function renderList() {
   view.innerHTML = `
     <div class="card">
       <div class="eyebrow">🩺 Befund-Trainer</div>
-      <h2>Vaka çalışması</h2>
-      <p class="small muted">Devlet sınavının pratik kısmında gerçek bir hastada muayene (Befund) yapıp belgeleyecek ve hedefli bir tedavi planı yazacaksın. Burada bunu adım adım çalışırsın: anamnezi oku → hangi muayeneyi yapacağını seç → Befundbogen'u doldur → örnek çözümle karşılaştır.</p>
-      <p class="small muted">Vakalar Almanca, ipuçları Türkçe. Cevaplarını Almanca yaz (anahtar kavramlar kontrol edilir).</p>
+      <h2>${t('case.h')}</h2>
+      <p class="small muted">${t('case.intro')}</p>
+      <p class="small muted">${t('case.lang')}</p>
     </div>
-    ${open && r.step !== 'result' ? `<a class="card row" href="#/vaka/${encodeURIComponent(r.id)}" style="text-decoration:none;color:inherit;border:2px solid var(--accent)"><span class="grow"><div class="eyebrow">▶︎ Devam et</div><b lang="de">${esc(open.title)}</b><div class="muted small">${{ anamnese: 'Anamnez', exam: 'Muayene', bogen: 'Befundbogen' }[r.step] || ''}</div></span><span class="chev">›</span></a>` : ''}
+    ${open && r.step !== 'result' ? `<a class="card row" href="#/vaka/${encodeURIComponent(r.id)}" style="text-decoration:none;color:inherit;border:2px solid var(--accent)"><span class="grow"><div class="eyebrow">${t('case.continue')}</div><b lang="de">${esc(open.title)}</b><div class="muted small">${{ anamnese: t('case.s.ana'), exam: t('case.s.exam'), bogen: 'Befundbogen' }[r.step] || ''}</div></span><span class="chev">›</span></a>` : ''}
     <div class="list">${CASES.map((c) => {
       const x = st[c.id];
-      const badge = !x ? '<span class="badge">yeni</span>' : `<span class="badge ${x.best >= 0.75 ? 'good' : x.best >= 0.5 ? 'warn' : 'bad'}">%${pct(x.best)}</span>`;
-      return `<a href="#/vaka/${encodeURIComponent(c.id)}"><span class="grow"><b class="small" lang="de">${esc(c.title)}</b><div class="muted small">${esc(c.tr)} · <span lang="de">${esc(c.bereich)}</span></div></span>${badge}<span class="chev">›</span></a>`;
+      const badge = !x ? `<span class="badge">${t('badge.new')}</span>` : `<span class="badge ${x.best >= 0.75 ? 'good' : x.best >= 0.5 ? 'warn' : 'bad'}">${t('pct', { p: pct(x.best) })}</span>`;
+      return `<a href="#/vaka/${encodeURIComponent(c.id)}"><span class="grow"><b class="small" lang="de">${esc(c.title)}</b><div class="muted small">${esc(tx(c, 'tr'))} · <span lang="de">${esc(c.bereich)}</span></div></span>${badge}<span class="chev">›</span></a>`;
     }).join('')}</div>
-    <p class="muted small" style="padding:0 4px">Vakalar kurgusaldır. Ders kitabı bilgisine göre hazırlandı (Leitfragen, ICF, Klassifikationsmodell, Red/Yellow Flags).</p>
+    <p class="muted small" style="padding:0 4px">${t('case.fiction')}</p>
   `;
 }
 
-const stepper = (k) => `<div class="case-steps">${['Anamnez', 'Muayene', 'Befund', 'Sonuç'].map((s, i) => `<span class="${i < k ? 'done' : i === k ? 'on' : ''}">${i + 1}. ${s}</span>`).join('')}</div>`;
+const stepper = (k) => `<div class="case-steps">${[t('case.s.ana'), t('case.s.exam'), 'Befund', t('pq.result')].map((s, i) => `<span class="${i < k ? 'done' : i === k ? 'on' : ''}">${i + 1}. ${s}</span>`).join('')}</div>`;
 
 function anamneseBox(c, open = false) {
   const { esc } = ctx;
   return `<details class="card case-ana"${open ? ' open' : ''}><summary><b>Anamnese</b> <span class="muted small">(${esc(c.bereich)})</span></summary>
-    <p lang="de">${esc(c.anamnese)}</p><div class="tr-box small">🇹🇷 ${esc(c.anamneseTr)}</div></details>`;
+    <p lang="de">${esc(c.anamnese)}</p><div class="tr-box small">${flag()} ${esc(tx(c, 'anamneseTr'))}</div></details>`;
 }
 
 // ───── 1. Anamnese ─────
@@ -89,16 +91,16 @@ function renderAnamnese(c) {
     <div class="card">
       <div class="eyebrow" lang="de">${esc(c.bereich)}</div>
       <h2 lang="de">${esc(c.title)}</h2>
-      <div class="muted small">🇹🇷 ${esc(c.tr)}</div>
+      <div class="muted small">${flag()} ${esc(tx(c, 'tr'))}</div>
       <h3>Anamnese</h3>
       <p lang="de" class="case-text">${esc(c.anamnese)}</p>
-      <div class="tr-box small">🇹🇷 ${esc(c.anamneseTr)}</div>
+      <div class="tr-box small">${flag()} ${esc(tx(c, 'anamneseTr'))}</div>
     </div>
     <div class="card small">
-      <b>Okurken düşün (4 Leitfrage):</b>
+      <b>${t('case.think')}</b>
       <ol style="margin:6px 0 0;padding-left:20px" lang="de"><li>Was ist das Problem?</li><li>Was beeinflusst es?</li><li>Was kann der Patient tun?</li><li>Was soll sich verändern?</li></ol>
     </div>
-    <button class="btn block" id="toExam">Muayeneye geç</button>
+    <button class="btn block" id="toExam">${t('case.toExam')}</button>
   `;
   $('#toExam').addEventListener('click', () => setStep('exam'));
 }
@@ -110,7 +112,7 @@ function findingsHtml(c, ids, { with3d = true } = {}) {
     const e = c.exams.find((x) => x.id === id);
     return `<div class="card finding"><div class="row"><span class="badge">${i + 1}</span><b lang="de" class="grow">${esc(e.name)}</b></div>
       <ul lang="de">${e.find.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>
-      ${e.note ? `<div class="muted small">💡 ${esc(e.note)}</div>` : ''}
+      ${e.note ? `<div class="muted small">💡 ${esc(tx(e, 'note'))}</div>` : ''}
       ${with3d ? btn3d(e.find.join(' '), { style: 'margin-top:8px', block: false }) : ''}</div>`;
   }).join('');
 }
@@ -122,10 +124,10 @@ function renderExam(c) {
   view.innerHTML = `
     ${stepper(1)}
     ${anamneseBox(c)}
-    <p class="muted small" style="padding:0 4px">Sırada hangi muayeneyi yapardın? Her seçim bulguları açar. Gerekli olmayan bir test seçersen sonunda sana söylenir – gerçek sınavda da zaman sınırlı.</p>
+    <p class="muted small" style="padding:0 4px">${t('case.examIntro')}</p>
     ${findingsHtml(c, r.seen)}
-    ${left.length ? `<div class="section-title">Muayene seç</div><div class="list">${left.map((e) => `<button data-ex="${e.id}"><span class="grow"><b lang="de">${esc(e.name)}</b><div class="muted small">${esc(e.tr)}</div></span><span class="chev">＋</span></button>`).join('')}</div>` : '<p class="muted small" style="padding:0 4px">Tüm muayeneler yapıldı.</p>'}
-    <button class="btn block" id="toBogen" ${r.seen.length ? '' : 'disabled'}>Befundbogen'u doldur${r.seen.length ? ` (${r.seen.length} muayene)` : ''}</button>
+    ${left.length ? `<div class="section-title">${t('case.chooseExam')}</div><div class="list">${left.map((e) => `<button data-ex="${e.id}"><span class="grow"><b lang="de">${esc(e.name)}</b><div class="muted small">${esc(tx(e, 'tr'))}</div></span><span class="chev">＋</span></button>`).join('')}</div>` : `<p class="muted small" style="padding:0 4px">${t('case.allDone')}</p>`}
+    <button class="btn block" id="toBogen" ${r.seen.length ? '' : 'disabled'}>${t('case.toBogen')}${r.seen.length ? ` (${t('case.nExams', { n: r.seen.length })})` : ''}</button>
   `;
   $$('[data-ex]').forEach((b) => b.addEventListener('click', () => {
     r.seen.push(b.dataset.ex);
@@ -145,20 +147,20 @@ function renderBogen(c) {
   view.innerHTML = `
     ${stepper(2)}
     ${anamneseBox(c)}
-    <details class="card"><summary><b>Bulgular</b> <span class="muted small">(${r.seen.length} muayene)</span></summary>${findingsHtml(c, r.seen, { with3d: false })}</details>
+    <details class="card"><summary><b>${t('case.findings')}</b> <span class="muted small">(${t('case.nExams', { n: r.seen.length })})</span></summary>${findingsHtml(c, r.seen, { with3d: false })}</details>
     <div class="card">
       <h2>Befundbogen</h2>
-      <p class="muted small">Almanca, kısa notlar yeterli. Taslak otomatik kaydedilir.</p>
+      <p class="muted small">${t('case.bogenNote')}</p>
       <h3 lang="de">Stadium</h3>
       ${chipRow('stadium', STADIEN)}
-      <div class="muted small" style="margin-top:4px">akut ≤ 4. hafta · subakut 5.–12. hafta · chronisch &gt; 12 hafta</div>
+      <div class="muted small" style="margin-top:4px">${t('case.stadien')}</div>
       <h3 lang="de">Physiotherapie ist …</h3>
       ${chipRow('indik', INDIKATION)}
-      ${FIELDS.map((f) => `<h3 lang="de">${esc(f.de)}</h3><div class="muted small">${esc(f.tr)}</div><textarea class="case-ta" data-f="${f.k}" lang="de" autocapitalize="sentences">${esc(r.f[f.k] || '')}</textarea>`).join('')}
+      ${FIELDS.map((f) => `<h3 lang="de">${esc(f.de)}</h3><div class="muted small">${esc(tx(f, 'tr'))}</div><textarea class="case-ta" data-f="${f.k}" lang="de" autocapitalize="sentences">${esc(r.f[f.k] || '')}</textarea>`).join('')}
     </div>
     <div class="grid2">
-      <button class="btn ghost" id="backExam">← Muayene</button>
-      <button class="btn" id="check">Karşılaştır</button>
+      <button class="btn ghost" id="backExam">← ${t('case.s.exam')}</button>
+      <button class="btn" id="check">${t('case.compare')}</button>
     </div>
   `;
   $$('[data-chips]').forEach((row) => $$('.chip', row).forEach((b) => b.addEventListener('click', () => {
@@ -170,7 +172,7 @@ function renderBogen(c) {
   $('#backExam').addEventListener('click', () => setStep('exam'));
   $('#check').addEventListener('click', () => {
     const empty = FIELDS.filter((f) => !(r.f[f.k] || '').trim()).length;
-    if (empty > 4 && !confirm(`${empty} alan boş. Yine de karşılaştırılsın mı?`)) return;
+    if (empty > 4 && !confirm(t('case.confirmEmpty', { n: empty }))) return;
     const res = scoreCase(c, r);
     store.recordCase(c.id, res.total, res.missed.map((e) => e.id));
     setStep('result');
@@ -189,13 +191,13 @@ function renderResult(c) {
     ${stepper(3)}
     <div class="card" style="text-align:center">
       <div class="eyebrow" lang="de">${esc(c.title)}</div>
-      <div class="score">%${pct(res.total)}</div>
-      <div class="muted small">anahtar kavramlar + evre + endikasyon</div>
+      <div class="score">${t('pct', { p: pct(res.total) })}</div>
+      <div class="muted small">${t('case.scoreSub')}</div>
     </div>
     <div class="card">
-      <h2>Muayene seçimi</h2>
-      ${res.missed.length ? `<p class="small">❗ Atladığın önemli muayeneler:</p>${res.missed.map((e) => `<div class="small">• <b lang="de">${esc(e.name)}</b> – <span lang="de">${esc(e.find[0])}</span>${e.note ? `<div class="muted">💡 ${esc(e.note)}</div>` : ''}</div>`).join('')}` : '<p class="small">✅ Tüm önemli muayeneleri yaptın.</p>'}
-      ${extra.length ? `<p class="small" style="margin-top:10px">ℹ️ Bu vakada gerekmeyen testler:</p>${extra.map((e) => `<div class="small">• <b lang="de">${esc(e.name)}</b> – ${esc(e.note || '')}</div>`).join('')}` : ''}
+      <h2>${t('case.examChoice')}</h2>
+      ${res.missed.length ? `<p class="small">${t('case.missed')}</p>${res.missed.map((e) => `<div class="small">• <b lang="de">${esc(e.name)}</b> – <span lang="de">${esc(e.find[0])}</span>${e.note ? `<div class="muted">💡 ${esc(tx(e, 'note'))}</div>` : ''}</div>`).join('')}` : `<p class="small">${t('case.noMissed')}</p>`}
+      ${extra.length ? `<p class="small" style="margin-top:10px">${t('case.extra')}</p>${extra.map((e) => `<div class="small">• <b lang="de">${esc(e.name)}</b> – ${esc(tx(e, 'note'))}</div>`).join('')}` : ''}
     </div>
     <div class="card">
       <h2>Klassifikationsmodell</h2>
@@ -207,14 +209,14 @@ function renderResult(c) {
       <div class="card">
         <div class="row"><h3 class="grow" style="margin:0" lang="de">${esc(f.de)}</h3><span class="badge ${cls(f.score)}">${f.hits.filter((h) => h.hit).length}/${f.hits.length}</span></div>
         <div style="margin-top:6px">${f.hits.map((h) => `<span class="kw ${h.hit ? 'hit' : 'miss'}" lang="de">${h.hit ? '✓' : '✗'} ${esc(h.k.split('|')[0])}</span>`).join('')}</div>
-        ${(r.f[f.k] || '').trim() ? `<div class="case-mine small" lang="de">${esc(r.f[f.k])}</div>` : '<div class="muted small">(boş)</div>'}
+        ${(r.f[f.k] || '').trim() ? `<div class="case-mine small" lang="de">${esc(r.f[f.k])}</div>` : `<div class="muted small">${t('case.empty')}</div>`}
         <div class="explain" lang="de">${esc(c[f.k].a)}</div>
         ${f.k === 'flags' ? `<div class="small" lang="de"><b>🔴 Red:</b> ${c.flags.red.map(esc).join(' · ')}<br><b>🟡 Yellow:</b> ${c.flags.yellow.map(esc).join(' · ')}</div>` : ''}
       </div>`).join('')}
     ${btn3d(allText, { style: 'margin:4px 0 12px' })}
     <div class="grid2">
-      <button class="btn ghost" id="retry">Yeniden dene</button>
-      <a class="btn" href="#/vaka">Diğer vakalar</a>
+      <button class="btn ghost" id="retry">${t('case.retry')}</button>
+      <a class="btn" href="#/vaka">${t('case.others')}</a>
     </div>
   `;
   $('#retry').addEventListener('click', () => {
