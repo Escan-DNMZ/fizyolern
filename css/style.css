@@ -190,6 +190,10 @@ input[type=text], input[type=search], input[type=number], input[type=password] {
 .face .sub { color: var(--muted); margin-top: 8px; font-size: 15px; }
 .face .tag { position: absolute; top: 14px; left: 16px; }
 .face .detail { text-align: left; font-size: 13.5px; width: 100%; }
+/* Ters kartlar: lange Muskellisten oben beginnen (zentriert würde der Anfang beim Scrollen abgeschnitten) */
+.face.back.multi { justify-content: flex-start; }
+.rv-list { margin: 8px 0; padding-left: 20px; line-height: 1.45; }
+.rv-pick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
 .rate { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .rate button { border: 0; border-radius: 12px; padding: 10px 4px; font-weight: 700; font-size: 14px; cursor: pointer; }
 .rate small { display: block; font-weight: 500; font-size: 11px; opacity: .75; }

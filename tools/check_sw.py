@@ -20,7 +20,8 @@ for folder in ['js', 'js/data']:
         for m in re.findall(r"""(?:from\s*|import\s*\(\s*)['"](\.{1,2}/[^'"]+)['"]""", src):
             imports.add(os.path.normpath(os.path.join(folder, m)).replace(os.sep, '/'))
         for m in re.findall(r"""new URL\(\s*['"](\.{1,2}/[^'"]+)['"]""", src):
-            imports.add(os.path.normpath(os.path.join(folder, m)).replace(os.sep, '/') + ' (URL)')
+            # normpath entfernt den Schrägstrich am Ende – Ordner-URLs (models/, vendor/draco/) sollen ihn behalten
+            imports.add(os.path.normpath(os.path.join(folder, m)).replace(os.sep, '/') + ('/' if m.endswith('/') else '') + ' (URL)')
 not_cached = sorted(p for p in imports if p.split(' ')[0] not in cached and not p.endswith('/ (URL)'))
 
 print(f'{len(cached)} Dateien im Cache')

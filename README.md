@@ -147,7 +147,8 @@ The German state exam has a written, an oral and a practical part, and each must
 - Decks:
   - mistake cards and homework cards from Notion;
   - lesson vocabulary per subject and basic medical vocabulary;
-  - muscles (each with a typical gym exercise), bones and joints.
+  - muscles (each with a typical gym exercise), bones and joints;
+  - **reverse cards** (*Ters kartlar*): *"Welche Muskeln entspringen am Tuber ischiadicum?"*, *"… setzen am Pes anserinus superficialis an?"*, *"… innerviert der N. femoralis?"*. They are generated automatically from the muscle data, so muscles are learned in groups by bony landmark or nerve. You tick which muscles you knew (e.g. 2/3); a card not fully known goes to the mistake deck until you know all of it.
 - At most 20 mistake cards per day, today's subjects first, so reviewing never becomes overwhelming.
 
 ### 6. Words of the day
@@ -391,6 +392,7 @@ The app finds the pages by title. Titles work in **English, German or Turkish**.
 python -m http.server 8765          # then open http://localhost:8765
 node tools/test_check.mjs           # answer checking
 node tools/test_structures.mjs      # term detection for the 3D buttons
+node tools/test_reverse.mjs         # reverse cards (muscles by landmark / nerve)
 node tools/audit_content.mjs        # content audit of all questions and cards
 python tools/bump_sw.py             # after any change, so phones load the new version
 ```
@@ -399,6 +401,7 @@ python tools/bump_sw.py             # after any change, so phones load the new v
 |---|---|
 | `js/app.js` | Screens and routing |
 | `js/quizgen.js` | Question generation, adaptive selection |
+| `js/reverse.js` | Reverse cards: muscles grouped by bony landmark or nerve |
 | `js/store.js` | Progress and spaced repetition |
 | `js/words.js`, `js/fuzzy.js` | Words of the day, tolerant answer checking |
 | `js/notion.js`, `js/private.js` | Read-only Notion sync, on-device private data |

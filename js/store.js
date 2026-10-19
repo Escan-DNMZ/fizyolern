@@ -14,6 +14,7 @@ const DEFAULT = () => ({
   mockRun: null,    // laufender Deneme sınavı (übersteht Neuladen der App)
   cases: {},        // Vaka çalışması: fallId -> { score, best, n, last, missed }
   caseRun: null,    // laufender Fall: { id, step, seen: [examId], f: { feld: text }, stadium, indik }
+  revx: {},         // Ters kartlar nicht ganz gewusst (✗-Liste): kartId -> { k: gewusst, n: Muskeln, last }
   settings: { cardsGoal: 15, quizGoal: 10, newPerDay: 10, reverse: false, lang: 'tr' }, // lang = Hilfssprache (tr | en)
 });
 
@@ -91,6 +92,7 @@ export function sanitize(raw) {
       ? { ...s.mockRun, i: int(s.mockRun.i, 0, 200, 0), fach: str(s.mockRun.fach, 100), pick: isObj(s.mockRun.pick) ? s.mockRun.pick : {}, text: isObj(s.mockRun.text) ? s.mockRun.text : {} } : null,
     cases: dict(s.cases, (v) => (isObj(v) ? { n: num(v.n), best: num(v.best, 0, 100), score: num(v.score, 0, 100), missed: strArr(v.missed), ...(date(v.last) ? { last: v.last } : {}) } : undefined)),
     caseRun: isObj(s.caseRun) && typeof s.caseRun.id === 'string' && Array.isArray(s.caseRun.seen || []) && isObj(s.caseRun.f || {}) ? { ...s.caseRun, seen: strArr(s.caseRun.seen), f: dict(s.caseRun.f, (v) => (typeof v === 'string' ? v.slice(0, 5000) : undefined)) } : null,
+    revx: dict(s.revx, (v, k) => (isObj(v) && k.startsWith('rv:') ? { k: int(v.k, 0, 50, 0), n: int(v.n, 1, 50, 1), ...(date(v.last) ? { last: v.last } : {}) } : undefined)),
     settings: {
       cardsGoal: int(set.cardsGoal, 1, 200, d.settings.cardsGoal),
       quizGoal: int(set.quizGoal, 1, 50, d.settings.quizGoal),
@@ -207,6 +209,14 @@ export function rate(cardId, rating) {
   day().cards++;
   save();
   return c;
+}
+
+// Ters kart mit mehreren Muskeln: known von total gewusst. Nicht alles gewusst → ✗-Liste, alles gewusst → wieder heraus.
+// rating wie bei rate() (aus partsRating() bzw. Gut/Leicht gewählt)
+export function rateParts(cardId, known, total, rating) {
+  if (known < total) state.revx[cardId] = { k: known, n: total, last: today() };
+  else delete state.revx[cardId];
+  return rate(cardId, rating); // speichert
 }
 
 export function isDue(cardId) {

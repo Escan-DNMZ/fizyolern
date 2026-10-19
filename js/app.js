@@ -20,6 +20,7 @@ import { initExam, renderMock } from './exam.js';
 import { initOral, renderOral, leaveOral } from './oral.js';
 import { initBefund, renderCases } from './befund.js';
 import { sayBtn } from './speech.js';
+import { reverseCards, findReverse, partsRating } from './reverse.js';
 import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, jointDetailQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked, weight, wpick } from './quizgen.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -82,6 +83,16 @@ const muscleOfDay = () => dailyPick(MUSCLES, 'muscleId');
 const structureOfDay = () => dailyPick([...BONES.map((b) => ({ ...b, kind: 'bone' })), ...JOINTS.map((j) => ({ ...j, kind: 'joint' }))], 'boneId');
 
 // ───────────────────────── Karteikarten-Decks ─────────────────────────
+// Ters kart → Karteikarte; parts = Muskeln, die man einzeln abhakt („2/3 gewusst“)
+function revCard(c, tag = '⇄ ' + t('rev.kind.' + c.kind)) {
+  return {
+    id: c.id, tag, front: c.q, frontSub: t('rev.hint', { n: c.parts.length }), parts: c.parts,
+    back: `<div class="detail"><b>${esc(c.name)}</b><ol class="rv-list">${c.parts.map((p) => `<li><b>${esc(p.la)}</b> <span class="muted">– ${esc(p.seg)}</span></li>`).join('')}</ol><div class="muted small">${t('rev.scope')}</div></div>`,
+  };
+}
+// nicht ganz gewusste Ters kartlar (✗-Liste), falls es die Karte noch gibt
+const revWrong = () => Object.keys(store.get().revx).map(findReverse).filter(Boolean);
+
 function deckCards(deck) {
   const rev = store.get().settings.reverse;
   if (deck.startsWith('vocab')) {
@@ -96,13 +107,20 @@ function deckCards(deck) {
   if (deck === 'fehler' || deck.startsWith('fehler:') || deck === 'odev') {
     const only = deck.startsWith('fehler:') ? deck.slice(7).split(',').filter(Boolean) : null;
     // Hausaufgaben („Ezber kartları“ in Notion) sind eigene Karten, keine Fehler
-    return (deck === 'odev' ? odevList() : fehlerList()).filter((f) => !only || only.includes(f.fach)).map((f) => ({
+    const notion = (deck === 'odev' ? odevList() : fehlerList()).filter((f) => !only || only.includes(f.fach)).map((f) => ({
       id: f.id, tag: f.odev ? '📌 ' + f.odev : '✗ ' + f.fach, front: f.seg ? cardFront(f.seg) : cleanText(f.q),
       // Aus Notion: Lückentext-Segmente (fett = Antwort); aus Datei: Frage/Antwort/Türkçe
       back: f.seg
         ? `<div class="detail" style="font-size:15px">${cleanSegments(f.seg).map((x) => (x.b ? `<b style="color:var(--accent)">${esc(x.t)}</b>` : esc(x.t))).join('')}</div>`
         : `<div class="detail" style="font-size:15px"><b>${esc(f.a)}</b><br><br><span class="muted">${flag()} ${esc(f.tr)}</span></div>`,
     }));
+    // nicht ganz gewusste Ters kartlar gehören zum Fach Anatomie
+    const rev = deck === 'odev' || (only && !only.includes('Anatomie')) ? [] : revWrong().map((c) => revCard(c, '✗ ' + t('rev.tag')));
+    return [...notion, ...rev];
+  }
+  if (deck === 'ters' || deck.startsWith('ters:')) {
+    const kind = deck.slice(5);
+    return reverseCards().filter((c) => !kind || c.kind === kind).map((c) => revCard(c));
   }
   if (deck.startsWith('ders:')) {
     const fach = deck.slice(5);
@@ -136,12 +154,16 @@ function deckCards(deck) {
 
 const DECKS = () => [
   ...(odevList().length ? [{ id: 'odev', name: t('deck.odev'), sub: t('deck.odevSub', { list: [...new Set(odevList().map((f) => f.odev))].join(', ') }) }] : []),
-  ...(fehlerList().length ? [{ id: 'fehler', name: t('deck.fehler'), sub: t('deck.fehlerSub') }] : []),
+  ...(fehlerList().length || revWrong().length ? [{ id: 'fehler', name: t('deck.fehler'), sub: t(fehlerList().length ? 'deck.fehlerSub' : 'deck.fehlerSubRev') }] : []),
   ...FAECHER.map((f) => ({ id: 'ders:' + f, name: t('deck.ders', { f }), sub: t('deck.dersSub') })),
   { id: 'vocab', name: t('deck.allWords'), sub: t('n.words', { n: allVocab().length }) },
   ...vocabCategories().map((c) => ({ id: 'vocab:' + c, name: c, sub: t('deck.words') })),
   ...(store.get().customVocab.length ? [{ id: 'vocab:Eigene', name: t('deck.own'), sub: t('n.words', { n: store.get().customVocab.length }) }] : []),
   { id: 'muscles', name: t('deck.muscles'), sub: 'Ursprung · Ansatz · Innervation · Funktion' },
+  { id: 'ters', name: t('deck.ters'), sub: t('deck.tersSub') },
+  { id: 'ters:o', name: t('deck.ters') + ' · Ursprung', sub: t('deck.tersO') },
+  { id: 'ters:i', name: t('deck.ters') + ' · Ansatz', sub: t('deck.tersI') },
+  { id: 'ters:n', name: t('deck.ters') + ' · Innervation', sub: t('deck.tersN') },
   { id: 'bones', name: t('deck.bones'), sub: t('deck.bonesSub') },
   { id: 'joints', name: t('deck.joints'), sub: 'Gelenktyp · Neutral-Null' },
 ];
@@ -219,7 +241,7 @@ function renderToday() {
   const m = muscleOfDay();
   const b = structureOfDay();
   const vocabCards = deckCards('vocab');
-  const due = store.dueCount(vocabCards) + ['muscles', 'bones', 'joints'].reduce((n, k) => n + store.dueCount(deckCards(k)), 0);
+  const due = store.dueCount(vocabCards) + ['muscles', 'ters', 'bones', 'joints'].reduce((n, k) => n + store.dueCount(deckCards(k)), 0);
 
   const plan = todayPlan();
   const fehlerCards = deckCards('fehler');
@@ -1029,7 +1051,7 @@ const FEHLER_PER_DAY = 20;
 
 function renderCardSession([deckId]) {
   // unbekanntes Deck (z. B. aus einem Link): Hinweis statt „heute fertig“
-  const known = DECKS().some((d) => d.id === deckId) || /^(fehler|ders):/.test(deckId)
+  const known = DECKS().some((d) => d.id === deckId) || /^(fehler|ders):/.test(deckId) || deckId === 'fehler'
     || (deckId.startsWith('vocab:') && vocabCategories().includes(deckId.slice(6)));
   if (!known) { view.innerHTML = `<p class="empty">${t('cards.notFound')}</p><a class="btn block" href="#/kartlar">${t('route.kartlar')}</a>`; return; }
   if (!session || session.deck !== deckId) {
@@ -1070,21 +1092,25 @@ function renderCardSession([deckId]) {
   const ivl = (r) => ivlLabel(store.nextInterval(c, r).label);
   // Vorderseite deutsch/lateinisch? Bei „TR → DE“ steht das deutsche Wort hinten
   const deFront = !(store.get().settings.reverse && card.de);
+  // Ters kart: abhaken, welche Muskeln man wusste
+  if (card.parts && session.rvId !== card.id) { session.rvId = card.id; session.rvKnown = []; }
   view.innerHTML = `
     <div class="row"><span class="muted small">${t('cards.left', { n: session.queue.length })}</span><span class="spacer"></span>${deckId.startsWith('fehler') ? `<span class="badge bad">${t('cards.badgeFehler')}</span>` : deckId === 'odev' ? `<span class="badge warn">${t('cards.badgeOdev')}</span>` : isNewCard ? `<span class="badge good">${t('badge.new')}</span>` : ''}</div>
     <div class="flash ${session.flipped ? 'flipped' : ''}" id="flash">
       <div class="flash-inner">
         <div class="face front"><span class="badge tag">${esc(card.tag)}</span><div class="big">${escGap(card.front)}</div>${deFront ? say(card.de || card.front) : ''}${card.frontSub ? `<div class="sub">${esc(card.frontSub)}</div>` : ''}<div class="sub" style="margin-top:24px">${t('cards.tap')}</div></div>
-        <div class="face back">${deFront ? '' : say(card.de)}${card.back}${btn3d(card.front + ' ' + card.back.replace(/<[^>]+>/g, ' '), { style: 'margin-top:12px', stop: true, block: false })}</div>
+        <div class="face back${card.parts ? ' multi' : ''}">${deFront ? '' : say(card.de)}${card.back}${btn3d(card.front + ' ' + card.back.replace(/<[^>]+>/g, ' '), { style: 'margin-top:12px', stop: true, block: false })}</div>
       </div>
     </div>
     <div id="rateBox" ${session.flipped ? '' : 'hidden'}>
-      <div class="rate">
+      ${card.parts ? `<p class="muted small" style="margin:0 0 6px">${t('rev.howMany')}</p>
+      <div class="rv-pick">${card.parts.map((p, i) => `<button class="chip${session.rvKnown.includes(i) ? ' on' : ''}" data-k="${i}" aria-pressed="${session.rvKnown.includes(i)}">${esc(p.la)}</button>`).join('')}</div>
+      <div class="rate" id="rvRate"></div>` : `<div class="rate">
         <button class="r0" data-r="0">${t('rate.0')}<small>${ivl(0)}</small></button>
         <button class="r1" data-r="1">${t('rate.1')}<small>${ivl(1)}</small></button>
         <button class="r2" data-r="2">${t('rate.2')}<small>${ivl(2)}</small></button>
         <button class="r3" data-r="3">${t('rate.3')}<small>${ivl(3)}</small></button>
-      </div>
+      </div>`}
     </div>
     <button class="btn block" id="showBtn" ${session.flipped ? 'hidden' : ''}>${t('cards.show')}</button>
   `;
@@ -1097,10 +1123,10 @@ function renderCardSession([deckId]) {
   // Knöpfe/Links auf der Karte (3D, 🔊) drehen die Karte nicht um
   $('#flash').addEventListener('click', (e) => { if (!e.target.closest('a, button, [data-stop]')) flip(); });
   $('#showBtn').addEventListener('click', flip);
-  $$('[data-r]').forEach((b) => b.addEventListener('click', () => {
-    const r = +b.dataset.r;
+  const onRate = (r) => {
     const step = store.nextInterval(store.get().srs[card.id], r);
-    store.rate(card.id, r);
+    if (card.parts) store.rateParts(card.id, session.rvKnown.length, card.parts.length, r);
+    else store.rate(card.id, r);
     if (deckId.startsWith('fehler')) { const d = store.day(); d.fehlerSeen = [...new Set([...(d.fehlerSeen || []), card.id])]; store.save(); }
     session.queue.shift();
     if (step.requeue === 'soon') session.queue.splice(Math.min(3, session.queue.length), 0, card); // gleich nochmal
@@ -1108,7 +1134,27 @@ function renderCardSession([deckId]) {
     else session.done++;
     session.flipped = false;
     renderCardSession([deckId]);
-  }));
+  };
+  if (card.parts) {
+    // Alle gewusst → Gut/Leicht wählen; sonst eine Bewertung nach Anteil (≥ Hälfte = Schwer, sonst Nochmal) + ✗-Liste
+    const drawRate = () => {
+      const k = session.rvKnown.length, n = card.parts.length;
+      const r = partsRating(k, n);
+      $('#rvRate').style.gridTemplateColumns = k === n ? '1fr 1fr' : '1fr';
+      $('#rvRate').innerHTML = k === n
+        ? `<button class="r2" data-r="2">${t('rate.2')} · ${k}/${n}<small>${ivl(2)}</small></button><button class="r3" data-r="3">${t('rate.3')}<small>${ivl(3)}</small></button>`
+        : `<button class="r${r}" data-r="${r}">${t('rev.save', { k, n })} · ${t('rate.' + r)}<small>${ivl(r)} · ${t('rev.toList')}</small></button>`;
+      $$('#rvRate [data-r]').forEach((b) => b.addEventListener('click', () => onRate(+b.dataset.r)));
+    };
+    $$('.rv-pick [data-k]').forEach((b) => b.addEventListener('click', () => {
+      const i = +b.dataset.k;
+      session.rvKnown = session.rvKnown.includes(i) ? session.rvKnown.filter((x) => x !== i) : [...session.rvKnown, i];
+      b.classList.toggle('on', session.rvKnown.includes(i));
+      b.setAttribute('aria-pressed', session.rvKnown.includes(i));
+      drawRate();
+    }));
+    drawRate();
+  } else $$('[data-r]').forEach((b) => b.addEventListener('click', () => onRate(+b.dataset.r)));
 }
 
 function renderWordList() {
