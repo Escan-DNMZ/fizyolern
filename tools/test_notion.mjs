@@ -67,5 +67,35 @@ const rows = await N.rowsFromPages([
 const { lessons, skipped } = mergeLessons([], rows);
 eq('Fragen-DB', [rows.length, skipped, lessons.map((l) => [l.fach, l.title, l.kern.length, l.mcq.length])], [3, 1, [['Neurologie', 'Knie', 1, 1]]]);
 
+// Checkliste: Fach-Zeile, ## Abschnitte, To-dos mit „✅ TT.MM“, „→ Skript x.y“, „→ Notu N“
+const todo = (text, checked) => ({ type: 'to_do', to_do: { rich_text: [rt(text)], checked } });
+const ckBlocks = [
+  blk('paragraph', [rt('Fach: Trainingslehre · Quelle: Beispiel')]),
+  blk('paragraph', [rt('Format für FizyoLern: ## = Abschnitt · To-do = Lernziel')]),
+  todo('Ohne Abschnitt → Skript 0', false),
+  blk('heading_2', [rt('Abschnitt A')]),
+  todo('Drei Beispiele nennen → Skript 4.2 → Notu 4 ✅ 19.10', true),
+  todo('Begriff definieren → Skript 2.1.1 → Notu 2, Notu 3 ✅ 05.10.2026', true),
+  todo('Methoden vergleichen → Skript 4.4.1', false),
+];
+const ck = await N.parseChecklist(ckBlocks, ['Anatomie', 'Trainingslehre'], new Date('2026-10-19'));
+eq('Checkliste Fach', ck.fach, 'Trainingslehre');
+eq('Checkliste Ziele', ck.items.map((x) => [x.sec, x.text, x.done, x.date, x.skript, x.notu]), [
+  ['', 'Ohne Abschnitt', false, '', '0', []],
+  ['Abschnitt A', 'Drei Beispiele nennen', true, '2026-10-19', '4.2', [4]],
+  ['Abschnitt A', 'Begriff definieren', true, '2026-10-05', '2.1.1', [2, 3]],
+  ['Abschnitt A', 'Methoden vergleichen', false, '', '4.4.1', []],
+]);
+// id = Fach + Abschnitt + Text: Haken/Datum/Verweise ändern sie nicht, ein anderer Abschnitt schon
+const ck2 = await N.parseChecklist([ckBlocks[0], ckBlocks[3], todo('Drei Beispiele nennen', false)], ['Trainingslehre']);
+const ck3 = await N.parseChecklist([ckBlocks[0], blk('heading_2', [rt('Andere')]), todo('Drei Beispiele nennen', false)], ['Trainingslehre']);
+eq('Checkliste id stabil', [ck2.items[0].id === ck.items[1].id, ck3.items[0].id === ck.items[1].id, /^ck:[0-9a-f]{16}$/.test(ck.items[1].id)], [true, false, true]);
+eq('Checkliste unbekanntes Fach', await N.parseChecklist([blk('paragraph', [rt('Fach: Astrologie')]), todo('x', true)], ['Anatomie']), { fach: '', unknown: 'Astrologie', items: [] });
+eq('Checkliste ohne Fach-Zeile', (await N.parseChecklist([todo('x', true)], ['Anatomie'])).items, []);
+// private.js prüft die Felder (falsche Typen / fremde ids fallen weg)
+const { cleanPrivate } = await imp('js/private.js');
+const cp = cleanPrivate({ kind: 'fizyolern-private', ck: [...ck.items, { id: 'evil', fach: 'X', text: 'y' }, { ...ck.items[1], id: 'ck:zz' + ck.items[1].id.slice(5), notu: ['4', 4] }] });
+eq('Checkliste cleanPrivate', [cp.ck.length, cp.ck[1].notu, cp.ck[1].date], [4, [4], '2026-10-19']);
+
 console.log(fail ? `\n${fail} von ${n} FEHLGESCHLAGEN` : `Alle ${n} Notion-Tests bestanden`);
 process.exit(fail ? 1 : 0);

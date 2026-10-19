@@ -365,6 +365,63 @@ async function loadLessonRows(db) {
   return rowsFromPages(pages);
 }
 
+// ───── Checklisten der Lehrkräfte (Lernziele): jede Seite mit „Checkliste“ im Titel ─────
+// „Fach: <Name>“ = Fach · ## = Abschnitt · To-do = Lernziel (abgehakt = im Unterricht behandelt)
+// Im Text: „✅ TT.MM“ = behandelt am · „→ Skript 4.4.1“ = Fundstelle · „→ Notu 4“ = Ders Notu des Fachs.
+// Die Texte bleiben nur auf dem Gerät (privater Speicher), nie im öffentlichen Code.
+export const CK_TITLE = 'Checkliste';
+const ckKey = (s) => lower(s).replace(/\s+/g, ' ').trim();
+
+// Datum „✅ 05.10“ / „✅ 05.10.2026“ (oder Notion-Datumserwähnung nach dem Haken) → YYYY-MM-DD
+function ckDate(rt, text, now) {
+  const at = text.indexOf('✅');
+  if (at < 0) return '';
+  const m = (rt || []).find((x) => x.type === 'mention' && x.mention && x.mention.date);
+  if (m) return m.mention.date.start.slice(0, 10);
+  const x = text.slice(at).match(/✅\s*(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?/);
+  if (!x || +x[2] < 1 || +x[2] > 12 || +x[1] < 1 || +x[1] > 31) return '';
+  let y = x[3] ? +x[3] : now.getFullYear();
+  if (y < 100) y += 2000;
+  let d = new Date(y, +x[2] - 1, +x[1]);
+  // ohne Jahr: ein Datum weit in der Zukunft gehört zum Vorjahr (Schuljahr über den Jahreswechsel)
+  if (!x[3] && d - now > 60 * 864e5) d = new Date(y - 1, +x[2] - 1, +x[1]);
+  return fmt(d);
+}
+
+export async function parseChecklist(blocks, faecher, now = new Date()) {
+  let fach = '', sec = '';
+  const items = [];
+  for (const b of blocks) {
+    const rt = b[b.type] && b[b.type].rich_text;
+    const text = plain(rt).trim();
+    if (!fach && /^(paragraph|callout|quote|heading_[123])$/.test(b.type)) {
+      const m = text.match(/\bFach:\s*([^·|\n]+)/i);
+      if (m) {
+        const name = m[1].trim();
+        fach = faecher.find((f) => ckKey(f) === ckKey(name)) || faecherIn(name, faecher)[0] || '';
+        if (!fach) return { fach: '', unknown: name, items: [] };
+      }
+    }
+    if (b.type === 'heading_2') sec = text.replace(/\s*\{[^}]*\}\s*$/, '');
+    if (b.type !== 'to_do' || !text) continue;
+    const head = text.split(/\s+→/)[0].replace(/\s*✅.*$/, '').trim();
+    if (!head) continue;
+    const refs = text.slice(head.length);
+    const skript = (refs.match(/Skript\s*(\d+(?:\.\d+)*)/i) || [])[1] || '';
+    const notu = [...refs.matchAll(/Notu\s*(\d{1,3})/gi)].map((m) => +m[1]);
+    // „→ @Ders Notu“ als Seitenerwähnung: nur der Hash der Seiten-ID (wie bei den Ders-Notları)
+    const nh = [];
+    for (const x of rt || []) if (x.type === 'mention' && x.mention && x.mention.page) nh.push(await sha16(x.mention.page.id.replace(/-/g, '')));
+    items.push({ id: 'ck:' + (await sha16(ckKey(fach) + '|' + ckKey(sec) + '|' + ckKey(head))), fach, sec, text: head, done: !!b.to_do.checked, date: ckDate(rt, text, now), skript, notu: [...new Set(notu)], nh });
+  }
+  return { fach, items: fach ? items : [] };
+}
+
+async function findAllPages(name) {
+  const r = await call('/search', { method: 'POST', body: { query: name, filter: { property: 'object', value: 'page' }, page_size: 50 } });
+  return r.results.filter((x) => !x.archived && !x.in_trash && lower(titleOf(x)).includes(lower(name)));
+}
+
 // ───── Notion-Links zu den Ders-Notları (Zuordnung über gehashte Seiten-IDs) ─────
 async function loadLessonLinks(dersler, lessons) {
   const map = {};
@@ -417,6 +474,17 @@ export async function syncFromNotion({ faecher, lessons }) {
     const open = result.exams.filter((e) => !e.done);
     report.push(t('nt.exams', { n: open.filter((e) => e.typ === 'Sınav').length, m: open.filter((e) => e.typ !== 'Sınav').length }));
   } else result.exams = old.exams || [];
+
+  // Checklisten: ohne solche Seiten bleibt die Funktion in der App ausgeblendet
+  result.ck = [];
+  const ckSkip = [];
+  for (const p of await findAllPages(CK_TITLE)) {
+    const { fach, unknown, items } = await parseChecklist(await children(p.id), faecher);
+    if (fach) result.ck.push(...items.filter((it) => !result.ck.some((x) => x.id === it.id)));
+    else ckSkip.push(unknown || titleOf(p));
+  }
+  if (result.ck.length) report.push(t('nt.ck', { n: result.ck.length, d: result.ck.filter((x) => x.done).length, f: [...new Set(result.ck.map((x) => x.fach))].join(', ') }));
+  if (ckSkip.length) report.push(t('nt.ckSkip', { x: ckSkip.join(', ') }));
 
   result.notion = dersler ? await loadLessonLinks(dersler, lessons) : old.notion || {};
   if (!setPrivate(result)) report.push(t('set.storageFull'));

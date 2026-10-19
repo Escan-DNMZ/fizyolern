@@ -13,6 +13,7 @@ All page titles and keywords work in **English, German or Turkish**. Pick one la
 | Lesson notes | `Lessons` | `Unterricht` | `Dersler` |
 | Extra questions (database) | `FizyoLern Questions` | `FizyoLern Fragen` | `FizyoLern Sorular` |
 | Exams and homework | `Exams & Homework` | `Prüfungen & Hausaufgaben` | `Sınav & Ödev Takibi` |
+| Learning goals (one page per subject, optional) | `Checkliste – <Subject>` | `Checkliste – <Fach>` | `Checkliste – <Ders>` |
 
 A title only has to **contain** the name, and capital letters don't matter, so `Weekly Plan (iPad)` works too. Put all these pages **inside one parent page** (e.g. "Physiotherapy") and connect the FizyoLern integration to that parent page.
 
@@ -109,3 +110,34 @@ New questions without an app update. Columns (German names):
 | `Erklärung TR` | Text | explanation |
 | `Schlüsselbegriffe` | Text | key terms for open questions, separated by commas; `a\|b` = alternatives |
 | `Gizle` | Checkbox | hide this row |
+
+---
+
+## 5. Checkliste – learning goals per subject (optional)
+
+Many teachers hand out a checklist of learning goals for the whole year ("this is what the exam asks"). Put it into Notion as one page per subject; the app then shows a **📋 Checkliste** screen for that subject: which goals were covered in class, how sure you are about each goal (😊 🙂 😕 😵), and quick tests for each goal. Without such a page the feature stays hidden.
+
+The texts stay private: the app reads them only from your Notion on your phone; they are never part of the public app.
+
+```markdown
+Fach: Hygiene · Source: teacher's checklist
+
+## Händehygiene
+- [x] Die Indikationen der hygienischen Händedesinfektion nennen → Skript 2.1 → Notu 1 ✅ 14.10
+- [x] Desinfektion und Sterilisation voneinander abgrenzen → Skript 2.3 → Notu 1 ✅ 14.10
+- [ ] Ablauf der chirurgischen Händedesinfektion erklären → Skript 2.4
+
+## Infektionsketten
+- [ ] Übertragungswege von Krankheitserregern erklären → Skript 3.1
+```
+
+**Rules the app follows**
+- **Title:** must contain `Checkliste`, e.g. `Checkliste – Hygiene`. One page per subject.
+- **Subject:** a line `Fach: <name>` near the top. The name must be one of the app's subjects (Anatomie, Physiologie, PT Grundlagen, PT Befund, O/C, Trainingslehre, KMT, Hygiene, PPS, or a subject from the questions database). Text after `·` is ignored.
+- **Sections:** `##` headings (heading 2).
+- **Goals:** to-do items. **Ticked** = covered in class. Only covered goals are used in the morning test and the mixed test.
+- `✅ 14.10` (or `✅ 14.10.2026`) after the text = the date it was covered. Goals covered in the last 7 days come up more often.
+- `→ Skript 2.4` = where to read the answer (shown as a reference only).
+- `→ Notu 1` = the lesson note with that number for this subject (e.g. `hygiene-1`); several: `→ Notu 2, Notu 3`. A Notion link (@-mention) to the lesson note page works too.
+- Each goal is identified by subject + section + goal text. Ticking, dates and `→` references can change any time; if you reword a goal or move it to another section, its self-rating starts again.
+- Questions are matched to goals automatically (optional `ck` keywords on built-in questions, otherwise by similar words). A wrong answer lowers the goal by one step; you can raise it again by hand.

@@ -28,5 +28,13 @@ ok(!store.migrate(s) && s.quiz['lm:trochanter_minor'].w === 1, 'Migration läuft
 store.replace({ srs: {}, days: {}, quiz: { 'lm:trochanter_minor': { r: 0, w: 4 } } });
 ok(!store.get().quiz['lm:trochanter_minor'], 'Migration auch beim Einspielen einer Sicherung');
 
+// Checkliste-Selbsteinschätzung: nur gültige ids/Stufen; Sicherung übernimmt sie
+const cs = store.sanitize({ srs: {}, days: {}, ck: { 'ck:0123456789abcdef': { lv: 7, last: '2026-10-19', auto: 1 }, 'ck:kaputt': { lv: 1 }, 'x': { lv: 2 } } });
+ok(JSON.stringify(cs.ck) === JSON.stringify({ 'ck:0123456789abcdef': { lv: 3, last: '2026-10-19', auto: true } }), 'ck bereinigt: ' + JSON.stringify(cs.ck));
+store.rateCk('ck:0123456789abcdef', 0);
+ok(store.get().ck['ck:0123456789abcdef'].lv === 0 && !store.get().ck['ck:0123456789abcdef'].auto, 'rateCk setzt Stufe');
+store.rateCk('ck:0123456789abcdef', null);
+ok(!store.get().ck['ck:0123456789abcdef'], 'rateCk(null) nimmt zurück');
+
 console.log(fails ? `${fails} Fehler` : 'Alle Store-Tests bestanden.');
 process.exit(fails ? 1 : 0);

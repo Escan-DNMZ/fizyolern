@@ -37,6 +37,12 @@ export function cleanPrivate(obj) {
     gw: objs(obj.gw, 5000).map((w) => ({ id: str(w.id, 300), de: str(w.de, 300), tr: str(w.tr, 500), ...(w.en ? { en: str(w.en, 500) } : {}), ex: str(w.ex, 1000), cat: str(w.cat, 100), stufe: str(w.stufe, 50), next: date(w.next) })).filter((w) => w.id && w.de),
     lessonRows: objs(obj.lessonRows, 5000).filter((r) => /^[0-9a-f]{16}$/.test(r.h)).map((r) => ({ h: r.h, fach: str(r.fach, 100), lektion: str(r.lektion, 200), typ: str(r.typ, 20), frage: str(r.frage), antwort: str(r.antwort), ablenker: strs(r.ablenker, 1000).slice(0, 3), erkl: str(r.erkl), kw: strs(r.kw, 200).slice(0, 20) })),
     exams: objs(obj.exams, 500).map((e) => ({ typ: e.typ === 'Sınav' ? 'Sınav' : 'Ödev', fach: str(e.fach, 100), topic: str(e.topic, 300), date: date(e.date), done: !!e.done, note: str(e.note, 500) })).filter((e) => e.date),
+    // Checklisten-Lernziele (Texte der Lehrkraft – nur auf dem Gerät)
+    ck: objs(obj.ck, 2000).filter((c) => typeof c.id === 'string' && /^ck:[0-9a-f]{16}$/.test(c.id)).map((c) => ({
+      id: c.id, fach: str(c.fach, 100), sec: str(c.sec, 200), text: str(c.text, 600), done: !!c.done, date: date(c.date), skript: str(c.skript, 30),
+      notu: (Array.isArray(c.notu) ? c.notu : []).filter((n) => Number.isInteger(n) && n > 0 && n < 1000).slice(0, 10),
+      nh: strs(c.nh, 16).filter((h) => /^[0-9a-f]{16}$/.test(h)).slice(0, 10),
+    })).filter((c) => c.fach && c.text),
     notion,
   };
 }
@@ -121,6 +127,7 @@ export function cardFront(seg) {
 // Notion-✗-Liste: echte Fehler und Hausaufgaben („Ezber kartları“) getrennt
 export const fehlerList = () => ((data && data.fehler) || []).filter((f) => !f.odev);
 export const odevList = () => ((data && data.fehler) || []).filter((f) => f.odev);
+export const ckList = () => ((data && data.ck) || []);
 export const notionLink = (lessonId) => data && data.notion && data.notion[lessonId];
 const isoDate = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 

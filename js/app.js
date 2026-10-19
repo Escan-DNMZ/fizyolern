@@ -19,6 +19,7 @@ import { masteredLessons, vocabTr } from './quizgen.js';
 import { initExam, renderMock } from './exam.js';
 import { initOral, renderOral, leaveOral } from './oral.js';
 import { initBefund, renderCases } from './befund.js';
+import { renderChecklist, ckFaecher, hasChecklist, summary as ckSummary } from './checkliste.js';
 import { sayBtn } from './speech.js';
 import { reverseCards, findReverse, partsRating } from './reverse.js';
 import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, jointDetailQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked, weight, wpick } from './quizgen.js';
@@ -190,6 +191,7 @@ const routes = {
   ders: { title: 'route.ders', tab: 'bugun', render: renderLesson, back: 'history' },
   dersler: { title: 'route.dersler', tab: 'bugun', render: renderLessonList, back: '#/bugun' },
   not: { title: 'route.not', tab: 'bugun', render: renderLessonNote, back: '#/dersler' },
+  ck: { title: 'route.ck', tab: 'bugun', render: ([fach]) => renderChecklist(view, fach, { toast }), back: 'history' },
   ayarlar: { title: 'route.ayarlar', tab: null, render: renderSettings, back: '#/bugun' },
   rapor: { title: 'route.rapor', tab: 'bugun', render: () => renderReport(view, toast), back: '#/bugun' },
   kelime: { title: 'route.kelime', tab: 'bugun', render: renderWordSession, back: '#/bugun' },
@@ -312,6 +314,8 @@ function renderToday() {
     <div class="list">
       ${weak.map((w) => `<a href="${w.topic === 'Knochenpunkte' ? '#/3d?quiz=pelvis' : `#/test?kat=${encodeURIComponent(w.topic)}`}"><span class="grow">${esc(topicLabel(w.topic))}<div class="muted small">${t('today.weakStat', { p: Math.round(w.acc * 100), n: w.total })}</div></span><span class="mini">${t('today.testIt')}</span></a>`).join('')}
     </div>` : ''}
+
+    ${ckFaecher().map((f) => { const c = ckSummary(f); return `<a class="card row" href="#/ck/${encodeURIComponent(f)}" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">${t('ck.eyebrow')}</div><h2 lang="de">${esc(f)}</h2><div class="muted small">${t('ck.doneOf', { a: c.done, b: c.total })} · 😊 ${c.good} · 😕/😵 ${c.weak}</div></span><span class="chev">›</span></a>`; }).join('')}
 
     ${LESSONS.length ? `<a class="card row" href="#/dersler" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">${t('today.fromNotion')}</div><h2>${t('today.lessonNotes')}</h2><div class="muted small">${t('today.lessonNotesSub', { n: LESSONS.length })}</div></span><span class="chev">›</span></a>` : ''}
 
@@ -529,6 +533,7 @@ function renderLessonList() {
     <p class="muted small" style="padding:0 4px">${t('lessons.intro')}</p>
     ${Object.entries(byFach).map(([fach, ls]) => `
       <div class="section-title" lang="de">${esc(fach)}</div>
+      ${hasChecklist(fach) ? (() => { const c = ckSummary(fach); return `<a class="card row ck-link" href="#/ck/${encodeURIComponent(fach)}"><span class="grow">📋 ${t('ck.open')}<div class="muted small">${t('ck.doneOf', { a: c.done, b: c.total })}</div></span><span class="chev">›</span></a>`; })() : ''}
       <div class="list">${ls.map((l) => {
         const p = lessonProgress(l);
         const badge = !p.seen ? `<span class="badge">${t('badge.new')}</span>` : `<span class="badge ${p.right / p.total >= 0.8 ? 'good' : 'warn'}">${p.right}/${p.total}</span>`;
@@ -551,6 +556,8 @@ function renderLessonNote([id]) {
         ${notionLink(l.id) && NOTION_URL.test(notionLink(l.id)) ? `<a class="btn ghost" href="${esc(notionLink(l.id))}" target="_blank" rel="noopener noreferrer">${t('note.openNotion')}</a>` : ''}
       </div>
       ${l.fach === 'PT Befund' ? `<a class="btn ghost block" style="margin-top:10px" href="#/vaka">${t('vaka.btn')}</a>` : ''}
+      ${l.fach === 'Anatomie' && /femur/i.test(l.title) ? `<a class="btn ghost block" style="margin-top:10px" href="#/3d?quiz=femur">${t('pq.femurBtn')}</a>` : ''}
+      ${hasChecklist(l.fach) ? `<a class="btn ghost block" style="margin-top:10px" href="#/ck/${encodeURIComponent(l.fach)}">📋 ${t('ck.open')}</a>` : ''}
     </div>
     <div class="section-title">${t('note.summary')}</div>
     <div class="list">${l.kern.map((k) => `<div style="display:block"><div lang="de">${esc(k.de)}</div><div class="muted small">${flagFor(k)} ${esc(tx(k))}</div></div>`).join('')}</div>
@@ -836,7 +843,7 @@ let quiz = null;
 
 const topicLabel = (c) => (c.startsWith('Ders: ') ? t('topic.ders', { f: c.slice(6) }) : c === 'Knochenpunkte' ? t('topic.lm') : catLabel(c));
 // Beschriftung einer Test-Kategorie (die Kategorie selbst bleibt der interne Schlüssel)
-const catLabel = (c) => (c === 'Gemischt' ? t('cat.mixed') : c === 'Hatalar: bugün' ? t('cat.wrongToday') : c === 'Hatalar: hafta' ? t('cat.wrongWeek') : c.startsWith('Ders: ') ? topicLabel(c) : c);
+const catLabel = (c) => (c.startsWith('Lernziel: ') ? t('cat.ck') : c === 'Gemischt' ? t('cat.mixed') : c === 'Hatalar: bugün' ? t('cat.wrongToday') : c === 'Hatalar: hafta' ? t('cat.wrongWeek') : c.startsWith('Ders: ') ? topicLabel(c) : c);
 let quizCat = 'Gemischt';
 
 function renderQuizStart(_, params = new URLSearchParams()) {
@@ -1372,15 +1379,22 @@ function renderFocusSheet(k) {
 }
 
 // ───── Quiz „Noktayı bul“: Knochenpunkt bzw. Ursprung/Ansatz eines Muskels am Modell antippen ─────
-const PQ_SETS = { pelvis: ['os_coxae', 'sacrum', 'femur'] };
-// Toleranz in Metern; lange oder flächige Strukturen großzügiger (sy < 1: in der Höhe großzügiger)
-const PQ_TOL = { crista_iliaca: { tol: 0.035 }, linea_aspera: { tol: 0.02, sy: 0.2 }, foramen_obturatum: { tol: 0.025 }, acetabulum: { tol: 0.025 } };
+const PQ_SETS = { pelvis: ['os_coxae', 'sacrum', 'femur'], femur: ['femur'] };
+// Becken-Quiz: nur das obere Femur (Knie-Punkte gehören zum Femur-Quiz, sonst müsste man weit herauszoomen)
+const PQ_ONLY = { pelvis: (l) => l.bone !== 'femur' || l.pos[1] > 0.6 };
+// Toleranz in Metern; lange oder flächige Strukturen großzügiger (sy < 1: in der Höhe großzügiger).
+// Tuberculum adductorium und Epicondylus medialis liegen nur ~1,6 cm auseinander → enger.
+const PQ_TOL = { crista_iliaca: { tol: 0.035 }, linea_aspera: { tol: 0.02, sy: 0.2 }, foramen_obturatum: { tol: 0.025 }, acetabulum: { tol: 0.025 },
+  linea_intertrochanterica: { tol: 0.025 }, tuberositas_glutea: { tol: 0.02, sy: 0.5 },
+  condylus_medialis_femoris: { tol: 0.022 }, condylus_lateralis_femoris: { tol: 0.022 },
+  tuberculum_adductorium: { tol: 0.013 }, epicondylus_medialis_femoris: { tol: 0.013 } };
 const PQ_ROUNDS = 10;
 let pq = null; // { set, qs, k, results, answer }
 
 function pointQuestions(set) {
   const bones = Object.hasOwn(PQ_SETS, set) ? PQ_SETS[set] : PQ_SETS.pelvis;
-  const lms = LANDMARKS.filter((l) => bones.includes(l.bone));
+  const only = (Object.hasOwn(PQ_ONLY, set) && PQ_ONLY[set]) || (() => true);
+  const lms = LANDMARKS.filter((l) => bones.includes(l.bone) && only(l));
   const qs = lms.map((l) => ({ id: 'lm:' + l.id, kind: 'point', ans: [l] }));
   for (const role of ['o', 'i']) {
     const by = {};
@@ -1488,7 +1502,8 @@ function renderPointQuizSheet() {
         ${wrong.length ? `<button class="btn ghost" id="pqRetry">${t('retryWrong')}</button>` : `<button class="btn plain" id="pqExit">${t('finish')}</button>`}
         <button class="btn" id="pqAgain">${t('pq.again')}</button>
       </div>
-      ${wrong.length ? `<button class="btn plain block" id="pqExit" style="margin-top:8px">${t('finish')}</button>` : ''}`;
+      ${wrong.length ? `<button class="btn plain block" id="pqExit" style="margin-top:8px">${t('finish')}</button>` : ''}
+      <button class="btn ghost block" id="pqOther" style="margin-top:8px">${t(pq.set === 'femur' ? 'pq.toPelvis' : 'pq.toFemur')}</button>`;
   } else {
     const q = pq.qs[pq.k];
     const a = pq.answer;
@@ -1515,6 +1530,7 @@ function renderPointQuizSheet() {
   on('pqNext', nextPoint);
   on('pqExit', exitFocus);
   on('pqAgain', () => startPointQuiz(pq.set));
+  on('pqOther', () => startPointQuiz(pq.set === 'femur' ? 'pelvis' : 'femur'));
   on('pqRetry', () => startPointQuiz(pq.set, pq.results.filter((x) => !x.ok).map((x) => x.q.id)));
 }
 

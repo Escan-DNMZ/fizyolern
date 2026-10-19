@@ -14,6 +14,7 @@ const DEFAULT = () => ({
   mockRun: null,    // laufender Deneme sınavı (übersteht Neuladen der App)
   cases: {},        // Vaka çalışması: fallId -> { score, best, n, last, missed }
   caseRun: null,    // laufender Fall: { id, step, seen: [examId], f: { feld: text }, stadium, indik }
+  ck: {},           // Checkliste-Selbsteinschätzung: lernzielId -> { lv: 0 😵 … 3 😊, last, auto: durch falsche Antwort gesenkt }
   mig: [],          // bereits ausgeführte Migrationen (Namen, siehe MIGRATIONS)
   revx: {},         // Ters kartlar nicht ganz gewusst (✗-Liste): kartId -> { k: gewusst, n: Muskeln, last }
   settings: { cardsGoal: 15, quizGoal: 10, newPerDay: 10, reverse: false, lang: 'tr' }, // lang = Hilfssprache (tr | en)
@@ -93,6 +94,7 @@ export function sanitize(raw) {
       ? { ...s.mockRun, i: int(s.mockRun.i, 0, 200, 0), fach: str(s.mockRun.fach, 100), pick: isObj(s.mockRun.pick) ? s.mockRun.pick : {}, text: isObj(s.mockRun.text) ? s.mockRun.text : {} } : null,
     cases: dict(s.cases, (v) => (isObj(v) ? { n: num(v.n), best: num(v.best, 0, 100), score: num(v.score, 0, 100), missed: strArr(v.missed), ...(date(v.last) ? { last: v.last } : {}) } : undefined)),
     caseRun: isObj(s.caseRun) && typeof s.caseRun.id === 'string' && Array.isArray(s.caseRun.seen || []) && isObj(s.caseRun.f || {}) ? { ...s.caseRun, seen: strArr(s.caseRun.seen), f: dict(s.caseRun.f, (v) => (typeof v === 'string' ? v.slice(0, 5000) : undefined)) } : null,
+    ck: dict(s.ck, (v, k) => (isObj(v) && /^ck:[0-9a-f]{16}$/.test(k) ? { lv: int(v.lv, 0, 3, 1), ...(date(v.last) ? { last: v.last } : {}), ...(v.auto ? { auto: true } : {}) } : undefined)),
     mig: strArr(s.mig).slice(0, 100),
     revx: dict(s.revx, (v, k) => (isObj(v) && k.startsWith('rv:') ? { k: int(v.k, 0, 50, 0), n: int(v.n, 1, 50, 1), ...(date(v.last) ? { last: v.last } : {}) } : undefined)),
     settings: {
@@ -297,6 +299,9 @@ export function recordCase(id, score, missed = []) {
 }
 
 // ───── Quiz-Statistik ─────
+// Andere Module können auf Antworten reagieren (z. B. Checkliste: falsche Antwort senkt die Selbsteinschätzung)
+const quizListeners = [];
+export const onQuizRecorded = (fn) => { quizListeners.push(fn); };
 export function recordQuiz(qid, correct) {
   const s = state.quiz[qid] || { r: 0, w: 0 };
   if (correct) s.r++; else s.w++;
@@ -309,6 +314,14 @@ export function recordQuiz(qid, correct) {
     d.quizRight++;
     if (d.wrong) d.wrong = d.wrong.filter((id) => id !== qid); // später richtig beantwortet → nicht mehr unter „Bugünün hataları“
   } else d.wrong = [...new Set([...(d.wrong || []), qid])]; // für „Dönüş yolu“ und Samstag
+  for (const fn of quizListeners) try { fn(qid, correct); } catch (e) { /* ein Zusatzmodul darf das Speichern nicht verhindern */ }
+  save();
+}
+
+// ───── Checkliste: Selbsteinschätzung eines Lernziels (0 = kann ich nicht … 3 = kann ich) ─────
+export function rateCk(id, lv, { auto = false } = {}) {
+  if (lv === null) delete state.ck[id];
+  else state.ck[id] = { lv: Math.max(0, Math.min(3, lv)), last: today(), ...(auto ? { auto: true } : {}) };
   save();
 }
 

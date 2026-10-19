@@ -34,6 +34,7 @@ In short:
 - Lessons / Unterricht / Dersler. Sub-pages with lesson notes; used for links.
 - FizyoLern Questions / FizyoLern Fragen / FizyoLern Sorular (database). Extra questions: Frage, Typ (Kern/MCQ/Offen/Wort), Fach, Antwort, Ablenker 1–3, Erklärung TR, Schlüsselbegriffe.
 - Exams & Homework / Prüfungen & Hausaufgaben / Sınav & Ödev Takibi. A table Type | Subject | Topic | Date | Status | Note, or to-do items containing a date.
+- Checkliste – <Subject> (optional, one page per subject; the title must contain "Checkliste"). A line "Fach: <subject>" near the top; "##" headings = sections; to-do items = learning goals (ticked = covered in class). In the goal text: "✅ 14.10" = date covered, "→ Skript 2.4" = reference only, "→ Notu 1" = lesson note number 1 of that subject. The app shows a checklist screen with self-ratings (😊 🙂 😕 😵) and uses only covered goals in the morning test. Without such pages the feature is hidden. Do not copy the teacher's checklist into public files.
 - Subject names used by the app: Anatomie, Physiologie, PT Grundlagen, PT Befund, O/C, Trainingslehre, KMT, Hygiene, PPS.
 
 ## Troubleshooting

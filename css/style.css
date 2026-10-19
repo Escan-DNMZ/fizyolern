@@ -327,3 +327,21 @@ body.pq3d .hud-side { display: none; }
 .close { min-width: 40px; min-height: 40px; }
 details > summary { min-height: 40px; display: flex; align-items: center; }
 .say-btn { width: 40px; height: 40px; flex-shrink: 0; }
+
+/* Checkliste (Lernziele): Abschnitte aufklappbar, 4 Stufen je Ziel, Fingerziele ≥ 40 px */
+.ck-link { text-decoration: none; color: inherit; margin: 6px 0; padding: 12px 16px; }
+.ck-bar { height: 8px; border-radius: 999px; background: var(--bg); overflow: hidden; margin: 10px 0 6px; }
+.ck-bar > div { height: 100%; background: var(--accent); }
+details.ck-sec { background: var(--card); border-radius: 14px; margin: 12px 0; box-shadow: var(--shadow); overflow: hidden; }
+details.ck-sec > summary { gap: 10px; padding: 12px 16px; cursor: pointer; font-weight: 700; list-style: none; }
+details.ck-sec > summary::-webkit-details-marker { display: none; }
+details.ck-sec > summary::before { content: '›'; color: var(--muted); transition: transform .2s; }
+details.ck-sec[open] > summary::before { transform: rotate(90deg); }
+.ck-item { border-top: 0.5px solid var(--line); padding: 10px 12px 12px 16px; }
+.ck-item.todo .ck-text > span[lang] { opacity: .55; }
+.ck-text { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 4px 0; color: inherit; font: inherit; cursor: pointer; min-height: 40px; }
+.ck-meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-top: 6px; }
+.ck-rate { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+.ck-lv { min-height: 42px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); font-size: 22px; cursor: pointer; filter: grayscale(.6); opacity: .75; }
+.ck-lv.on { border-color: var(--accent); background: var(--accent-soft); filter: none; opacity: 1; box-shadow: 0 0 0 2px var(--accent) inset; }
+.ck-more { margin-top: 10px; display: grid; gap: 8px; }

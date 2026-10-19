@@ -6,6 +6,7 @@ import { UEBUNGEN } from './data/uebungen.js';
 import { LESSONS, FAECHER } from './lessons.js';
 import * as store from './store.js';
 import { week, examFaecher } from './private.js';
+import { ckWeight, allowedInDaily, itemQuiz } from './checkliste.js';
 import { t, tx, lang } from './i18n.js';
 import './strings.js';
 
@@ -247,7 +248,7 @@ export function jointDetailQuestions(j) {
 export const ALL_JOINT_DETAIL = () => JOINTS.flatMap(jointDetailQuestions);
 
 // Fragen aus den Notion-Ders-Notları
-export const lessonMcq = (l) => l.mcq.map((q, i) => ({ id: q.id || `L:${l.id}:${i}`, cat: l.fach, lesson: l.id, q: q.q, o: q.o, a: 0, x: q.x, xEn: q.xEn }));
+export const lessonMcq = (l) => l.mcq.map((q, i) => ({ id: q.id || `L:${l.id}:${i}`, cat: l.fach, lesson: l.id, q: q.q, o: q.o, a: 0, x: q.x, xEn: q.xEn, ...(q.ck ? { ck: q.ck } : {}) }));
 export const ALL_LESSON_MCQ = () => LESSONS.flatMap(lessonMcq);
 export { FAECHER };
 
@@ -355,6 +356,7 @@ export function weight(qid, prio = new Set()) {
   if (s && s.last === store.today(-1) && (s.st || 0) >= 1) w *= 0.1;
   if (s && s.last === store.today() && (s.st || 0) >= 1) w *= 0.05;
   w *= fachWeight(qid);
+  w *= ckWeight(qid); // Checkliste: unsichere und frisch behandelte Lernziele öfter
   return Math.max(w, 0.02);
 }
 
@@ -391,6 +393,10 @@ export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = []) {
     // Heute (Rückweg) bzw. diese Woche (Samstag) falsch beantwortete Fragen
     const ids = category === 'Hatalar: hafta' ? store.wrongSince(7) : (store.day().wrong || []);
     return shuffle(questionsByIds(ids)).slice(0, n).map(prepare);
+  }
+  if (category.startsWith('Lernziel: ')) {
+    // „Bu hedefi test et“: die 3–5 passendsten Fragen eines Checklisten-Ziels
+    return shuffle(itemQuiz(category.slice(10), Math.min(5, n))).map(prepare);
   }
   if (category.startsWith('Dönüş: ')) category = 'Ders: ' + category.slice(7);
   const vocabPool = [...VOCAB, ...extraVocab];
@@ -432,6 +438,8 @@ export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = []) {
   } else {
     qs = Object.hasOwn(pools, category) ? pools[category]() : []; // unbekannte Kategorie aus einem Link
   }
+  // Morgentest / gemischter Test: nur Fragen zu Lernzielen, die schon im Unterricht behandelt wurden
+  if (category.startsWith('Ders: ') || category === 'Gemischt') qs = qs.filter((q) => allowedInDaily(q.id));
   return shuffle(wpickQ(qs, n)).map(prepare);
 }
 

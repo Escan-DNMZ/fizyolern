@@ -939,6 +939,427 @@ export const LESSONS = [
   "nh": "21f9b8d93b67dad8"
  },
  {
+  "id": "anatomie-i-2",
+  "fach": "Anatomie",
+  "title": "Anatomie I 2 – Femur, Os coxae (Wiederholung)",
+  "kern": [
+   {
+    "de": "Das Femur (Oberschenkelknochen) ist der längste und stärkste Röhrenknochen des Körpers; man unterscheidet proximales Ende, Schaft (Corpus femoris) und distales Ende.",
+    "tr": "Femur vücudun en uzun ve en güçlü uzun kemiğidir: üst uç, gövde, alt uç.",
+    "en": "The femur is the longest and strongest long bone: upper end, shaft, lower end."
+   },
+   {
+    "de": "Proximal bildet das Caput femoris mit dem Acetabulum die Art. coxae; distal bilden die Kondylen mit der Tibia und die Facies patellaris mit der Patella die Art. genus.",
+    "tr": "Üst uç kalça eklemini (Caput + Acetabulum), alt uç diz eklemini (kondiller + tibia, Facies patellaris + patella) yapar.",
+    "en": "The upper end forms the hip joint (Caput + Acetabulum), the lower end the knee joint (condyles + tibia, Facies patellaris + patella)."
+   },
+   {
+    "de": "Proximales Femurende: Caput femoris mit Fovea capitis (für das Lig. capitis femoris), Collum femoris, lateral der tastbare Trochanter major, medial-hinten der Trochanter minor.",
+    "tr": "Baş (çukurunda baş bağı), boyun, dışta elle hissedilen büyük trokanter, içte-arkada küçük trokanter.",
+    "en": "Head (with a pit for the head ligament), neck, the palpable greater trochanter laterally and the lesser trochanter at the back on the inside."
+   },
+   {
+    "de": "Am Trochanter major setzen M. gluteus medius, M. gluteus minimus und M. piriformis an; am Trochanter minor setzt der M. iliopsoas an.",
+    "tr": "Büyük trokanter: gluteus medius, minimus, piriformis. Küçük trokanter: iliopsoas.",
+    "en": "Greater trochanter: gluteus medius, minimus, piriformis. Lesser trochanter: iliopsoas."
+   },
+   {
+    "de": "Die Fossa trochanterica liegt innen am Trochanter major; dort setzt der M. obturatorius externus an.",
+    "tr": "Fossa trochanterica = büyük trokanterin iç tarafındaki çukur; obturatorius externus buraya yapışır.",
+    "en": "Fossa trochanterica = the pit on the inner side of the greater trochanter; the obturator externus inserts there."
+   },
+   {
+    "de": "Die Linea intertrochanterica verbindet die Trochanteren vorne (Ansatz des Lig. iliofemorale), die Crista intertrochanterica hinten (Ansatz des M. quadratus femoris).",
+    "tr": "Linea önde (iliofemoral bağ), Crista arkada (quadratus femoris). \"Linea vorne, Crista hinten\".",
+    "en": "Linea at the front (iliofemoral ligament), Crista at the back (quadratus femoris). \"Linea vorne, Crista hinten\"."
+   },
+   {
+    "de": "An der Linea aspera auf der Rückseite des Schafts setzen die Adduktoren an; dort entspringen M. vastus medialis, M. vastus lateralis und das Caput breve des M. biceps femoris.",
+    "tr": "Linea aspera = gövdenin arkasındaki pürüzlü çizgi: addüktörlerin yapışma yeri; vastus medialis/lateralis ve biceps femoris kısa başının çıkış yeri.",
+    "en": "Linea aspera = the rough line on the back of the shaft: insertion of the adductors; origin of vastus medialis/lateralis and the short head of biceps femoris."
+   },
+   {
+    "de": "Der M. gluteus maximus setzt an der Tuberositas glutea an, der M. pectineus an der Linea pectinea.",
+    "tr": "Gluteus maximus → Tuberositas glutea (üst arka-dış), pectineus → Linea pectinea.",
+    "en": "Gluteus maximus → Tuberositas glutea (upper back, outer side), pectineus → Linea pectinea."
+   },
+   {
+    "de": "Distal tragen die Condyli medialis und lateralis die Gelenkflächen zur Tibia; die Epicondyli sitzen auf ihnen und dienen Bändern und Muskeln als Ursprung. Am Tuberculum adductorium setzt der M. adductor magnus an, in der Fossa intercondylaris liegen die Kreuzbänder.",
+    "tr": "Kondil = eklem yüzeyi; epikondil = üzerindeki çıkıntı (bağ/kas çıkışı). Tuberculum adductorium: adductor magnus. Kondiller arası çukur: çapraz bağlar.",
+    "en": "Condyle = joint surface; epicondyle = the bump on it (origin of ligaments and muscles). Adductor tubercle: adductor magnus. Intercondylar fossa: cruciate ligaments."
+   },
+   {
+    "de": "Der CCD-Winkel zwischen Schenkelhals und Schaft beträgt beim Erwachsenen etwa 125–130°; ist er kleiner, spricht man von Coxa vara, ist er größer, von Coxa valga.",
+    "tr": "Boyun-gövde açısı ~125–130°. Küçükse coxa vara, büyükse coxa valga.",
+    "en": "Neck–shaft angle about 125–130°. Smaller = coxa vara, larger = coxa valga."
+   },
+   {
+    "de": "Bei einer Schenkelhalsfraktur (oft im Alter nach einem Sturz) ist das Bein typischerweise verkürzt und außenrotiert; es droht eine Hüftkopfnekrose, weil die Blutversorgung des Kopfes unterbrochen sein kann.",
+    "tr": "Femur boynu kırığı: bacak kısa ve dışa dönmüş; başın beslenmesi bozulursa femur başı nekrozu riski.",
+    "en": "Femoral neck fracture: the leg is short and turned outward; if the blood supply of the head is cut, the head can die (necrosis)."
+   },
+   {
+    "de": "Das Os coxae entsteht aus Os ilium, Os ischii und Os pubis, die im Acetabulum verschmelzen. Die Art. coxae ist ein Kugelgelenk mit 3 Freiheitsgraden (6 Bewegungsrichtungen).",
+    "tr": "Os coxae = ilium + ischium + pubis, asetabulumda birleşir. Kalça eklemi küresel eklem: 3 serbestlik derecesi (6 hareket yönü). Notta \"6 FG\" yazıyor; ders kitabına göre 3 FG (Notiz abweichend).",
+    "en": "Os coxae = ilium + ischium + pubis, fused in the acetabulum. The hip is a ball-and-socket joint: 3 degrees of freedom (6 directions). The note says \"6 FG\"; the textbook says 3 (Notiz abweichend)."
+   }
+  ],
+  "mcq": [
+   {
+    "id": "L:anatomie-i-2:0",
+    "q": "Welcher Muskel setzt am Trochanter minor an?",
+    "o": [
+     "M. iliopsoas",
+     "M. gluteus medius",
+     "M. piriformis",
+     "M. quadratus femoris"
+    ],
+    "x": "Küçük trokanter = iliopsoas. Gluteus medius ve piriformis büyük trokantere, quadratus femoris Crista intertrochanterica'ya yapışır.",
+    "xEn": "Lesser trochanter = iliopsoas. Gluteus medius and piriformis insert on the greater trochanter, quadratus femoris on the intertrochanteric crest."
+   },
+   {
+    "id": "L:anatomie-i-2:1",
+    "q": "Welche Muskeln setzen vor allem am Trochanter major an?",
+    "o": [
+     "Mm. gluteus medius und minimus",
+     "M. iliopsoas und M. pectineus",
+     "Mm. adductor longus und brevis",
+     "M. gracilis und M. sartorius"
+    ],
+    "x": "Büyük trokanter: gluteus medius + minimus (+ piriformis). İliopsoas küçük trokantere, pectineus Linea pectinea'ya, addüktörler Linea aspera'ya, gracilis/sartorius tibiaya yapışır.",
+    "xEn": "Greater trochanter: gluteus medius + minimus (+ piriformis). Iliopsoas → lesser trochanter, pectineus → Linea pectinea, adductors → Linea aspera, gracilis/sartorius → tibia."
+   },
+   {
+    "id": "L:anatomie-i-2:2",
+    "q": "Wo setzt der M. gluteus maximus am Femur an?",
+    "o": [
+     "Tuberositas glutea",
+     "Trochanter minor",
+     "Linea intertrochanterica",
+     "Tuberculum adductorium"
+    ],
+    "x": "Gluteus maximus femurda Tuberositas glutea'ya (ve tractus iliotibialis'e) yapışır.",
+    "xEn": "On the femur, gluteus maximus inserts on the Tuberositas glutea (and into the iliotibial tract)."
+   },
+   {
+    "id": "L:anatomie-i-2:3",
+    "q": "Wo liegt die Crista intertrochanterica?",
+    "o": [
+     "hinten zwischen den Trochanteren",
+     "vorne zwischen den Trochanteren",
+     "zwischen den Femurkondylen",
+     "oben auf dem Schenkelhals"
+    ],
+    "x": "\"Linea vorne, Crista hinten\": Crista arkada (quadratus femoris), Linea önde (iliofemoral bağ).",
+    "xEn": "\"Linea vorne, Crista hinten\": the crest is at the back (quadratus femoris), the line at the front (iliofemoral ligament)."
+   },
+   {
+    "id": "L:anatomie-i-2:4",
+    "q": "Welches Band setzt an der Linea intertrochanterica an?",
+    "o": [
+     "Lig. iliofemorale",
+     "Lig. capitis femoris",
+     "Lig. patellae",
+     "Lig. sacrotuberale"
+    ],
+    "x": "En güçlü bağ olan iliofemoral bağ öndeki Linea intertrochanterica'ya yapışır. Baş bağı Fovea capitis'te, patella bağı tibiada, sakrotuberal bağ tuber ischiadicum'dadır.",
+    "xEn": "The strongest ligament, the iliofemoral ligament, attaches to the front Linea intertrochanterica. Head ligament → Fovea capitis, patellar ligament → tibia, sacrotuberous ligament → ischial tuberosity."
+   },
+   {
+    "id": "L:anatomie-i-2:5",
+    "q": "Was liegt in der Fossa intercondylaris?",
+    "o": [
+     "die Kreuzbänder",
+     "die Kollateralbänder",
+     "das Lig. capitis femoris",
+     "die Patella"
+    ],
+    "x": "Kondiller arası çukurda çapraz bağlar bulunur. Yan bağlar epikondillerden çıkar, patella önde Facies patellaris üzerinde kayar.",
+    "xEn": "The cruciate ligaments lie in the intercondylar fossa. The collateral ligaments start at the epicondyles, the patella glides on the Facies patellaris at the front."
+   },
+   {
+    "id": "L:anatomie-i-2:6",
+    "q": "Welche Struktur liegt in der Fovea capitis femoris?",
+    "o": [
+     "Lig. capitis femoris",
+     "Lig. iliofemorale",
+     "M. obturatorius externus",
+     "die Kreuzbänder"
+    ],
+    "x": "Fovea capitis = femur başındaki küçük çukur; baş bağı (Lig. capitis femoris) buraya tutunur.",
+    "xEn": "Fovea capitis = small pit on the femoral head; the head ligament (Lig. capitis femoris) attaches there."
+   },
+   {
+    "id": "L:anatomie-i-2:7",
+    "q": "Welcher Muskel setzt am Tuberculum adductorium an?",
+    "o": [
+     "M. adductor magnus",
+     "M. adductor longus",
+     "M. gracilis",
+     "M. pectineus"
+    ],
+    "x": "Adductor magnus'un bir kısmı medial epikondilin üstündeki Tuberculum adductorium'a yapışır. Longus Linea aspera'ya, gracilis tibiaya, pectineus Linea pectinea'ya.",
+    "xEn": "Part of adductor magnus inserts on the adductor tubercle above the medial epicondyle. Longus → Linea aspera, gracilis → tibia, pectineus → Linea pectinea."
+   },
+   {
+    "id": "L:anatomie-i-2:8",
+    "q": "Was unterscheidet einen Epicondylus von einem Condylus?",
+    "o": [
+     "Er sitzt auf dem Condylus und ist keine Gelenkfläche.",
+     "Er bildet die Gelenkfläche zur Tibia.",
+     "Er liegt am proximalen Ende des Femurs.",
+     "Er ist eine Grube für die Kreuzbänder."
+    ],
+    "x": "Kondil eklem yüzeyini yapar; epikondil onun üzerindeki çıkıntıdır, ekleme katılmaz, bağ ve kas çıkış yeridir.",
+    "xEn": "The condyle forms the joint surface; the epicondyle is the bump on it, not part of the joint, an origin for ligaments and muscles."
+   },
+   {
+    "id": "L:anatomie-i-2:9",
+    "q": "Welche Muskeln setzen an der Linea aspera an?",
+    "o": [
+     "die Adduktoren",
+     "die Mm. glutei",
+     "die Mm. ischiocrurales",
+     "M. iliopsoas"
+    ],
+    "x": "Linea aspera = addüktörlerin yapışma çizgisi. Vastus medialis/lateralis buradan çıkar (yapışmaz). Hamstringler tibia/fibulaya yapışır.",
+    "xEn": "Linea aspera = insertion line of the adductors. Vastus medialis/lateralis start there (they do not insert). The hamstrings insert on the tibia/fibula."
+   },
+   {
+    "id": "L:anatomie-i-2:10",
+    "q": "Wie groß ist der CCD-Winkel beim Erwachsenen etwa?",
+    "o": [
+     "125–130°",
+     "90–100°",
+     "150–160°",
+     "12–15°"
+    ],
+    "x": "Yetişkinde ~125–130°, yenidoğanda ~150°. 12–15° antetorsiyon açısıdır.",
+    "xEn": "Adults about 125–130°, newborns about 150°. 12–15° is the antetorsion angle."
+   },
+   {
+    "id": "L:anatomie-i-2:11",
+    "q": "Wie heißt ein CCD-Winkel, der deutlich kleiner als normal ist?",
+    "o": [
+     "Coxa vara",
+     "Coxa valga",
+     "Genu valgum",
+     "Coxa saltans"
+    ],
+    "x": "Küçük açı = coxa vara, büyük açı = coxa valga. Genu valgum dizdeki X bacaktır.",
+    "xEn": "Smaller angle = coxa vara, larger angle = coxa valga. Genu valgum is knock-knee."
+   },
+   {
+    "id": "L:anatomie-i-2:12",
+    "q": "Welche Beinstellung ist typisch für eine Schenkelhalsfraktur?",
+    "o": [
+     "verkürzt und außenrotiert",
+     "verlängert und innenrotiert",
+     "verkürzt und innenrotiert",
+     "normal lang und abduziert"
+    ],
+    "x": "Femur boynu kırığında bacak kısalır ve dışa döner (kaslar distal parçayı yukarı ve dışa çeker).",
+    "xEn": "In a femoral neck fracture the leg is shortened and turned outward (the muscles pull the lower part up and outward)."
+   },
+   {
+    "id": "L:anatomie-i-2:13",
+    "q": "Aus welchen drei Knochen besteht das Os coxae?",
+    "o": [
+     "Os ilium, Os ischii, Os pubis",
+     "Os ilium, Os sacrum, Os pubis",
+     "Os ischii, Os pubis, Os coccygis",
+     "Os ilium, Os ischii, Os sacrum"
+    ],
+    "x": "\"I-I-P\": ilium, ischium, pubis; asetabulumda birleşir. Sakrum ve koksiks pelvisin parçasıdır ama Os coxae'nın değil.",
+    "xEn": "\"I-I-P\": ilium, ischium, pubis, fused in the acetabulum. Sacrum and coccyx belong to the pelvis, not to the Os coxae."
+   },
+   {
+    "id": "L:anatomie-i-2:14",
+    "q": "Welcher Muskel setzt in der Fossa trochanterica an?",
+    "o": [
+     "M. obturatorius externus",
+     "M. gluteus maximus",
+     "M. iliopsoas",
+     "M. vastus lateralis"
+    ],
+    "x": "Fossa trochanterica = obturatorius externus'un yapışma yeri. Gluteus maximus Tuberositas glutea'ya, iliopsoas küçük trokantere; vastus lateralis femurdan çıkar.",
+    "xEn": "Fossa trochanterica = insertion of obturator externus. Gluteus maximus → Tuberositas glutea, iliopsoas → lesser trochanter; vastus lateralis starts on the femur."
+   },
+   {
+    "id": "L:anatomie-i-2:15",
+    "q": "Welcher Teil der Hüftpfanne ist überknorpelt und trägt das Gewicht?",
+    "o": [
+     "Facies lunata",
+     "Fossa acetabuli",
+     "Incisura acetabuli",
+     "Fovea capitis"
+    ],
+    "x": "Ay şeklindeki Facies lunata kıkırdakla kaplı taşıyıcı yüzeydir; Fossa acetabuli ortadaki taşımayan çukurdur. Fovea capitis femur başındadır.",
+    "xEn": "The crescent-shaped Facies lunata is the cartilage-covered weight-bearing surface; the Fossa acetabuli is the non-bearing pit in the middle. The Fovea capitis is on the femoral head."
+   },
+   {
+    "id": "L:anatomie-i-2:16",
+    "q": "Welche Struktur des Femurs ist von außen gut tastbar?",
+    "o": [
+     "Trochanter major",
+     "Trochanter minor",
+     "Fossa intercondylaris",
+     "Caput femoris"
+    ],
+    "x": "Büyük trokanter kalçanın dış yanında elle bulunur. Küçük trokanter, baş ve kondiller arası çukur derin kaslar/eklem içinde kalır.",
+    "xEn": "The greater trochanter can be felt on the side of the hip. The lesser trochanter, the head and the intercondylar fossa lie deep under muscles or inside the joint."
+   }
+  ],
+  "open": [
+   {
+    "q": "Beschreiben Sie das proximale Femurende und nennen Sie die Muskeln, die an den beiden Trochanteren ansetzen.",
+    "a": "Das proximale Femurende besteht aus dem Caput femoris mit der Fovea capitis, dem Collum femoris sowie dem Trochanter major lateral und dem Trochanter minor medial-hinten. Am Trochanter major setzen M. gluteus medius, M. gluteus minimus und M. piriformis an, am Trochanter minor der M. iliopsoas.",
+    "kw": [
+     "Caput femoris",
+     "Collum femoris",
+     "Trochanter major",
+     "Trochanter minor",
+     "Gluteus medius",
+     "Iliopsoas"
+    ]
+   },
+   {
+    "q": "Vergleichen Sie Linea intertrochanterica und Crista intertrochanterica: Wo liegen sie, und was setzt dort an?",
+    "a": "Die Linea intertrochanterica verbindet die beiden Trochanteren auf der Vorderseite; dort setzt das Lig. iliofemorale an. Die Crista intertrochanterica verbindet sie auf der Rückseite als kräftiger Knochenkamm; dort setzt der M. quadratus femoris an.",
+    "kw": [
+     "Linea intertrochanterica",
+     "Vorderseite|vorne|ventral",
+     "iliofemorale",
+     "Crista intertrochanterica",
+     "Rückseite|hinten|dorsal",
+     "quadratus femoris"
+    ]
+   },
+   {
+    "q": "Erklären Sie den Unterschied zwischen Condylus und Epicondylus am distalen Femur und nennen Sie, was in der Fossa intercondylaris liegt.",
+    "a": "Die Condyli medialis und lateralis bilden die Gelenkflächen zur Tibia. Die Epicondyli sitzen auf den Kondylen, gehören nicht zum Gelenk und dienen Bändern und Muskeln als Ursprung. In der Fossa intercondylaris zwischen den Kondylen liegen die Kreuzbänder.",
+    "kw": [
+     "Condyli|Condylus",
+     "Gelenkfläche",
+     "Epicondyli|Epicondylus",
+     "Bändern|Muskeln|Ursprung",
+     "Fossa intercondylaris",
+     "Kreuzbänder"
+    ]
+   },
+   {
+    "q": "Was ist der CCD-Winkel, wie groß ist er beim Erwachsenen, und was bedeuten Coxa vara und Coxa valga?",
+    "a": "Der CCD-Winkel ist der Winkel zwischen Schenkelhals und Femurschaft. Beim Erwachsenen beträgt er etwa 125 bis 130 Grad. Ist der Winkel kleiner, spricht man von Coxa vara, ist er größer, von Coxa valga.",
+    "kw": [
+     "Schenkelhals",
+     "Femurschaft|Schaft",
+     "125|130",
+     "Coxa vara",
+     "Coxa valga"
+    ]
+   }
+  ],
+  "vocab": [
+   {
+    "de": "der Oberschenkelknochen",
+    "tr": "uyluk kemiği (femur)",
+    "ex": "Der Oberschenkelknochen ist der längste Knochen des Körpers.",
+    "en": "thigh bone (femur)"
+   },
+   {
+    "de": "der Hüftkopf",
+    "tr": "femur başı",
+    "ex": "Der Hüftkopf liegt in der Hüftpfanne.",
+    "en": "femoral head"
+   },
+   {
+    "de": "der Schenkelhals",
+    "tr": "femur boynu",
+    "ex": "Der Schenkelhals verbindet Kopf und Schaft.",
+    "en": "femoral neck"
+   },
+   {
+    "de": "der Rollhügel",
+    "tr": "trokanter",
+    "ex": "Am großen Rollhügel setzen die kleinen Gesäßmuskeln an.",
+    "en": "trochanter"
+   },
+   {
+    "de": "der Schaft",
+    "tr": "kemik gövdesi (diyafiz)",
+    "ex": "Auf der Rückseite des Schafts liegt die Linea aspera.",
+    "en": "shaft"
+   },
+   {
+    "de": "der Gelenkknorren",
+    "tr": "kondil",
+    "ex": "Die Gelenkknorren des Femurs bilden die Gelenkfläche zur Tibia.",
+    "en": "condyle"
+   },
+   {
+    "de": "der Röhrenknochen",
+    "tr": "uzun kemik",
+    "ex": "Das Femur ist ein Röhrenknochen.",
+    "en": "long bone"
+   },
+   {
+    "de": "das Kreuzband",
+    "tr": "çapraz bağ",
+    "ex": "Die Kreuzbänder liegen zwischen den Kondylen.",
+    "en": "cruciate ligament"
+   },
+   {
+    "de": "die Kniescheibe",
+    "tr": "diz kapağı (patella)",
+    "ex": "Die Kniescheibe gleitet auf der Facies patellaris.",
+    "en": "kneecap"
+   },
+   {
+    "de": "die Schenkelhalsfraktur",
+    "tr": "femur boynu kırığı",
+    "ex": "Nach einem Sturz im Alter kommt es oft zur Schenkelhalsfraktur.",
+    "en": "femoral neck fracture"
+   },
+   {
+    "de": "verkürzt",
+    "tr": "kısalmış",
+    "ex": "Das Bein ist nach der Fraktur verkürzt.",
+    "en": "shortened"
+   },
+   {
+    "de": "außenrotiert",
+    "tr": "dışa dönmüş",
+    "ex": "Das verletzte Bein liegt außenrotiert.",
+    "en": "externally rotated"
+   },
+   {
+    "de": "an|setzen",
+    "tr": "yapışmak (kas)",
+    "ex": "Der M. iliopsoas setzt am Trochanter minor an.",
+    "en": "to insert"
+   },
+   {
+    "de": "entspringen",
+    "tr": "başlamak, çıkmak (kas)",
+    "ex": "Der M. vastus lateralis entspringt am Femur.",
+    "en": "to originate"
+   },
+   {
+    "de": "ab|tasten",
+    "tr": "elle yoklamak, palpe etmek",
+    "ex": "Den Trochanter major kann man seitlich abtasten.",
+    "en": "to palpate"
+   },
+   {
+    "de": "die Hüftpfanne",
+    "tr": "kalça çukuru (asetabulum)",
+    "ex": "Die Hüftpfanne wird von drei Knochen gebildet.",
+    "en": "hip socket"
+   }
+  ],
+  "nh": "7ab80ae866a2a4d7"
+ },
+ {
   "id": "physiologie-1",
   "fach": "Physiologie",
   "title": "Einführung, Homöostase, Regelkreis",
@@ -5348,7 +5769,11 @@ export const LESSONS = [
      "Kraft, Kondition, Beweglichkeit, Koordination, Schnelligkeit"
     ],
     "x": "Beş temel yük biçimi: kuvvet, dayanıklılık, hareketlilik, koordinasyon, sürat. Denge ayrı bir ana biçim olarak sayılmaz, rejenerasyon motorik bir özellik değildir; Kondition ise kuvvet, dayanıklılık ve süratin üst kavramıdır.",
-    "xEn": "The five basic forms of load: strength, endurance, mobility, coordination, speed. Balance is not counted as a separate main form, regeneration is not a motor ability; Kondition is the umbrella term for strength, endurance and speed."
+    "xEn": "The five basic forms of load: strength, endurance, mobility, coordination, speed. Balance is not counted as a separate main form, regeneration is not a motor ability; Kondition is the umbrella term for strength, endurance and speed.",
+    "ck": [
+     "Definition",
+     "Training"
+    ]
    },
    {
     "id": "L:trainingslehre-1:1",
@@ -5360,7 +5785,11 @@ export const LESSONS = [
      "Beweglichkeit"
     ],
     "x": "Hastalarımızın 100 m'yi 10 saniyede koşması gerekmez; sürat en az önemli olandır. Kuvvet ise tam tersine fizyoterapide en önemli yük biçimidir – ikisini karıştırma.",
-    "xEn": "Our patients don't need to run 100 m in 10 seconds; speed is the least important. Strength, on the contrary, is the most important form of load in physiotherapy – don't mix them up."
+    "xEn": "Our patients don't need to run 100 m in 10 seconds; speed is the least important. Strength, on the contrary, is the most important form of load in physiotherapy – don't mix them up.",
+    "ck": [
+     "Definition",
+     "Training"
+    ]
    },
    {
     "id": "L:trainingslehre-1:2",
@@ -5372,7 +5801,10 @@ export const LESSONS = [
      "Erst beim nächsten Training unter Belastung"
     ],
     "x": "Uyum dinlenme (Erholung) evresinde oluşur. Antrenman sırasında vücut yalnızca yüklenir; bu yüzden 'antrenman sırasında' seçeneği en sık yapılan hatadır.",
-    "xEn": "Adaptation happens in the rest (Erholung) phase. During training the body is only loaded; that's why 'during training' is the most common mistake."
+    "xEn": "Adaptation happens in the rest (Erholung) phase. During training the body is only loaded; that's why 'during training' is the most common mistake.",
+    "ck": [
+     "Superkompensation"
+    ]
    },
    {
     "id": "L:trainingslehre-1:3",
@@ -5384,7 +5816,11 @@ export const LESSONS = [
      "Der Reiz wird vom Therapeuten passiv von außen gesetzt"
     ],
     "x": "Eşik üstü: uyaran uyum oluşturacak kadar güçlüdür. Eşik altı uyaran etkisiz kalır, aşırı güçlü uyaran zarar verir; 'überschwellig' zarar verecek kadar güçlü demek değildir.",
-    "xEn": "Above threshold: the stimulus is strong enough to cause adaptation. A below-threshold stimulus has no effect, an excessively strong one causes harm; 'überschwellig' does not mean strong enough to cause harm."
+    "xEn": "Above threshold: the stimulus is strong enough to cause adaptation. A below-threshold stimulus has no effect, an excessively strong one causes harm; 'überschwellig' does not mean strong enough to cause harm.",
+    "ck": [
+     "Definition",
+     "Training"
+    ]
    },
    {
     "id": "L:trainingslehre-1:4",
@@ -5396,7 +5832,10 @@ export const LESSONS = [
      "Beide beruhen vor allem auf großen Probandenstudien"
     ],
     "x": "Trainingslehre, Trainingswissenschaft'ın deneyime dayalı, uygulamaya yönelik parçasıdır. Ters ilişki yanlıştır; büyük denek gruplarıyla yapılan çalışmalar sadece Trainingswissenschaft'ın özelliğidir.",
-    "xEn": "Trainingslehre is the experience-based, practice-oriented part of Trainingswissenschaft. The reverse relation is wrong; studies with large groups of subjects are a feature of Trainingswissenschaft only."
+    "xEn": "Trainingslehre is the experience-based, practice-oriented part of Trainingswissenschaft. The reverse relation is wrong; studies with large groups of subjects are a feature of Trainingswissenschaft only.",
+    "ck": [
+     "Trainingswissenschaft"
+    ]
    },
    {
     "id": "L:trainingslehre-1:5",
@@ -5408,7 +5847,12 @@ export const LESSONS = [
      "Ausführung und Fortschritte werden am Ende evaluiert"
     ],
     "x": "Systematisch: adımlar birbirinin üzerine kurulur, düzenli yapılır (hafif başla, dikkatlice artır). Hedefe yönelim zielgerichtet, önceden belirleme planmäßig'tir – folyoda bu üçü ayrı kavramlardır.",
-    "xEn": "Systematisch: steps build on each other and are done regularly (start light, increase carefully). Goal orientation is zielgerichtet, deciding in advance is planmäßig – on the slides these are three separate concepts."
+    "xEn": "Systematisch: steps build on each other and are done regularly (start light, increase carefully). Goal orientation is zielgerichtet, deciding in advance is planmäßig – on the slides these are three separate concepts.",
+    "ck": [
+     "Definition",
+     "Training",
+     "systematisch"
+    ]
    },
    {
     "id": "L:trainingslehre-1:6",
@@ -5420,7 +5864,10 @@ export const LESSONS = [
      "1960"
     ],
     "x": "Fosbury 1968'de Mexiko-Stadt'ta bu teknikle olimpiyat altını kazandı. 1964 ve 1972 komşu olimpiyat yıllarıdır, karıştırma.",
-    "xEn": "Fosbury won Olympic gold with this technique in 1968 in Mexico City. 1964 and 1972 are the neighbouring Olympic years, don't confuse them."
+    "xEn": "Fosbury won Olympic gold with this technique in 1968 in Mexico City. 1964 and 1972 are the neighbouring Olympic years, don't confuse them.",
+    "ck": [
+     "Trainingswissenschaft"
+    ]
    },
    {
     "id": "L:trainingslehre-1:7",
@@ -5432,7 +5879,10 @@ export const LESSONS = [
      "Aktive Mobilisation des Patienten aus dem Bett nach OP"
     ],
     "x": "Pasif tekniklerde uyaranı terapist verir; Trainingslehre ise hastanın aktif olduğu antrenmanla ilgilenir. Curls, protezle yürüme ve yataktan mobilizasyonda hasta aktiftir, bu yüzden hepsi antrenmandır.",
-    "xEn": "In passive techniques the therapist gives the stimulus; Trainingslehre deals with training in which the patient is active. In curls, walking with a prosthesis and mobilisation out of bed the patient is active, so they are all training."
+    "xEn": "In passive techniques the therapist gives the stimulus; Trainingslehre deals with training in which the patient is active. In curls, walking with a prosthesis and mobilisation out of bed the patient is active, so they are all training.",
+    "ck": [
+     "Trainingswissenschaft"
+    ]
    },
    {
     "id": "L:trainingslehre-1:8",
@@ -5444,7 +5894,11 @@ export const LESSONS = [
      "Ausdauer, Schnelligkeit, Koordination"
     ],
     "x": "Kondisyonel (enerjiye dayalı) yetiler kuvvet, dayanıklılık ve sürattir. Koordinasyon sinir sistemiyle yönetilen koordinatif bir yetidir, hareketlilik ise özel bir konumdadır; bu yüzden koordinasyon içeren seçenekler yanlıştır.",
-    "xEn": "Conditional (energy-based) abilities are strength, endurance and speed. Coordination is a coordinative ability controlled by the nervous system, and mobility has a special position; so options containing coordination are wrong."
+    "xEn": "Conditional (energy-based) abilities are strength, endurance and speed. Coordination is a coordinative ability controlled by the nervous system, and mobility has a special position; so options containing coordination are wrong.",
+    "ck": [
+     "Definition",
+     "Training"
+    ]
    },
    {
     "id": "L:trainingslehre-1:n1",
@@ -5457,7 +5911,10 @@ export const LESSONS = [
     ],
     "x": "Yanlış olan: Trainingslehre çoğunlukla deneyime (Meisterlehre) dayanır; büyük denek çalışmaları Trainingswissenschaft'a aittir. Diğer üç ifade derste aynen geçer.",
     "typ": "falsch",
-    "xEn": "The false one: Trainingslehre is mostly based on experience (Meisterlehre); large studies with subjects belong to Trainingswissenschaft. The other three statements appear exactly like this in the course."
+    "xEn": "The false one: Trainingslehre is mostly based on experience (Meisterlehre); large studies with subjects belong to Trainingswissenschaft. The other three statements appear exactly like this in the course.",
+    "ck": [
+     "Trainingswissenschaft"
+    ]
    },
    {
     "id": "L:trainingslehre-1:n2",
@@ -5470,7 +5927,14 @@ export const LESSONS = [
     ],
     "x": "Zielgerichtet = hastanın hedefine yönelik (2), planmäßig = içerik ve yöntem önceden belirlenir (1), systematisch = adımlar birbirine dayanır ve kademeli artar (3). En sık karışıklık planmäßig ile systematisch arasındadır.",
     "typ": "zuordnung",
-    "xEn": "Zielgerichtet = aimed at the patient's goal (2), planmäßig = content and method decided in advance (1), systematisch = steps build on each other and increase gradually (3). The most common confusion is between planmäßig and systematisch."
+    "xEn": "Zielgerichtet = aimed at the patient's goal (2), planmäßig = content and method decided in advance (1), systematisch = steps build on each other and increase gradually (3). The most common confusion is between planmäßig and systematisch.",
+    "ck": [
+     "Definition",
+     "Training",
+     "zielgerichtet",
+     "planmäßig",
+     "systematisch"
+    ]
    },
    {
     "id": "L:trainingslehre-1:n3",
@@ -5483,7 +5947,10 @@ export const LESSONS = [
     ],
     "x": "Deneyimle aktarılan, işe yarayan ama henüz bilimsel olarak açıklanmamış bilgi Meisterlehre'dir (Fosbury-Flop örneği). Trainingswissenschaft ve kanıta dayalı araştırma bilimsel çalışmalara dayanır.",
     "typ": "fall",
-    "xEn": "Knowledge passed on by experience that works but is not yet scientifically explained is Meisterlehre (Fosbury-Flop example). Trainingswissenschaft and evidence-based research rely on scientific studies."
+    "xEn": "Knowledge passed on by experience that works but is not yet scientifically explained is Meisterlehre (Fosbury-Flop example). Trainingswissenschaft and evidence-based research rely on scientific studies.",
+    "ck": [
+     "Trainingswissenschaft"
+    ]
    },
    {
     "id": "L:trainingslehre-1:n4",
@@ -5495,7 +5962,11 @@ export const LESSONS = [
      "Schädigung des Gewebes"
     ],
     "x": "Reizstufenregel: eşik altı = etki yok · zayıf eşik üstü = mevcut seviyeyi korur · güçlü eşik üstü = uyum, performans artışı (optimal uyaran) · aşırı güçlü = zarar verir.",
-    "xEn": "Reizstufenregel: below threshold = no effect · weakly above threshold = maintains current level · strongly above threshold = adaptation, increased performance (optimal stimulus) · excessively strong = causes harm."
+    "xEn": "Reizstufenregel: below threshold = no effect · weakly above threshold = maintains current level · strongly above threshold = adaptation, increased performance (optimal stimulus) · excessively strong = causes harm.",
+    "ck": [
+     "Definition",
+     "Training"
+    ]
    },
    {
     "id": "L:trainingslehre-1:n5",
@@ -5507,7 +5978,11 @@ export const LESSONS = [
      "Es tritt gar keine Wirkung ein"
     ],
     "x": "Zayıf eşik üstü uyaran sadece mevcut seviyeyi korur. Performans artışı için güçlü eşik üstü uyaran gerekir; zarar aşırı güçlü, hiç etki olmaması eşik altı uyaranda görülür.",
-    "xEn": "A weakly above-threshold stimulus only maintains the current level. A strongly above-threshold stimulus is needed for increased performance; harm comes from an excessively strong stimulus, no effect at all from a below-threshold one."
+    "xEn": "A weakly above-threshold stimulus only maintains the current level. A strongly above-threshold stimulus is needed for increased performance; harm comes from an excessively strong stimulus, no effect at all from a below-threshold one.",
+    "ck": [
+     "Definition",
+     "Training"
+    ]
    }
   ],
   "open": [
@@ -5759,7 +6234,10 @@ export const LESSONS = [
      "Überschießendes Leistungsniveau nach der Erholungsphase"
     ],
     "x": "Steady State yük altında yükselmiş ama sabit kalan seviyedir (ör. tansiyon sürekli artmaz, yüksek seviyede sabitlenir). Dinlenmedeki denge Homöostase, yükle bozulma Heterostase, aşan seviye Superkompensation'dur.",
-    "xEn": "Steady State is a level that is raised under load but stays constant (e.g. blood pressure does not keep rising, it settles at a high level). Balance at rest is Homöostase, disturbance by load is Heterostase, the overshooting level is Superkompensation."
+    "xEn": "Steady State is a level that is raised under load but stays constant (e.g. blood pressure does not keep rising, it settles at a high level). Balance at rest is Homöostase, disturbance by load is Heterostase, the overshooting level is Superkompensation.",
+    "ck": [
+     "Steady State"
+    ]
    },
    {
     "id": "L:trainingslehre-2:1",
@@ -5771,7 +6249,10 @@ export const LESSONS = [
      "Ermüdung – Belastung – Erholung – Superkompensation – Rückgang"
     ],
     "x": "Önce yüklenme ve yorgunluk, sonra toparlanma, ardından süperkompanzasyon; yeni uyaran yoksa geri düşüş. Süperkompanzasyon toparlanmadan önce gelemez, çünkü fazlası ancak dinlenmede kurulur.",
-    "xEn": "First load and fatigue, then recovery, then supercompensation; without a new stimulus a drop back. Supercompensation cannot come before recovery, because the extra is only built during rest."
+    "xEn": "First load and fatigue, then recovery, then supercompensation; without a new stimulus a drop back. Supercompensation cannot come before recovery, because the extra is only built during rest.",
+    "ck": [
+     "Superkompensation"
+    ]
    },
    {
     "id": "L:trainingslehre-2:2",
@@ -5783,7 +6264,10 @@ export const LESSONS = [
      "Weil die Anpassung nur während der Trainingseinheit stattfindet"
     ],
     "x": "Faustregel: Antrenmansızlarda zirve yaklaşık 48 saat sonradır; haftada iki antrenman bu zirveyi yakalar. Haftada bir antrenmanda süperkompanzasyon çoktan geri çekilmiş olur.",
-    "xEn": "Faustregel: in untrained people the peak is about 48 hours later; training twice a week catches this peak. With training once a week the supercompensation has already faded."
+    "xEn": "Faustregel: in untrained people the peak is about 48 hours later; training twice a week catches this peak. With training once a week the supercompensation has already faded.",
+    "ck": [
+     "Superkompensation"
+    ]
    },
    {
     "id": "L:trainingslehre-2:3",
@@ -5795,7 +6279,10 @@ export const LESSONS = [
      "Niedriger Ruheblutdruck und niedrige Ruheherzfrequenz"
     ],
     "x": "Sempatik tip: huzursuzluk, uyku bozukluğu, yüksek dinlenme nabzı ve tansiyonu. Düşük dinlenme nabzı parasempatik tipin işaretidir – 'sempatik = yüksek, parasempatik = düşük' diye hatırla.",
-    "xEn": "Sympathetic type: restlessness, sleep disturbance, high resting heart rate and blood pressure. A low resting heart rate is a sign of the parasympathetic type – remember 'sympathetic = high, parasympathetic = low'."
+    "xEn": "Sympathetic type: restlessness, sleep disturbance, high resting heart rate and blood pressure. A low resting heart rate is a sign of the parasympathetic type – remember 'sympathetic = high, parasympathetic = low'.",
+    "ck": [
+     "Übertrainingssyndrom"
+    ]
    },
    {
     "id": "L:trainingslehre-2:4",
@@ -5807,7 +6294,10 @@ export const LESSONS = [
      "Gezielte Trainingspause bei Übertraining zur Regeneration"
     ],
     "x": "Abtraining kasıtlı ve kademelidir (2 yıla kadar); amaç kalp-dolaşım sistemini korumaktır. İstenmeden kazanımların kaybolması (ör. sakatlık) Detraining'dir – bu ikisi en sık karıştırılan kavramlardır.",
-    "xEn": "Abtraining is intentional and gradual (up to 2 years); the aim is to protect the cardiovascular system. Unintended loss of gains (e.g. injury) is Detraining – these two are the most commonly confused terms."
+    "xEn": "Abtraining is intentional and gradual (up to 2 years); the aim is to protect the cardiovascular system. Unintended loss of gains (e.g. injury) is Detraining – these two are the most commonly confused terms.",
+    "ck": [
+     "Abtraining"
+    ]
    },
    {
     "id": "L:trainingslehre-2:5",
@@ -5819,7 +6309,10 @@ export const LESSONS = [
      "Tritt nur bei Leistungssportlern nach dem Karriereende auf"
     ],
     "x": "Detraining kazanımların kaybıdır ama çoğu zaman geri döndürülebilir; ameliyat sonrası yatan normal insanlarda da görülür. Kasıtlı kademeli azaltma Abtraining'dir; sinir kaybına bağlı geri dönüşsüzlük kas atrofisinin özel durumudur.",
-    "xEn": "Detraining is the loss of gains but is often reversible; it is also seen in normal people lying in bed after surgery. Intentional gradual reduction is Abtraining; irreversibility due to nerve loss is a special case of muscle atrophy."
+    "xEn": "Detraining is the loss of gains but is often reversible; it is also seen in normal people lying in bed after surgery. Intentional gradual reduction is Abtraining; irreversibility due to nerve loss is a special case of muscle atrophy.",
+    "ck": [
+     "Detraining"
+    ]
    },
    {
     "id": "L:trainingslehre-2:6",
@@ -5831,7 +6324,10 @@ export const LESSONS = [
      "Wenn die Kapillardichte durch Bettruhe abnimmt"
     ],
     "x": "Sinir kası artık uyaramazsa kas körelir ve geri dönmez; bu yaştan bağımsızdır. Yatak istirahatinde kapiller yoğunluğun azalması ise Detraining'e aittir ve genelde geri döndürülebilir.",
-    "xEn": "If the nerve can no longer stimulate the muscle, the muscle wastes away and does not recover; this is independent of age. The decrease in capillary density during bed rest belongs to Detraining and is usually reversible."
+    "xEn": "If the nerve can no longer stimulate the muscle, the muscle wastes away and does not recover; this is independent of age. The decrease in capillary density during bed rest belongs to Detraining and is usually reversible.",
+    "ck": [
+     "Detraining"
+    ]
    },
    {
     "id": "L:trainingslehre-2:7",
@@ -5843,7 +6339,10 @@ export const LESSONS = [
      "Müdigkeit nach einer langen Radtour"
     ],
     "x": "Nasır, vücudun gerekenden fazlasını kurmasıdır (aşan uyum). Kas ağrısı ve yorgunluk yüklenmenin sonucudur; koşu sırasındaki nabız artışı ise anlık bir tepkidir, kalıcı fazlalık değildir.",
-    "xEn": "A callus is the body building up more than necessary (overshooting adaptation). Muscle soreness and fatigue are results of the load; the rise in heart rate while running is a momentary reaction, not a lasting surplus."
+    "xEn": "A callus is the body building up more than necessary (overshooting adaptation). Muscle soreness and fatigue are results of the load; the rise in heart rate while running is a momentary reaction, not a lasting surplus.",
+    "ck": [
+     "Superkompensation"
+    ]
    },
    {
     "id": "L:trainingslehre-2:8",
@@ -5855,7 +6354,10 @@ export const LESSONS = [
      "Leistungsabfall nach einer einzigen zu harten Trainingseinheit"
     ],
     "x": "2–3 haftalık dinlenmeye rağmen performans düşüklüğü sürüyorsa Übertrainingssyndrom denir; daha kısa sürede düzelirse Overreaching'dir. 'Gün' ile 'hafta'yı karıştırma.",
-    "xEn": "If reduced performance continues despite 2–3 weeks of rest, it is called Übertrainingssyndrom; if it improves in a shorter time it is Overreaching. Don't confuse 'days' with 'weeks'."
+    "xEn": "If reduced performance continues despite 2–3 weeks of rest, it is called Übertrainingssyndrom; if it improves in a shorter time it is Overreaching. Don't confuse 'days' with 'weeks'.",
+    "ck": [
+     "Übertrainingssyndrom"
+    ]
    },
    {
     "id": "L:trainingslehre-2:n1",
@@ -5868,7 +6370,10 @@ export const LESSONS = [
     ],
     "x": "Abtraining kariyer sonrası kademeli olarak 2 yıla kadar sürebilir; amaç kalp-dolaşım sistemini korumaktır. Birkaç hafta veya ay kalp-dolaşım sisteminin uyumu için çok kısadır.",
     "typ": "zahlen",
-    "xEn": "Abtraining after a career can last up to 2 years, done gradually; the aim is to protect the cardiovascular system. A few weeks or months is too short for the cardiovascular system to adapt."
+    "xEn": "Abtraining after a career can last up to 2 years, done gradually; the aim is to protect the cardiovascular system. A few weeks or months is too short for the cardiovascular system to adapt.",
+    "ck": [
+     "Abtraining"
+    ]
    },
    {
     "id": "L:trainingslehre-2:n2",
@@ -5881,7 +6386,10 @@ export const LESSONS = [
     ],
     "x": "Yanlış olan: parasempatik tipte dinlenme nabzı düşüktür; yüksek nabız sempatik tipe aittir. Diğer üç ifade ders notlarıyla örtüşür.",
     "typ": "falsch",
-    "xEn": "The false one: in the parasympathetic type the resting heart rate is low; a high heart rate belongs to the sympathetic type. The other three statements match the course notes."
+    "xEn": "The false one: in the parasympathetic type the resting heart rate is low; a high heart rate belongs to the sympathetic type. The other three statements match the course notes.",
+    "ck": [
+     "Übertrainingssyndrom"
+    ]
    },
    {
     "id": "L:trainingslehre-2:n3",
@@ -5894,7 +6402,11 @@ export const LESSONS = [
     ],
     "x": "Belirtiler aşırı antrenmanı (sempatik tip) gösterir; çözüm yükü azaltmak ve toparlanmayı artırmaktır. Daha fazla yüklenmek durumu kötüleştirir; Abtraining ise sadece kariyer sonu için planlanan bir süreçtir.",
     "typ": "fall",
-    "xEn": "The symptoms point to overtraining (sympathetic type); the solution is to reduce the load and increase recovery. Loading more makes it worse; Abtraining is a process planned only for the end of a career."
+    "xEn": "The symptoms point to overtraining (sympathetic type); the solution is to reduce the load and increase recovery. Loading more makes it worse; Abtraining is a process planned only for the end of a career.",
+    "ck": [
+     "Maßnahmen",
+     "Übertraining"
+    ]
    },
    {
     "id": "L:trainingslehre-2:n4",
@@ -5907,7 +6419,11 @@ export const LESSONS = [
     ],
     "x": "Abtraining kasıtlı kademeli azaltmadır (2), Detraining antrenmanın kesilmesiyle kazanımların kaybıdır (3), Übertraining yetersiz dinlenmeyle aşırı yüklenmedir (1). Abtraining ile Detraining'i yer değiştirmek en tipik hatadır.",
     "typ": "zuordnung",
-    "xEn": "Abtraining is intentional gradual reduction (2), Detraining is loss of gains when training stops (3), Übertraining is overloading with too little rest (1). Swapping Abtraining and Detraining is the most typical mistake."
+    "xEn": "Abtraining is intentional gradual reduction (2), Detraining is loss of gains when training stops (3), Übertraining is overloading with too little rest (1). Swapping Abtraining and Detraining is the most typical mistake.",
+    "ck": [
+     "Abtraining",
+     "Detraining"
+    ]
    },
    {
     "id": "L:trainingslehre-2:n5",
@@ -5919,7 +6435,10 @@ export const LESSONS = [
      "Angespannte Körperhaltung und verzögerte Erholung"
     ],
     "x": "Parasempatik tip: yorgunluk/depresyon, normal uyku, düşük dinlenme nabzı ve tansiyonu, yükten sonra nabız hızlı düşer. Uyku bozukluğu, yüksek nabız/tansiyon, huzursuzluk, gergin duruş ve gecikmiş toparlanma sempatik tipin belirtileridir.",
-    "xEn": "Parasympathetic type: fatigue/depression, normal sleep, low resting heart rate and blood pressure, heart rate drops quickly after load. Sleep disturbance, high heart rate/blood pressure, restlessness, tense posture and delayed recovery are signs of the sympathetic type."
+    "xEn": "Parasympathetic type: fatigue/depression, normal sleep, low resting heart rate and blood pressure, heart rate drops quickly after load. Sleep disturbance, high heart rate/blood pressure, restlessness, tense posture and delayed recovery are signs of the sympathetic type.",
+    "ck": [
+     "Übertrainingssyndrom"
+    ]
    }
   ],
   "open": [
@@ -6174,7 +6693,10 @@ export const LESSONS = [
      "konditionell, kognitiv, affektiv, sozial"
     ],
     "x": "Dört hedef: motorik, bilişsel, duygusal (affektiv), sosyal (M-K-A-S). Kondisyonel ve koordinatif yetiler motorik hedefin içindedir, taktik ise bilişsel hedefe aittir; ayrı hedef değildir.",
-    "xEn": "Four goals: motor, cognitive, affective, social (M-K-A-S). Conditional and coordinative abilities are part of the motor goal, and tactics belong to the cognitive goal; they are not separate goals."
+    "xEn": "Four goals: motor, cognitive, affective, social (M-K-A-S). Conditional and coordinative abilities are part of the motor goal, and tactics belong to the cognitive goal; they are not separate goals.",
+    "ck": [
+     "Trainingsbegriffe"
+    ]
    },
    {
     "id": "L:trainingslehre-3:1",
@@ -6186,7 +6708,10 @@ export const LESSONS = [
      "motorisch"
     ],
     "x": "Duygularla başa çıkmak (zafer ve yenilgiyi işlemek) affektiv hedeftir. Sosyal hedef fair-play gibi sosyal davranışlar, bilişsel hedef taktik ve kural bilgisidir.",
-    "xEn": "Coping with emotions (processing victory and defeat) is the affective goal. The social goal is social behaviour like fair play, the cognitive goal is knowledge of tactics and rules."
+    "xEn": "Coping with emotions (processing victory and defeat) is the affective goal. The social goal is social behaviour like fair play, the cognitive goal is knowledge of tactics and rules.",
+    "ck": [
+     "Trainingsbegriffe"
+    ]
    },
    {
     "id": "L:trainingslehre-3:2",
@@ -6198,7 +6723,10 @@ export const LESSONS = [
      "Anstrengungsgrad bzw. Stärke des einzelnen Reizes"
     ],
     "x": "Dichte = yük ile dinlenme arasındaki zaman oranı (ör. setler arası mola). Toplam miktar Umfang, haftalık sayı Häufigkeit, zorluk derecesi Intensität'tir.",
-    "xEn": "Dichte = time ratio between load and rest (e.g. break between sets). Total amount is Umfang, the weekly number is Häufigkeit, the level of difficulty is Intensität."
+    "xEn": "Dichte = time ratio between load and rest (e.g. break between sets). Total amount is Umfang, the weekly number is Häufigkeit, the level of difficulty is Intensität.",
+    "ck": [
+     "Belastungsnormative"
+    ]
    },
    {
     "id": "L:trainingslehre-3:3",
@@ -6210,7 +6738,10 @@ export const LESSONS = [
      "Belastungsintensität"
     ],
     "x": "Toplam tekrar sayısı (3 × 10 = 30) yük hacmidir, yani Umfang. Dichte setler arası molayı, Intensität tek tekrarın zorluğunu tanımlar.",
-    "xEn": "The total number of repetitions (3 × 10 = 30) is the load volume, i.e. Umfang. Dichte describes the break between sets, Intensität the difficulty of a single repetition."
+    "xEn": "The total number of repetitions (3 × 10 = 30) is the load volume, i.e. Umfang. Dichte describes the break between sets, Intensität the difficulty of a single repetition.",
+    "ck": [
+     "Belastungsnormative"
+    ]
    },
    {
     "id": "L:trainingslehre-3:4",
@@ -6222,7 +6753,10 @@ export const LESSONS = [
      "Planmäßiges Verfahren zum Erreichen eines Trainingsziels"
     ],
     "x": "Form = içerik + yöntem. Araç (Mittel) ayrı bir kavramdır; 'hedefe ulaşmak için planlı yöntem' ise Trainingsmethode'nin tanımıdır.",
-    "xEn": "Form = content + method. The means (Mittel) is a separate concept; 'planned procedure to reach a goal' is the definition of Trainingsmethode."
+    "xEn": "Form = content + method. The means (Mittel) is a separate concept; 'planned procedure to reach a goal' is the definition of Trainingsmethode.",
+    "ck": [
+     "Trainingsbegriffe"
+    ]
    },
    {
     "id": "L:trainingslehre-3:5",
@@ -6234,7 +6768,10 @@ export const LESSONS = [
      "Ausdauer vor Schnelligkeit, damit der Kreislauf angeregt ist"
     ],
     "x": "Erken yorgunluğu önlemek için teknik ve taktik kondisyondan önce gelir. Kuvvet veya dayanıklılığı öne almak yorgunluk yaratır ve hassas hareket kontrolünü bozar.",
-    "xEn": "To avoid early fatigue, technique and tactics come before conditioning. Putting strength or endurance first creates fatigue and impairs fine movement control."
+    "xEn": "To avoid early fatigue, technique and tactics come before conditioning. Putting strength or endurance first creates fatigue and impairs fine movement control.",
+    "ck": [
+     "Trainingsprinzipien"
+    ]
    },
    {
     "id": "L:trainingslehre-3:6",
@@ -6246,7 +6783,10 @@ export const LESSONS = [
      "6 Monate"
     ],
     "x": "Mezo döngü genelde 6–12 hafta, sağlık sporunda 6–8 haftadır. 1 hafta mikro döngü, yaklaşık 6 ay ise makro döngüdür.",
-    "xEn": "A meso cycle is usually 6–12 weeks, in health sport 6–8 weeks. 1 week is a micro cycle, about 6 months is a macro cycle."
+    "xEn": "A meso cycle is usually 6–12 weeks, in health sport 6–8 weeks. 1 week is a micro cycle, about 6 months is a macro cycle.",
+    "ck": [
+     "Periodisierung"
+    ]
    },
    {
     "id": "L:trainingslehre-3:7",
@@ -6270,7 +6810,10 @@ export const LESSONS = [
      "Weil sie erst nach dem Krafttraining richtig wirken kann"
     ],
     "x": "Yorgunluk sinir sisteminin kontrolünü bozar; bu yüzden koordinasyon dinlenmiş haldeyken çalışılır. Isınmanın yerini tutmaz, 'kolay olduğu için' de başa konmaz.",
-    "xEn": "Fatigue impairs control by the nervous system; that's why coordination is trained while rested. It does not replace the warm-up, and it is not put first 'because it is easy'."
+    "xEn": "Fatigue impairs control by the nervous system; that's why coordination is trained while rested. It does not replace the warm-up, and it is not put first 'because it is easy'.",
+    "ck": [
+     "Trainingsprinzipien"
+    ]
    },
    {
     "id": "L:trainingslehre-3:9",
@@ -6282,7 +6825,10 @@ export const LESSONS = [
      "Abnahme der Energiereserven bei Belastung"
     ],
     "x": "Dinlenme nabzının düşmesi kalıcı (anhaltend) uyumdur. Diğerleri antrenman sırasında ortaya çıkan ve sonra kaybolan akut uyumlardır.",
-    "xEn": "A lower resting heart rate is a lasting (anhaltend) adaptation. The others are acute adaptations that appear during training and then disappear."
+    "xEn": "A lower resting heart rate is a lasting (anhaltend) adaptation. The others are acute adaptations that appear during training and then disappear.",
+    "ck": [
+     "anhaltende Anpassungen"
+    ]
    },
    {
     "id": "L:trainingslehre-3:n1",
@@ -6295,7 +6841,10 @@ export const LESSONS = [
     ],
     "x": "Ünite ısınma, ana bölüm ve soğuma ile yapılır; koordinasyon ana bölümün başında, dinlenmişken çalışılır. Kuvvetten sonra koordinasyon yapmak yorgunluk nedeniyle yanlıştır; ısınmadan önce de yapılmaz.",
     "typ": "reihenfolge",
-    "xEn": "A session consists of warm-up, main part and cool-down; coordination is trained at the start of the main part while rested. Coordination after strength is wrong because of fatigue; it is also not done before the warm-up."
+    "xEn": "A session consists of warm-up, main part and cool-down; coordination is trained at the start of the main part while rested. Coordination after strength is wrong because of fatigue; it is also not done before the warm-up.",
+    "ck": [
+     "Trainingsprinzipien"
+    ]
    },
    {
     "id": "L:trainingslehre-3:n2",
@@ -6321,7 +6870,10 @@ export const LESSONS = [
     ],
     "x": "Setler arası mola, yük ile dinlenme arasındaki zaman oranıdır, yani Dichte. Dauer tek bir yüklenmenin süresi, Umfang toplam tekrar miktarı, Häufigkeit haftalık antrenman sayısıdır.",
     "typ": "fall",
-    "xEn": "The break between sets is the time ratio between load and rest, i.e. Dichte. Dauer is the duration of a single load, Umfang the total amount of repetitions, Häufigkeit the number of training sessions per week."
+    "xEn": "The break between sets is the time ratio between load and rest, i.e. Dichte. Dauer is the duration of a single load, Umfang the total amount of repetitions, Häufigkeit the number of training sessions per week.",
+    "ck": [
+     "Belastungsnormative"
+    ]
    },
    {
     "id": "L:trainingslehre-3:n4",
@@ -6346,7 +6898,10 @@ export const LESSONS = [
      "Trainingsmittel"
     ],
     "x": "Step-up genel egzersize dayanır ve hedef hareketin (merdiven) öğelerini içerir → Spezialübung. Bacak presi genel egzersiz, gerçek merdiven 'yarışma' egzersizidir; Trainingsmittel ise araç/ekipmandır, içerik değil.",
-    "xEn": "A step-up is based on a general exercise and contains elements of the target movement (stairs) → Spezialübung. Leg press is a general exercise, real stairs are the 'competition' exercise; Trainingsmittel is a tool/equipment, not content."
+    "xEn": "A step-up is based on a general exercise and contains elements of the target movement (stairs) → Spezialübung. Leg press is a general exercise, real stairs are the 'competition' exercise; Trainingsmittel is a tool/equipment, not content.",
+    "ck": [
+     "Trainingsbegriffe"
+    ]
    },
    {
     "id": "L:trainingslehre-3:n6",
@@ -6358,7 +6913,11 @@ export const LESSONS = [
      "Trainingsziele, Trainingsinhalte, Trainingsmethoden, Trainingsmittel"
     ],
     "x": "Uyumu etkileyen faktörler: iç (endogen) faktörler yaş, cinsiyet (testosteron) ve antrenman durumu; dış (exogen) faktörler yükün niteliği/niceliği, beslenme ve toparlanma önlemleridir. (Folyoda bu atama ters yazılmıştı; doğrusu endo = iç, exo = dış.) Diğer seçenekler kalite ölçütleri, periyodizasyon ve antrenman süreci terimleridir.",
-    "xEn": "Factors affecting adaptation: internal (endogenous) factors are age, sex (testosterone) and training status; external (exogenous) factors are quality/quantity of load, nutrition and recovery measures. (On the slides this assignment was written the wrong way round; correct is endo = internal, exo = external.) The other options are terms of quality criteria, periodisation and the training process."
+    "xEn": "Factors affecting adaptation: internal (endogenous) factors are age, sex (testosterone) and training status; external (exogenous) factors are quality/quantity of load, nutrition and recovery measures. (On the slides this assignment was written the wrong way round; correct is endo = internal, exo = external.) The other options are terms of quality criteria, periodisation and the training process.",
+    "ck": [
+     "Einflussfaktoren",
+     "Belastung"
+    ]
    }
   ],
   "open": [
@@ -6552,6 +7111,526 @@ export const LESSONS = [
    }
   ],
   "nh": "8130d5dbade808df"
+ },
+ {
+  "id": "trainingslehre-4",
+  "fach": "Trainingslehre",
+  "title": "Kraft: Definition, Kontraktionsformen, Kraftfähigkeiten, Bedeutung",
+  "kern": [
+   {
+    "de": "Trainingswissenschaftlich ist Kraft eine konditionelle Fähigkeit: Mit Muskelkraft werden Widerstände überwunden, nachgebend abgebremst oder gehalten. Von Kraftleistungen spricht man ab etwa 30 % des individuellen Maximums.",
+    "tr": "Antrenman biliminde kuvvet kondisyonel bir yetidir: direnci yenmek (konsantrik), frenlemek (eksantrik) veya tutmak (izometrik). Kişisel maksimumun yaklaşık %30'undan fazlası = kuvvet performansı.",
+    "en": "In training science, strength is a conditional ability: overcoming resistance (concentric), braking it (eccentric) or holding it (isometric). Above about 30 % of the personal maximum it counts as a strength performance."
+   },
+   {
+    "de": "Physikalisch gilt F = m × a; die Einheit der Kraft ist Newton (N).",
+    "tr": "Fizikte kuvvet = kütle × ivme, birimi Newton.",
+    "en": "In physics, force = mass × acceleration; the unit is the newton."
+   },
+   {
+    "de": "Nach der Längenänderung unterscheidet man konzentrische (überwindende), exzentrische (nachgebende) und statische (haltende) Arbeit.",
+    "tr": "Kas boyuna göre: konsantrik = kısalır, eksantrik = kasılırken uzar ve hareketi frenler, statik = boy aynı kalır.",
+    "en": "By length change: concentric = the muscle shortens, eccentric = it lengthens while braking the movement, static = the length stays the same."
+   },
+   {
+    "de": "Isometrisch: gleiche Länge, steigende Spannung. Isotonisch: gleiche Spannung, Muskel verkürzt sich (im Training nur theoretisch). Auxotonisch: Länge und Spannung ändern sich – die häufigste Form.",
+    "tr": "İzometrik: boy aynı, gerilim artar. İzotonik: gerilim aynı, kas kısalır (pratikte neredeyse yok). Oksotonik: boy ve gerilim birlikte değişir, günlük hayatta en sık.",
+    "en": "Isometric: same length, rising tension. Isotonic: same tension, the muscle shortens (only theoretical in training). Auxotonic: length and tension both change – the most common type."
+   },
+   {
+    "de": "Mischformen: Unterstützungskontraktion = erst isometrisch, dann dynamisch (Gewicht vom Boden heben); Anschlagskontraktion = erst dynamisch, dann isometrisch (Schlag auf den Boxsack). Isokinetisch = konstante Geschwindigkeit, nur an Maschinen.",
+    "tr": "Karışık formlar: Unterstützung = önce tut, sonra hareket et; Anschlag = önce hareket, sonunda ani durma (izometrik). İzokinetik = sabit hız, sadece makineyle.",
+    "en": "Mixed forms: Unterstützung = hold first, then move; Anschlag = move first, then a sudden isometric stop. Isokinetic = constant speed, only on machines."
+   },
+   {
+    "de": "Kraftleistung = die sportliche Tätigkeit selbst; Kraftfähigkeiten = die Voraussetzungen dafür (beschleunigen, abbremsen, Körperstellung halten).",
+    "tr": "Kraftleistung = yapılan iş; Kraftfähigkeit = onu mümkün kılan önkoşul.",
+    "en": "Kraftleistung = the performance itself; Kraftfähigkeit = the ability that makes it possible."
+   },
+   {
+    "de": "Die vier Kraftfähigkeiten sind Maximalkraft, Schnellkraft, Reaktivkraft und Kraftausdauer; die Maximalkraft ist die Basis für alle anderen.",
+    "tr": "4 kuvvet yeteneği: maksimal, çabuk, reaktif kuvvet ve kuvvet dayanıklılığı. Maksimal kuvvet hepsinin temelidir.",
+    "en": "The four strength abilities: maximal, speed, reactive strength and strength endurance. Maximal strength is the basis of all of them."
+   },
+   {
+    "de": "Die Maximalkraft hängt u. a. vom Muskelquerschnitt, vom Muskelaufbau (gefiedert/spindelförmig), von der Muskellänge, von der intra- und intermuskulären Koordination, der Fasertypverteilung und der Motivation ab.",
+    "tr": "Maksimal kuvvet: kas kesiti, kas yapısı, kas boyu, kas içi ve kaslar arası koordinasyon, lif tipi dağılımı ve motivasyona bağlıdır.",
+    "en": "Maximal strength depends on cross-section, muscle structure, muscle length, intra- and intermuscular coordination, fibre type distribution and motivation."
+   },
+   {
+    "de": "Absolutkraft = gedachter Wert, wenn alle Muskelfasern kontrahieren (nur per Elektrostimulation messbar); Maximalkraft = willkürlich abrufbarer Anteil; Relativkraft = Kraft im Verhältnis zum Körpergewicht. Das Kraftdefizit (Absolut- minus Maximalkraft) liegt bei Untrainierten bei etwa 30 %, bei Trainierten bei etwa 5 %.",
+    "tr": "Mutlak kuvvet = teorik tavan; maksimal = isteyerek ulaşılan kısım; göreli = vücut ağırlığına oran. Kuvvet açığı: antrenmansız ~%30, antrenmanlı ~%5.",
+    "en": "Absolute = theoretical ceiling; maximal = the part you can activate voluntarily; relative = strength per body weight. Strength deficit: untrained about 30 %, trained about 5 %."
+   },
+   {
+    "de": "Schnellkraft = einen Widerstand in kurzer Zeit möglichst stark beschleunigen; sie hängt von Maximalkraft, Startkraft (erste 20–30 ms) und Explosivkraft (steiler Kraftanstieg) ab.",
+    "tr": "Çabuk kuvvet: maksimal kuvvet + başlangıç kuvveti (ilk 20–30 ms) + patlayıcı kuvvet.",
+    "en": "Speed strength: maximal strength + starting strength (first 20–30 ms) + explosive strength."
+   },
+   {
+    "de": "Reaktivkraft nutzt den Dehnungs-Verkürzungs-Zyklus: Auf eine exzentrische folgt unmittelbar eine konzentrische Phase; Energie aus elastischen Strukturen und Dehnungsreflexe verstärken den Kraftstoß.",
+    "tr": "Reaktif kuvvet = lastik gibi: önce eksantrik germe, hemen ardından konsantrik kasılma; elastik enerji + germe refleksi.",
+    "en": "Reactive strength works like a rubber band: eccentric stretch immediately followed by a concentric contraction; elastic energy plus stretch reflexes."
+   },
+   {
+    "de": "Kraftausdauer ist eine Mischfähigkeit aus Maximalkraft und Energiebereitstellung (über 30 % des Maximums); unter 30 % spricht man von lokaler Muskelausdauer.",
+    "tr": "Kuvvet dayanıklılığı = maksimal kuvvet + enerji sağlanması; %30'un altı = lokal kas dayanıklılığı.",
+    "en": "Strength endurance = maximal strength + energy supply; below 30 % it is called local muscular endurance."
+   },
+   {
+    "de": "Gut ausgeprägte Kraft hilft bei Gesundheit (z. B. weniger Osteoporose), Alltagsbelastungen, Verletzungsprophylaxe, motorischem Lernen, Körperbau und Psyche; sie schützt auch passive Strukturen wie Knochen, Bänder und Bandscheiben.",
+    "tr": "Kuvvetin 6 faydası: sağlık, günlük yükler, yaralanma önleme, motor öğrenme, vücut yapısı, psikoloji. Fizyo açısından en önemlisi pasif yapıların korunması.",
+    "en": "Six benefits of strength: health, daily loads, injury prevention, motor learning, body composition, mental health. For physio the key point is protecting passive structures."
+   }
+  ],
+  "mcq": [
+   {
+    "id": "L:trainingslehre-4:0",
+    "q": "Ab welchem Anteil des individuellen Kraftmaximums spricht man von einer Kraftleistung?",
+    "o": [
+     "über etwa 30 %",
+     "über etwa 10 %",
+     "über etwa 50 %",
+     "über etwa 80 %"
+    ],
+    "x": "%30 sınırı: bunun üstü kuvvet performansı sayılır. Altındaki yükler daha çok dayanıklılık alanına girer.",
+    "xEn": "The 30 % limit: above it a load counts as a strength performance; below it, it belongs more to endurance.",
+    "ck": [
+     "trainingswissenschaftlich"
+    ]
+   },
+   {
+    "id": "L:trainingslehre-4:1",
+    "q": "Wie lautet die physikalische Formel für Kraft?",
+    "o": [
+     "F = m × a",
+     "F = m × v",
+     "F = m : a",
+     "F = a : t"
+    ],
+    "x": "Kuvvet = kütle × ivme (2. Newton yasası), birim Newton. m × v momentumdur.",
+    "xEn": "Force = mass × acceleration (Newton's second law), unit newton. m × v is momentum.",
+    "ck": [
+     "trainingswissenschaftlich"
+    ]
+   },
+   {
+    "id": "L:trainingslehre-4:2",
+    "q": "Beim Bergabgehen bremst der M. quadriceps femoris die Bewegung. Wie arbeitet er?",
+    "o": [
+     "exzentrisch (nachgebend)",
+     "konzentrisch (überwindend)",
+     "statisch (haltend)",
+     "isokinetisch"
+    ],
+    "x": "Kas kasılırken uzar ve hareketi frenler = eksantrik. Konsantrik kısalarak yener, statik boyu korur.",
+    "xEn": "The muscle lengthens while contracting and brakes the movement = eccentric. Concentric shortens, static keeps the length.",
+    "ck": [
+     "Kontraktionsformen"
+    ]
+   },
+   {
+    "id": "L:trainingslehre-4:3",
+    "q": "Welche Kontraktionsform kommt bei Körperbewegungen am häufigsten vor?",
+    "o": [
+     "auxotonisch",
+     "isotonisch",
+     "isometrisch",
+     "isokinetisch"
+    ],
+    "x": "Neredeyse tüm hareketlerde boy ve gerilim birlikte değişir = oksotonik. İzotonik pratikte sadece teoride vardır.",
+    "xEn": "In almost all movements length and tension change together = auxotonic. Isotonic is practically only theoretical.",
+    "ck": [
+     "Kontraktionsformen"
+    ]
+   },
+   {
+    "id": "L:trainingslehre-4:4",
+    "q": "Bei welcher Kontraktion bleibt die Muskellänge gleich, während die Spannung steigt?",
+    "o": [
+     "isometrisch",
+     "isotonisch",
+     "auxotonisch",
+     "exzentrisch"
+    ],
+    "x": "iso = aynı, metron = ölçü: boy aynı, gerilim artar (ör. kapalı kapıyı çekmek). Fiziksel olarak iş yapılmaz.",
+    "xEn": "iso = same, metron = measure: same length, rising tension (e.g. pulling a locked door). Physically no work is done.",
+    "ck": [
+     "Kontraktionsformen"
+    ]
+   },
+   {
+    "id": "L:trainingslehre-4:5",
+    "q": "Ein Gewicht wird vom Boden gehoben: erst Halten, dann Bewegen. Welche Mischform ist das?",
+    "o": [
+     "Unterstützungskontraktion",
+     "Anschlagskontraktion",
+     "isokinetische Kontraktion",
+     "Dehnungs-Verkürzungs-Zyklus"
+    ],
+    "x": "Önce izometrik, sonra dinamik = Unterstützungskontraktion. Anschlag tersidir: önce hareket, sonunda izometrik durma (boks torbası).",
+    "xEn": "Isometric first, then dynamic = Unterstützungskontraktion. Anschlag is the reverse: movement first, isometric stop at the end (punch bag).",
+    "ck": [
+     "Kontraktionsformen"
+    ]
+   },
+   {
+    "id": "L:trainingslehre-4:6",
+    "q": "Welche Gruppe nennt die vier Kraftfähigkeiten?",
+    "o": [
+     "Maximalkraft, Schnellkraft, Reaktivkraft, Kraftausdauer",
+     "Maximalkraft, Schnelligkeit, Beweglichkeit, Ausdauer",
+     "Absolutkraft, Relativkraft, Startkraft, Explosivkraft",
+     "Maximalkraft, Schnellkraft, Koordination, Ausdauer"
+    ],
+    "x": "\"Max Schnell Reagiert Ausdauernd\": maksimal, çabuk, reaktif, kuvvet dayanıklılığı. Mutlak/göreli ve başlangıç/patlayıcı kuvvet bunların alt kavramlarıdır.",
+    "xEn": "\"Max Schnell Reagiert Ausdauernd\": maximal, speed, reactive, strength endurance. Absolute/relative and start/explosive strength are sub-terms.",
+    "ck": [
+     "vier Kraftfähigkeiten"
+    ]
+   },
+   {
+    "id": "L:trainingslehre-4:7",
+    "q": "Welche Kraftfähigkeit gilt als Basisfähigkeit für alle anderen?",
+    "o": [
+     "Maximalkraft",
+     "Schnellkraft",
+     "Reaktivkraft",
+     "Kraftausdauer"
+    ],
+    "x": "Maksimal kuvvet diğer üç yeteneği de belirler; bu yüzden temel yetenektir.",
+    "xEn": "Maximal strength also determines the other three abilities, so it is the basic ability.",
+    "ck": [
+     "Maximalkraftfähigkeit"
+    ]
+   },
+   {
+    "id": "L:trainingslehre-4:8",
+    "q": "Welcher Faktor der Maximalkraft beruht vor allem auf dem Nervensystem?",
+    "o": [
+     "intramuskuläre Koordination",
+     "Muskelfaserquerschnitt",
+     "Muskellänge",
+     "gefiederter Muskelaufbau"
+    ],
+    "x": "Kas içi koordinasyon = sinir sisteminin bir kastaki lifleri ne kadar aktive edebildiği. Kesit, boy ve yapı kasın kendisine ait özelliklerdir.",
+    "xEn": "Intramuscular coordination = how many fibres of a muscle the nervous system can activate. Cross-section, length and structure belong to the muscle itself.",
+    "ck": [
+     "Maximalkraftfähigkeit"
+    ]
+   },
+   {
+    "id": "L:trainingslehre-4:9",
+    "q": "Was ist die Relativkraft?",
+    "o": [
+     "Kraft im Verhältnis zum Körpergewicht",
+     "willkürlich abrufbarer Anteil der Absolutkraft",
+     "Kraft aller Fasern bei Elektrostimulation",
+     "Differenz aus Absolut- und Maximalkraft"
+    ],
+    "x": "Göreli kuvvet = kuvvet : vücut ağırlığı. İsteyerek ulaşılan kısım maksimal kuvvet, tüm lifler mutlak kuvvet, fark ise kuvvet açığıdır.",
+    "xEn": "Relative strength = strength : body weight. The voluntary part is maximal strength, all fibres is absolute strength, the difference is the strength deficit.",
+    "ck": [
+     "Absolutkraft",
+     "Relativkraft"
+    ]
+   },
+   {
+    "id": "L:trainingslehre-4:10",
+    "q": "Wie groß ist das Kraftdefizit bei Untrainierten ungefähr?",
+    "o": [
+     "etwa 30 %",
+     "etwa 5 %",
+     "etwa 50 %",
+     "etwa 70 %"
+    ],
+    "x": "Antrenmansızlar mutlak kuvvetin ~%70'ini kullanabilir → açık ~%30. Antrenmanlılarda ~%5.",
+    "xEn": "Untrained people can use about 70 % of their absolute strength → deficit about 30 %. Trained people: about 5 %.",
+    "ck": [
+     "Absolutkraft",
+     "Relativkraft"
+    ]
+   },
+   {
+    "id": "L:trainingslehre-4:11",
+    "q": "Was versteht man unter Startkraft?",
+    "o": [
+     "schnell hohe Kraft in den ersten 20–30 ms",
+     "die höchste willkürlich erreichbare Kraft",
+     "die Kraft aller Muskelfasern zusammen",
+     "eine Haltekraft über lange Zeit"
+    ],
+    "x": "Başlangıç kuvveti = kuvvet-zaman eğrisinin ilk 20–30 ms'si. Patlayıcı kuvvet ise başlamış artışı en hızlı sürdürmektir.",
+    "xEn": "Starting strength = the first 20–30 ms of the force–time curve. Explosive strength is continuing the rise as steeply as possible.",
+    "ck": [
+     "Schnellkraftfähigkeit"
+    ]
+   },
+   {
+    "id": "L:trainingslehre-4:12",
+    "q": "Welche Abfolge kennzeichnet den Dehnungs-Verkürzungs-Zyklus?",
+    "o": [
+     "exzentrisch, unmittelbar danach konzentrisch",
+     "konzentrisch, unmittelbar danach exzentrisch",
+     "isometrisch, danach konzentrisch",
+     "exzentrisch, lange Pause, dann konzentrisch"
+    ],
+    "x": "DVZ = germe (eksantrik) ve hemen ardından kısalma (konsantrik). Ara verilirse depolanan elastik enerji kaybolur.",
+    "xEn": "SSC = stretch (eccentric) immediately followed by shortening (concentric). With a pause the stored elastic energy is lost.",
+    "ck": [
+     "Reaktivkraftfähigkeit",
+     "Dehnungs-Verkürzungs-Zyklus"
+    ]
+   },
+   {
+    "id": "L:trainingslehre-4:13",
+    "q": "Welches Beispiel zeigt die Reaktivkraft am deutlichsten?",
+    "o": [
+     "Absprung beim Weitsprung",
+     "Kreuzheben mit Maximalgewicht",
+     "Rudern im Endspurt",
+     "Halten einer Plank"
+    ],
+    "x": "Uzun atlamada sıçrama = kısa yer teması, germe-kısalma döngüsü. Deadlift maksimal kuvvet, kürek kuvvet dayanıklılığı, plank izometrik tutmadır.",
+    "xEn": "Take-off in the long jump = short ground contact, stretch-shortening cycle. Deadlift = maximal strength, rowing = strength endurance, plank = isometric hold.",
+    "ck": [
+     "Reaktivkraftfähigkeit",
+     "Dehnungs-Verkürzungs-Zyklus"
+    ]
+   },
+   {
+    "id": "L:trainingslehre-4:14",
+    "q": "Warum ist die Kraftausdauer eine „Mischfähigkeit“?",
+    "o": [
+     "Sie hängt von Maximalkraft und Energiebereitstellung ab.",
+     "Sie hängt von Schnelligkeit und Beweglichkeit ab.",
+     "Sie hängt nur von der Fasertypverteilung ab.",
+     "Sie hängt von Koordination und Reaktionszeit ab."
+    ],
+    "x": "Kuvvet dayanıklılığı hem kuvvet (maksimal kuvvet) hem dayanıklılık (enerji sağlanması) ister.",
+    "xEn": "Strength endurance needs both strength (maximal strength) and endurance (energy supply).",
+    "ck": [
+     "Kraftausdauerfähigkeit"
+    ]
+   },
+   {
+    "id": "L:trainingslehre-4:15",
+    "q": "Wie nennt man ausdauernde Muskelarbeit unter 30 % des Maximums?",
+    "o": [
+     "lokale Muskelausdauer",
+     "Reaktivkraft",
+     "Schnellkraftausdauer",
+     "Relativkraft"
+    ],
+    "x": "%30'un üstü kuvvet dayanıklılığı, altı lokal kas dayanıklılığıdır.",
+    "xEn": "Above 30 % = strength endurance, below it = local muscular endurance.",
+    "ck": [
+     "Kraftausdauerfähigkeit"
+    ]
+   },
+   {
+    "id": "L:trainingslehre-4:16",
+    "q": "Welcher Nutzen gut ausgeprägter Kraft ist für die Physiotherapie besonders wichtig?",
+    "o": [
+     "Schutz passiver Strukturen wie Bänder und Bandscheiben",
+     "eine höhere maximale Herzfrequenz",
+     "eine kürzere Reaktionszeit auf Signale",
+     "mehr Gelenkbeweglichkeit ohne Dehnen"
+    ],
+    "x": "Güçlü kas kuvvetleri yakalar (ör. yere atlarken) ve bağları, diskleri, kemikleri korur.",
+    "xEn": "Strong muscles absorb forces (e.g. when landing) and protect ligaments, discs and bones.",
+    "ck": [
+     "Bedeutung",
+     "Kraftfähigkeiten"
+    ]
+   },
+   {
+    "id": "L:trainingslehre-4:17",
+    "q": "Was beschreibt eine muskuläre Dysbalance?",
+    "o": [
+     "Eine Muskelgruppe ist schwach, ihr Gegenspieler stärker.",
+     "Beide Seiten eines Gelenks sind gleich schwach.",
+     "Ein Muskel ist nach dem Dehnen dauerhaft länger.",
+     "Ein Muskel verkrampft nach langer Belastung."
+    ],
+    "x": "Kas dengesizliği: bir grup zayıf, karşıt grup güçlü (ör. uzun süre kambur oturmak). Kuvvet antrenmanı bunu azaltabilir.",
+    "xEn": "Muscular imbalance: one group is weak, the opposite group strong (e.g. sitting hunched for a long time). Strength training can reduce it.",
+    "ck": [
+     "Bedeutung",
+     "Kraftfähigkeiten"
+    ]
+   }
+  ],
+  "open": [
+   {
+    "q": "Definieren Sie Kraft aus trainingswissenschaftlicher Sicht. Wie kann die Muskelkraft auf einen Widerstand wirken, und ab welcher Grenze spricht man von Kraftleistungen?",
+    "a": "Kraft ist eine konditionelle Fähigkeit. Mit der Muskelkraft kann ein Widerstand überwunden werden (konzentrisch), ihm kann nachgebend entgegengewirkt werden (exzentrisch), oder er kann gehalten werden (isometrisch). Von Kraftleistungen spricht man bei Krafteinsätzen über 30 % des individuellen Maximums.",
+    "kw": [
+     "konditionelle Fähigkeit",
+     "überwunden|überwinden|konzentrisch",
+     "nachgebend|exzentrisch",
+     "gehalten|halten|isometrisch",
+     "30 %|30 Prozent"
+    ]
+   },
+   {
+    "q": "Grenzen Sie Absolutkraft, Maximalkraft und Relativkraft voneinander ab und erklären Sie das Kraftdefizit.",
+    "a": "Die Absolutkraft ist der gedachte Wert, wenn alle Muskelfasern maximal kontrahieren; sie ist nur mit Elektrostimulation messbar. Die Maximalkraft ist der Anteil davon, der willkürlich aktiviert werden kann. Die Relativkraft ist die Kraft im Verhältnis zum Körpergewicht. Das Kraftdefizit ist die Differenz zwischen Absolutkraft und Maximalkraft: bei Untrainierten etwa 30 %, bei Trainierten etwa 5 %.",
+    "kw": [
+     "Absolutkraft",
+     "Maximalkraft",
+     "Relativkraft",
+     "Körpergewicht",
+     "willkürlich",
+     "Kraftdefizit"
+    ]
+   },
+   {
+    "q": "Erklären Sie den Dehnungs-Verkürzungs-Zyklus und nennen Sie ein Beispiel.",
+    "a": "Beim Dehnungs-Verkürzungs-Zyklus folgt auf eine exzentrische Phase unmittelbar eine konzentrische Phase. Beim Dehnen wird Energie in elastischen Strukturen gespeichert und danach wieder genutzt; schnelle Dehnungen lösen zusätzlich einen Dehnungsreflex aus. Ein Beispiel ist der Absprung beim Weitsprung.",
+    "kw": [
+     "exzentrisch",
+     "konzentrisch",
+     "elastisch",
+     "Energie|gespeichert",
+     "Dehnungsreflex",
+     "Weitsprung|Absprung|Schmetterschlag"
+    ]
+   },
+   {
+    "q": "Erklären Sie den Unterschied zwischen Unterstützungskontraktion und Anschlagskontraktion mit je einem Beispiel.",
+    "a": "Bei der Unterstützungskontraktion arbeitet der Muskel zuerst isometrisch und danach dynamisch, zum Beispiel beim Gewichtheben, wenn das Gewicht vom Boden gehoben wird. Bei der Anschlagskontraktion ist es umgekehrt: zuerst dynamisch, am Ende isometrisch, zum Beispiel beim Schlag auf einen Boxsack.",
+    "kw": [
+     "Unterstützungskontraktion",
+     "Anschlagskontraktion",
+     "isometrisch",
+     "dynamisch",
+     "Gewichtheben|Gewicht",
+     "Boxsack|Kauen|Ohrfeige"
+    ]
+   },
+   {
+    "q": "Wovon hängt die Schnellkraft ab?",
+    "a": "Die Schnellkraft hängt von der Maximalkraft, der Startkraft und der Explosivkraft ab. Die Startkraft ist die Fähigkeit, in den ersten 20–30 Millisekunden schnell hohe Kraft zu erzeugen; die Explosivkraft beschreibt einen möglichst steilen Kraftanstieg. Außerdem spielen der Anteil schneller Fasern, die Rekrutierung und die Synchronisation der Fasern eine Rolle.",
+    "kw": [
+     "Maximalkraft",
+     "Startkraft",
+     "Explosivkraft",
+     "Rekrutierung|Synchronisation|schneller Fasern"
+    ]
+   }
+  ],
+  "vocab": [
+   {
+    "de": "überwinden",
+    "tr": "yenmek, üstesinden gelmek",
+    "ex": "Konzentrisch wird ein Widerstand überwunden.",
+    "en": "to overcome"
+   },
+   {
+    "de": "nach|geben",
+    "tr": "boyun eğmek (eksantrik)",
+    "ex": "Exzentrisch arbeitet der Muskel nachgebend.",
+    "en": "to give way"
+   },
+   {
+    "de": "ab|bremsen",
+    "tr": "frenlemek",
+    "ex": "Der Quadrizeps bremst beim Bergabgehen die Bewegung ab.",
+    "en": "to brake"
+   },
+   {
+    "de": "die Spannung",
+    "tr": "gerilim",
+    "ex": "Bei isometrischer Arbeit steigt die Spannung, die Länge bleibt gleich.",
+    "en": "tension"
+   },
+   {
+    "de": "willkürlich",
+    "tr": "istemli",
+    "ex": "Die Maximalkraft ist der willkürlich abrufbare Anteil der Absolutkraft.",
+    "en": "voluntary"
+   },
+   {
+    "de": "der Querschnitt",
+    "tr": "kesit",
+    "ex": "Ein größerer Muskelquerschnitt erhöht die Maximalkraft.",
+    "en": "cross-section"
+   },
+   {
+    "de": "gefiedert",
+    "tr": "tüysü (pennat)",
+    "ex": "Gefiederte Muskeln können viel Kraft entwickeln.",
+    "en": "pennate"
+   },
+   {
+    "de": "die Vordehnung",
+    "tr": "ön germe",
+    "ex": "Eine Vordehnung kann die Kraft der folgenden Verkürzung erhöhen.",
+    "en": "pre-stretch"
+   },
+   {
+    "de": "beschleunigen",
+    "tr": "hızlandırmak",
+    "ex": "Die Kugelstoßerin beschleunigt die Kugel so stark wie möglich.",
+    "en": "to accelerate"
+   },
+   {
+    "de": "der Kraftstoß",
+    "tr": "kuvvet itkisi",
+    "ex": "Im Dehnungs-Verkürzungs-Zyklus entsteht ein erhöhter Kraftstoß.",
+    "en": "force impulse"
+   },
+   {
+    "de": "speichern",
+    "tr": "depolamak",
+    "ex": "Sehnen speichern beim Dehnen elastische Energie.",
+    "en": "to store"
+   },
+   {
+    "de": "die Steifheit",
+    "tr": "sertlik",
+    "ex": "Die Steifheit der Muskelfasern ist für die Reaktivkraft wichtig.",
+    "en": "stiffness"
+   },
+   {
+    "de": "aufrecht|erhalten",
+    "tr": "sürdürmek",
+    "ex": "Bei der Kraftausdauer soll die Kraft lange aufrechterhalten werden.",
+    "en": "to maintain"
+   },
+   {
+    "de": "die Energiebereitstellung",
+    "tr": "enerji sağlanması",
+    "ex": "Die Kraftausdauer hängt auch von der Energiebereitstellung ab.",
+    "en": "energy supply"
+   },
+   {
+    "de": "ab|federn",
+    "tr": "yaylanarak sönümlemek",
+    "ex": "Kräftige Beinmuskeln federn einen Niedersprung ab.",
+    "en": "to cushion"
+   },
+   {
+    "de": "die Bandscheibe",
+    "tr": "omurlar arası disk",
+    "ex": "Eine kräftige Rumpfmuskulatur entlastet die Bandscheiben.",
+    "en": "intervertebral disc"
+   },
+   {
+    "de": "die Selbstwirksamkeit",
+    "tr": "öz yeterlilik",
+    "ex": "Krafttraining kann die Selbstwirksamkeit stärken.",
+    "en": "self-efficacy"
+   },
+   {
+    "de": "die Dysbalance",
+    "tr": "dengesizlik",
+    "ex": "Eine muskuläre Dysbalance kann zu Haltungsschwächen führen.",
+    "en": "imbalance"
+   }
+  ],
+  "nh": "e0779e0d281ecb99"
  },
  {
   "id": "kmt-1",

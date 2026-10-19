@@ -7,6 +7,7 @@ import { MUSCLES, BONES, JOINTS } from './data/anatomy.js';
 import { fehlerList, odevList, todayPlan, week, upcoming } from './private.js';
 import { muscleQuestions, boneQuestions, jointQuestions, ALL_JOINT_DETAIL, exerciseQuestions } from './quizgen.js';
 import { todaysWords } from './words.js';
+import { ckFaecher, summary as ckSummary, emojiOf, levelOf } from './checkliste.js';
 import { t, locale } from './i18n.js';
 import './strings.js';
 
@@ -146,6 +147,13 @@ export function buildReport({ details = false } = {}) {
     if (weakT.length) lines.push(t('rep.mockWeak', { f: last.fach, x: weakT.join(', ') }));
   }
   if (w) lines.push(t('rep.plan', { kw: w.kw }) + (plan && plan.kurse.length ? t('rep.planToday', { x: [...new Set(plan.kurse.map(courseName).filter(Boolean))].join(' / ') }) : '') + (plan && plan.test.length ? t('rep.planMorning', { x: plan.test.join(' + ') }) : ''));
+
+  // Checkliste je Fach; Zieltexte kommen aus Notion → nur mit „details“, sonst nur die Anzahl
+  for (const f of ckFaecher()) {
+    const c = ckSummary(f);
+    lines.push(t('rep.ck', { f, a: c.done, b: c.total, g: c.good, w: c.weak }));
+    if (c.weakest.length) lines.push(details ? t('rep.ckWeak', { x: c.weakest.map((x) => `${emojiOf(levelOf(x.id))} ${x.text}`).join(' · ') }) : t('rep.ckWeakN', { n: c.weakest.length }));
+  }
 
   const fachRows = Object.entries(byFach).map(([f, v]) => [f, pct(v.r, v.w), v.r + v.w]).filter((x) => x[2] >= 2).sort((a, b) => a[1] - b[1]);
   if (fachRows.length) {
