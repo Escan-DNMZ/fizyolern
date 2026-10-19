@@ -79,7 +79,7 @@ export function muscleQuestions(m) {
     mkMuscle(`g:ans:${m.id}`, `Wo setzt der ${m.la} an?`, m, 'i', `${tx(m)}: ${m.i}.`),
     mkMuscle(`g:urs:${m.id}`, `Wo entspringt der ${m.la}?`, m, 'o', `${tx(m)}: ${m.o}.`),
     mkMuscle(`g:fkt:${m.id}`, `Welche Funktion hat der ${m.la}?`, m, 'f', tx(m, 'ftr')),
-    mkMuscle(`g:rev:${m.id}`, `Welcher Muskel: Ursprung „${m.o}“, Ansatz „${m.i}“?`, m, 'la', `${m.la} (${m.de}) – ${tx(m)}. ${t('qg.dontConfuse')}`),
+    mkMuscle(`g:rev:${m.id}`, `Welcher Muskel entspringt an „${m.o}“ und setzt an „${m.i}“ an?`, m, 'la', `${m.la} (${m.de}) – ${tx(m)}. ${t('qg.dontConfuse')}`),
   ].filter(Boolean);
 }
 
@@ -87,7 +87,7 @@ export function boneQuestions(b) {
   const others = BONES.filter((o) => o.id !== b.id);
   return [
     mk(`g:bla:${b.id}`, 'Knochen', `Wie lautet der lateinische Name für „${b.de}“?`, b.la, others.map((o) => o.la), `${b.de} = ${b.la} (${tx(b)})`),
-    mk(`g:btr:${b.id}`, 'Knochen', `Welcher Knochen ist auf ${t('qg.boneLang')} „${tx(b)}“?`, b.de, others.map((o) => o.de), `${tx(b)} = ${b.de} / ${b.la}`),
+    mk(`g:btr:${b.id}`, 'Knochen', `Wie heißt dieser Knochen auf Deutsch? (${t('qg.boneLang')}: „${tx(b)}“)`, b.de, others.map((o) => o.de), `${tx(b)} = ${b.de} / ${b.la}`),
   ].filter(Boolean);
 }
 
@@ -95,7 +95,7 @@ export function jointQuestions(j) {
   const others = JOINTS.filter((o) => o.id !== j.id);
   return [
     mk(`g:jtyp:${j.id}`, 'Gelenke', `Welcher Gelenktyp ist das ${j.de}?`, j.typ, others.map((o) => o.typ), `${j.de}: ${j.typ}`),
-    mk(`g:jnn:${j.id}`, 'Gelenke', `Welches Bewegungsausmaß (Neutral-Null) gehört zum ${j.de}?`, j.nn, others.map((o) => o.nn), `${j.de}: ${j.nn}`),
+    mk(`g:jnn:${j.id}`, 'Gelenke', `Welche Bewegungsausmaße (Neutral-Null-Methode) hat das ${j.de}?`, j.nn, others.map((o) => o.nn), `${j.de}: ${j.nn}`),
   ].filter(Boolean);
 }
 
@@ -128,7 +128,7 @@ export function exerciseQuestions() {
     const wrong = [...pick(cand.filter((id) => regs.has(region(id)) || (regs.has('Hüfte') && region(id) === 'Bein') || (regs.has('Bein') && region(id) === 'Hüfte')), 3), ...pick(cand, 6)]
       .filter((id, i, arr) => arr.indexOf(id) === i).slice(0, 3);
     if (wrong.length === 3) {
-      qs.push({ id: `g:ub:${slug(ex.n)}`, cat: 'Muskeln', gen: true, q: `Beim „${ex.n}“ arbeitet hauptsächlich …?`, o: [mName(right), ...wrong.map(mName)], a: 0,
+      qs.push({ id: `g:ub:${slug(ex.n)}`, cat: 'Muskeln', gen: true, q: `Welcher Muskel arbeitet bei der Übung „${ex.n}“ hauptsächlich?`, o: [mName(right), ...wrong.map(mName)], a: 0,
         x: `${ex.n} (${tx(ex)}) = ${ex.b} → ${ex.muscles.map(mName).join(', ')}. ${t('qg.others')} ${wrong.map((id) => `${mName(id)} → ${moves(id)[0]}`).join(' · ')}.` });
     }
     // Bewegung → Übung
@@ -158,10 +158,10 @@ export function jointDetailQuestions(j) {
   for (const [n, r] of (j.rom || []).entries()) {
     const [b1, b2] = r.bew.split(' / ');
     const q1 = near(r.a);
-    qs.push({ ...base, id: id('rom-a' + n), q: `Wie viel Grad ${b1} hat das ${name} (Neutral-Null, ${j.romQuelle || 'Folie'})?`, o: [`${r.a}°`, ...q1.map((x) => `${x}°`)], a: 0,
+    qs.push({ ...base, id: id('rom-a' + n), q: `Wie viel Grad ${b1} erreicht das ${name}? (Neutral-Null-Methode, ${j.romQuelle || 'Folie'})`, o: [`${r.a}°`, ...q1.map((x) => `${x}°`)], a: 0,
       x: t('qg.romA', { bew: r.bew, a: r.a, b: r.b, nums: q1.map((x) => x + '°').join(', ') }) });
     const q2 = near(r.b, [5, 10, -5, 15]);
-    qs.push({ ...base, id: id('rom-b' + n), q: `Wie viel Grad ${b2} hat das ${name} (Neutral-Null)?`, o: [`${r.b}°`, ...q2.map((x) => `${x}°`)], a: 0,
+    qs.push({ ...base, id: id('rom-b' + n), q: `Wie viel Grad ${b2} erreicht das ${name}? (Neutral-Null-Methode)`, o: [`${r.b}°`, ...q2.map((x) => `${x}°`)], a: 0,
       x: `${b2} = ${r.b}° (${r.bew}: ${r.a}° – 0° – ${r.b}°). ${t('qg.romB')}` });
     const wrong = [[r.a, 0, r.b + 10], [r.a - 10, 0, r.b], [r.b, 0, r.a]].map(([x, y, z]) => `${x}° – ${y}° – ${z}°`);
     qs.push({ ...base, id: id('rom-nn' + n), q: `Welche Neutral-Null-Werte gelten für ${r.bew} im ${name}?`, o: [`${r.a}° – 0° – ${r.b}°`, ...wrong], a: 0,
@@ -178,7 +178,7 @@ export function jointDetailQuestions(j) {
     const pad = near(a.flex, [10, -10, 20, 25]).filter((x) => !others.includes(x));
     const opts = [...others, ...pad].slice(0, 3);
     if (opts.length < 3) continue;
-    qs.push({ ...base, id: id('adl' + n), q: `Wie viel Hüftflexion braucht man für „${a.akt}“ (${j.adlQuelle || 'ADL'})?`, o: [`${a.flex}°`, ...opts.map((x) => `${x}°`)], a: 0,
+    qs.push({ ...base, id: id('adl' + n), q: `Wie viel Grad Hüftflexion braucht man im Alltag für „${a.akt}“?`, o: [`${a.flex}°`, ...opts.map((x) => `${x}°`)], a: 0,
       x: `${a.akt}: ${a.w}. ${t('qg.adl', { list: adl.filter((x) => x !== a).map((x) => `${x.akt} ${x.flex}°`).join(', ') })}` });
   }
   // Muskelgruppen nach Bewegungsrichtung
