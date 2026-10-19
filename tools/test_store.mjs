@@ -1,0 +1,32 @@
+// Tests für Migrationen und neue Felder in js/store.js. Aufruf: node tools/test_store.mjs
+const mem = {};
+globalThis.localStorage = { getItem: (k) => mem[k] ?? null, setItem: (k, v) => { mem[k] = String(v); }, removeItem: (k) => { delete mem[k]; } };
+// alter Stand ohne „mig“: Trochanter-minor-Fehler aus dem falsch platzierten Punkt
+mem['fizyo.v1'] = JSON.stringify({
+  srs: {}, days: { '2026-10-18': { quiz: 3, wrong: ['lm:trochanter_minor', 'lm:sias', 'lm:i:iliopsoas'] } },
+  quiz: { 'lm:trochanter_minor': { r: 2, w: 3, st: 1 }, 'lm:i:iliopsoas': { r: 0, w: 1 }, 'lm:sias': { r: 0, w: 2 } },
+});
+const root = new URL('../', import.meta.url).href;
+const store = await import(root + 'js/store.js');
+
+let fails = 0;
+const ok = (cond, msg) => { if (!cond) { fails++; console.log('✗', msg); } };
+
+const s = store.get();
+ok(s.quiz['lm:trochanter_minor'] && s.quiz['lm:trochanter_minor'].w === 0 && s.quiz['lm:trochanter_minor'].r === 2, 'Trochanter-minor-Fehler gelöscht, Richtige bleiben');
+ok(!s.quiz['lm:i:iliopsoas'], 'Iliopsoas-Ansatz nur mit Fehlern → Eintrag weg');
+ok(s.quiz['lm:sias'].w === 2, 'andere Punkte unverändert');
+ok(s.days['2026-10-18'].wrong.join() === 'lm:sias', 'Fehlerliste des Tages bereinigt');
+ok(s.mig.includes('lmTrochMinor2026'), 'Migration gemerkt');
+ok(JSON.parse(mem['fizyo.v1']).mig.includes('lmTrochMinor2026'), 'migrierter Stand gespeichert');
+
+// zweiter Lauf: neue Fehler bleiben (Migration läuft nur einmal)
+s.quiz['lm:trochanter_minor'].w = 1;
+ok(!store.migrate(s) && s.quiz['lm:trochanter_minor'].w === 1, 'Migration läuft nicht zweimal');
+
+// ältere Sicherung einspielen → Migration läuft auch dort
+store.replace({ srs: {}, days: {}, quiz: { 'lm:trochanter_minor': { r: 0, w: 4 } } });
+ok(!store.get().quiz['lm:trochanter_minor'], 'Migration auch beim Einspielen einer Sicherung');
+
+console.log(fails ? `${fails} Fehler` : 'Alle Store-Tests bestanden.');
+process.exit(fails ? 1 : 0);

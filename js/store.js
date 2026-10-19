@@ -14,6 +14,7 @@ const DEFAULT = () => ({
   mockRun: null,    // laufender Deneme sınavı (übersteht Neuladen der App)
   cases: {},        // Vaka çalışması: fallId -> { score, best, n, last, missed }
   caseRun: null,    // laufender Fall: { id, step, seen: [examId], f: { feld: text }, stadium, indik }
+  mig: [],          // bereits ausgeführte Migrationen (Namen, siehe MIGRATIONS)
   revx: {},         // Ters kartlar nicht ganz gewusst (✗-Liste): kartId -> { k: gewusst, n: Muskeln, last }
   settings: { cardsGoal: 15, quizGoal: 10, newPerDay: 10, reverse: false, lang: 'tr' }, // lang = Hilfssprache (tr | en)
 });
@@ -92,6 +93,7 @@ export function sanitize(raw) {
       ? { ...s.mockRun, i: int(s.mockRun.i, 0, 200, 0), fach: str(s.mockRun.fach, 100), pick: isObj(s.mockRun.pick) ? s.mockRun.pick : {}, text: isObj(s.mockRun.text) ? s.mockRun.text : {} } : null,
     cases: dict(s.cases, (v) => (isObj(v) ? { n: num(v.n), best: num(v.best, 0, 100), score: num(v.score, 0, 100), missed: strArr(v.missed), ...(date(v.last) ? { last: v.last } : {}) } : undefined)),
     caseRun: isObj(s.caseRun) && typeof s.caseRun.id === 'string' && Array.isArray(s.caseRun.seen || []) && isObj(s.caseRun.f || {}) ? { ...s.caseRun, seen: strArr(s.caseRun.seen), f: dict(s.caseRun.f, (v) => (typeof v === 'string' ? v.slice(0, 5000) : undefined)) } : null,
+    mig: strArr(s.mig).slice(0, 100),
     revx: dict(s.revx, (v, k) => (isObj(v) && k.startsWith('rv:') ? { k: int(v.k, 0, 50, 0), n: int(v.n, 1, 50, 1), ...(date(v.last) ? { last: v.last } : {}) } : undefined)),
     settings: {
       cardsGoal: int(set.cardsGoal, 1, 200, d.settings.cardsGoal),
@@ -106,6 +108,30 @@ export function sanitize(raw) {
 // Sieht die Datei überhaupt wie eine FizyoLern-Sicherung aus?
 export const looksLikeBackup = (x) => isObj(x) && isObj(x.srs) && isObj(x.days) && (x.settings === undefined || isObj(x.settings));
 
+// ───── Migrationen: laufen einmal pro Stand (auch nach dem Einspielen einer älteren Sicherung) ─────
+const MIGRATIONS = {
+  // „Noktayı bul“: Trochanter minor lag im Modell auf Höhe des Trochanter major. Wer die richtige Stelle angetippt hat,
+  // bekam einen Fehler – diese Fehler zählen nicht (auch Iliopsoas-Ansatz, dessen einzige Antwort der Trochanter minor ist).
+  lmTrochMinor2026(s) {
+    for (const id of ['lm:trochanter_minor', 'lm:i:iliopsoas']) {
+      const q = s.quiz[id];
+      if (q && q.r) s.quiz[id] = { ...q, w: 0 };
+      else delete s.quiz[id];
+      for (const d of Object.values(s.days)) if (d.wrong) d.wrong = d.wrong.filter((x) => x !== id);
+    }
+  },
+};
+export function migrate(s) {
+  let changed = false;
+  for (const [name, fn] of Object.entries(MIGRATIONS)) {
+    if (s.mig.includes(name)) continue;
+    fn(s);
+    s.mig.push(name);
+    changed = true;
+  }
+  return changed;
+}
+
 let state = load();
 let saveError = null;
 export const onSaveError = (fn) => { saveError = fn; };
@@ -113,9 +139,15 @@ export const onSaveError = (fn) => { saveError = fn; };
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return sanitize(JSON.parse(raw));
+    if (raw) {
+      const s = sanitize(JSON.parse(raw));
+      if (migrate(s)) try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* beim nächsten Speichern */ }
+      return s;
+    }
   } catch (e) { /* privater Modus oder kaputte Daten */ }
-  return DEFAULT();
+  const s = DEFAULT();
+  migrate(s); // neuer Stand: nichts zu reparieren, nur als erledigt merken
+  return s;
 }
 
 export function save() {
@@ -126,10 +158,11 @@ export function get() { return state; }
 
 export function replace(newState) {
   state = sanitize(newState);
+  migrate(state);
   save();
 }
 
-export function reset() { state = DEFAULT(); save(); }
+export function reset() { state = DEFAULT(); migrate(state); save(); }
 
 // ───── Datum ─────
 export function today(offset = 0) {
