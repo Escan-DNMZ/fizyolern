@@ -346,6 +346,8 @@ export async function rowsFromPages(pages) {
       erkl: get('Erklärung TR'),
       // Komma oder Zeilenumbruch trennt Begriffe, „|“ trennt gleichwertige Alternativen
       kw: get('Schlüsselbegriffe').split(/[,;\n]/).map((k) => k.trim()).filter(Boolean),
+      // Erstellzeit der Zeile: neue Themen bekommen im Test Vorrang (quizgen.js)
+      ...(p.created_time ? { created: p.created_time } : {}),
     });
   }
   return rows;

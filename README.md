@@ -292,6 +292,8 @@ Many students don't know how to take good notes. FizyoLern doesn't expect you to
 - your **weekly plan**, with the morning test for each day;
 - later, from your test results and homework lists, **mistake cards** and **homework cards**.
 
+> ⚠️ **Important:** the app does **not** turn your lesson notes into questions by itself. New questions come only from the **FizyoLern Questions** database. The setup prompt tells your AI to add the question rows automatically after **every** new lesson note, so new topics show up in your tests the same day.
+
 If the AI can write to Notion (e.g. Claude or ChatGPT with the Notion connector), it creates everything directly. Otherwise it gives you text to paste and a CSV file to import, which works with every AI.
 
 *Tested:* an AI that only had the guide, a sample timetable and nine slides about the knee joint produced a weekly plan and 44 questions. The app's own Notion parser read all of them: 12 key sentences, 14 multiple choice, 5 open questions and 13 terms, a complete new lesson and the right morning tests.

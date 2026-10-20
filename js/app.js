@@ -22,7 +22,7 @@ import { initBefund, renderCases } from './befund.js';
 import { renderChecklist, ckFaecher, hasChecklist, summary as ckSummary } from './checkliste.js';
 import { sayBtn } from './speech.js';
 import { reverseCards, findReverse, partsRating } from './reverse.js';
-import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, jointDetailQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked, weight, wpick } from './quizgen.js';
+import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, jointDetailQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked, weight, wpick, kursFaecher } from './quizgen.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -756,9 +756,7 @@ function renderSaturday() {
 // Fächer von heute: Morgentest + erkannte Kursnamen
 function todayFaecher(plan = todayPlan()) {
   if (!plan) return examFaecher(7);
-  const text = (plan.kurse || []).join(' ').replace(/PT-Befund/g, 'PT Befund');
-  const all = [...new Set([...FAECHER, 'AM', 'AKL', 'Atemtherapie', 'KI'])];
-  const hit = all.filter((f) => (f.length <= 3 ? new RegExp(`(^|[^A-Za-zÄÖÜäöü])${f.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}($|[^A-Za-zÄÖÜäöü])`).test(text) : text.includes(f)) || (f === 'Anatomie' && /\bANA\b/.test(text)));
+  const hit = kursFaecher(plan.kurse, [...new Set([...FAECHER, 'AM', 'AKL', 'Atemtherapie', 'KI'])]);
   // Fächer mit Prüfung in ≤ 7 Tagen zuerst (Lesestoff und ✗-Karten im Rückweg)
   return [...new Set([...examFaecher(7), ...(plan.test || []), ...hit])];
 }
@@ -854,7 +852,7 @@ function renderQuizStart(_, params = new URLSearchParams()) {
     history.replaceState(null, '', '#/test');
     const donus = params.get('donus') === '1' || kat.startsWith('Dönüş: ');
     const n = donus ? 5 : kat.startsWith('Hatalar: ') ? 30 : store.get().settings.quizGoal;
-    quiz = { qs: buildQuiz(kat, n, store.get().customVocab), i: 0, right: 0, wrong: [], finished: false, cat: kat, donus };
+    quiz = { qs: buildQuiz(kat, n, store.get().customVocab, { morning: !donus && kat === morningKat() }), i: 0, right: 0, wrong: [], finished: false, cat: kat, donus };
     if (!quiz.qs.length) { quiz = null; toast(t('quiz.none')); } else return renderQuizQuestion();
   }
   if (quiz && !quiz.finished) return renderQuizQuestion();
@@ -876,7 +874,7 @@ function renderQuizStart(_, params = new URLSearchParams()) {
   `;
   $$('[data-cat]').forEach((b) => b.addEventListener('click', () => { quizCat = b.dataset.cat; renderQuizStart(); }));
   $('#startQuiz').addEventListener('click', () => {
-    const qs = buildQuiz(quizCat, store.get().settings.quizGoal, store.get().customVocab);
+    const qs = buildQuiz(quizCat, store.get().settings.quizGoal, store.get().customVocab, { morning: quizCat === morningKat() });
     quiz = { qs, i: 0, right: 0, wrong: [], answered: false, finished: false, cat: quizCat };
     renderQuizQuestion();
   });

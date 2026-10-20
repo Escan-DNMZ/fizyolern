@@ -97,7 +97,7 @@ You can also use to-do items (type `[] ` in Notion, or paste `- [ ] Anatomie exa
 
 ## 4. FizyoLern Questions (database, optional)
 
-New questions without an app update. Columns (German names):
+New questions without an app update. **This database is the only way new lessons get questions:** the app does not read the text of your lesson notes to make questions. Add rows here for every new lesson note (the [AI setup prompt](ai-setup.md) does this automatically). Columns (German names):
 
 | Column | Type | Meaning |
 |---|---|---|

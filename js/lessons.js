@@ -52,6 +52,9 @@ export function mergeLessons(builtin, rows = []) {
       l = { id: 'n-' + (slug(r.fach + ' ' + (r.lektion || 'notion')) || r.h), fach: r.fach, title, lektion: r.lektion, notionOnly: true, kern: [], mcq: [], open: [], vocab: [] };
       list.push(l);
     }
+    // Lektion nur aus Notion: Erstellzeit = älteste Zeile (seitdem gibt es die Lektion)
+    if (l.notionOnly && r.created && (!l.created || r.created < l.created)) l.created = r.created;
+    if (r.created) item.created = r.created;
     const [arr, f] = FIELD[r.typ];
     // Gleiche Frage/gleicher Begriff wie mitgeliefert → Notion gewinnt; die alte id bleibt, damit der Lernstand erhalten bleibt
     const i = l[arr].findIndex((x) => key(x[f]) === key(item[f]));

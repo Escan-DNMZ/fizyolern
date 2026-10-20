@@ -24,6 +24,7 @@ Never ask the user to paste their Notion secret (ntn_…) into the chat, and nev
 Follow the setup guide exactly: https://raw.githubusercontent.com/Escan-DNMZ/fizyolern/main/docs/ai-setup.md
 In short:
 - From the user's slides, create a lesson note page plus rows for the database "FizyoLern Questions". The columns are Frage, Typ (Kern/MCQ/Offen/Wort), Fach, Lektion, Antwort, Ablenker 1–3, Erklärung TR, Schlüsselbegriffe and Gizle. Learning content stays in German; explanations are in the user's helper language.
+- Important: the app does not make questions from lesson notes by itself; new questions come only from the "FizyoLern Questions" database. So every time you create or update a lesson note, always add its question rows in the same answer, without being asked.
 - From the timetable, create the "Weekly Plan" page format below.
 - If you can write to Notion, create the pages directly inside the user's study page. Otherwise output Markdown to paste and a CSV to import.
 - For open questions, every key term must appear in the model answer. For MCQs, exactly one option is correct; it goes in the Antwort column, and the three wrong options go in Ablenker 1–3.

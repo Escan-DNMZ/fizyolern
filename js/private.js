@@ -10,6 +10,8 @@ const isObj = (x) => x !== null && typeof x === 'object' && !Array.isArray(x);
 const str = (x, max = 5000) => (typeof x === 'string' ? x.slice(0, max) : x == null ? '' : String(x).slice(0, max));
 const strs = (x, max = 500) => (Array.isArray(x) ? x.filter((v) => typeof v === 'string').map((v) => v.slice(0, max)).slice(0, 200) : []);
 const date = (x) => (typeof x === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x) ? x : '');
+// Zeitstempel wie bei Notion („2026-10-20T08:15:00.000Z“), sonst leer
+const iso = (x) => (typeof x === 'string' && x.length <= 40 && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,6})?)?(Z|[+-]\d{2}:?\d{2})$/.test(x) && Number.isFinite(Date.parse(x)) ? x : '');
 const objs = (x, n = 5000) => (Array.isArray(x) ? x.filter(isObj).slice(0, n) : []);
 const BAD = new Set(['__proto__', 'constructor', 'prototype']);
 function cleanWeek(w) {
@@ -35,7 +37,7 @@ export function cleanPrivate(obj) {
       ...(f.a !== undefined ? { a: str(f.a, 2000) } : {}), ...(f.tr !== undefined ? { tr: str(f.tr, 2000) } : {}),
     })).filter((f) => f.id),
     gw: objs(obj.gw, 5000).map((w) => ({ id: str(w.id, 300), de: str(w.de, 300), tr: str(w.tr, 500), ...(w.en ? { en: str(w.en, 500) } : {}), ex: str(w.ex, 1000), cat: str(w.cat, 100), stufe: str(w.stufe, 50), next: date(w.next) })).filter((w) => w.id && w.de),
-    lessonRows: objs(obj.lessonRows, 5000).filter((r) => /^[0-9a-f]{16}$/.test(r.h)).map((r) => ({ h: r.h, fach: str(r.fach, 100), lektion: str(r.lektion, 200), typ: str(r.typ, 20), frage: str(r.frage), antwort: str(r.antwort), ablenker: strs(r.ablenker, 1000).slice(0, 3), erkl: str(r.erkl), kw: strs(r.kw, 200).slice(0, 20) })),
+    lessonRows: objs(obj.lessonRows, 5000).filter((r) => /^[0-9a-f]{16}$/.test(r.h)).map((r) => ({ h: r.h, fach: str(r.fach, 100), lektion: str(r.lektion, 200), typ: str(r.typ, 20), frage: str(r.frage), antwort: str(r.antwort), ablenker: strs(r.ablenker, 1000).slice(0, 3), erkl: str(r.erkl), kw: strs(r.kw, 200).slice(0, 20), ...(iso(r.created) ? { created: r.created } : {}) })),
     exams: objs(obj.exams, 500).map((e) => ({ typ: e.typ === 'Sınav' ? 'Sınav' : 'Ödev', fach: str(e.fach, 100), topic: str(e.topic, 300), date: date(e.date), done: !!e.done, note: str(e.note, 500) })).filter((e) => e.date),
     // Checklisten-Lernziele (Texte der Lehrkraft – nur auf dem Gerät)
     ck: objs(obj.ck, 2000).filter((c) => typeof c.id === 'string' && /^ck:[0-9a-f]{16}$/.test(c.id)).map((c) => ({

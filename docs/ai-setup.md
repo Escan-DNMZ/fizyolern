@@ -10,6 +10,11 @@ You don't need to know how to take notes or how Notion works. The AI turns your 
 - your **weekly plan**, with the right morning test for each day;
 - later, from your test results, **mistake cards** and **homework cards**.
 
+> ⚠️ **The app does not make questions from your lesson notes by itself.** It only learns from the **FizyoLern Questions** database. A lesson note without question rows never shows up in your tests, cards or exams. So every new lesson note must come **together with** its question rows. The setup prompt below tells your AI to do this automatically every time, so you never have to ask.
+>
+> 🇩🇪 Die App erstellt aus deinen Notizen **keine** Fragen selbst, sie liest nur die Datenbank **FizyoLern Fragen**. Deshalb muss die KI zu jeder neuen Notiz sofort auch die Fragen anlegen.
+> 🇹🇷 Uygulama ders notlarından kendisi soru **üretmez**, sadece **FizyoLern Sorular** veritabanını okur. Bu yüzden yapay zekâ her yeni nottan sonra soruları da hemen eklemeli.
+
 ---
 
 > 🔒 **Never paste your Notion key (`ntn_…`) into an AI chat.** The AI does not need it. You paste it only into the app's Settings.
@@ -81,6 +86,13 @@ useful, every important term in bold, and after each section one line
 What I must know" as a checklist (- [ ] …). Create it inside a page "Lessons".
 
 == 3. Database "FizyoLern Questions" (this is what the app learns from) ==
+IMPORTANT, for this whole chat: the app does NOT read the lesson notes to make
+questions; it only reads this database. So EVERY time you create or update a
+lesson note (from slides, photos, a recording, or my own summary of the lesson),
+ALWAYS add its rows to this database in the same answer, without me asking.
+Never deliver a lesson note without its question rows. Base the rows on the
+note's content, including any mini test at the end of the note.
+
 Columns in this order (CSV header exactly):
 Frage,Typ,Fach,Lektion,Antwort,Ablenker 1,Ablenker 2,Ablenker 3,Erklärung TR,Schlüsselbegriffe,Gizle
 
@@ -125,10 +137,16 @@ Content rules:
 
 ## Short prompts for later (same chat)
 
-**New slides:**
+**New slides** (also for photos, a recording, or "today we did …"):
 ```text
-New slides attached (subject: <Fach>). Create the lesson note page and the rows
-for "FizyoLern Questions" in exactly the same format as before.
+New lesson material attached (subject: <Fach>). Create the lesson note page and
+the rows for "FizyoLern Questions" in exactly the same format as before.
+```
+
+**Questions missing for older notes:**
+```text
+Check every lesson note in "Lessons". For each note that has no rows in
+"FizyoLern Questions" yet (match by Lektion), create its rows now in the same format.
 ```
 
 **New week:**
@@ -164,5 +182,6 @@ Add to "Exams & Homework": Exam · <Fach> · <topic> · <date>.
 ## Check that it worked
 - In the app: ⚙️ → **Update now**. The message lists weeks, mistake cards, words and questions.
 - **Lesson notes:** your new lesson appears with its summary, test and terms.
+- **New lesson but no new questions?** Its rows are missing in *FizyoLern Questions*. Send the "Questions missing for older notes" prompt.
 - **Today:** shows today's classes and the morning test.
 - If something is missing, see [Troubleshooting](../README.md#troubleshooting). The usual causes are a wrong page title, the page not being inside *Physiotherapy*, or a database whose name isn't exactly *FizyoLern Questions*.

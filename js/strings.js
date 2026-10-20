@@ -500,6 +500,7 @@ addStrings({
   'rep.streak': ['🔥 Seri: {s} gün · Kurulumdan beri ({start}, {n}. gün): {a}/{n} gün aktif', '🔥 Streak: {s} days · Since setup ({start}, day {n}): {a}/{n} days active'],
   'rep.last7': [' · son 7 gün: {a}/7', ' · last 7 days: {a}/7'],
   'rep.weekQuiz': ['📊 Bu hafta test: {n} soru, {p}', '📊 Quiz this week: {n} questions, {p}'],
+  'rep.newTopics': ['🆕 Bu haftanın yeni konuları: {n} soru, {a} tanesi cevaplandı', '🆕 New topics this week: {n} questions, {a} answered'],
   'rep.pctRight': ['{p}% doğru', '{p}% correct'],
   'rep.cards': ['🗂️ Kartlar: {l} öğrenildi · bugün {r} tekrar + {nw} yeni (bugün ilk kez gördüğüm kartlar)', '🗂️ Cards: {l} learned · today {r} reviews + {nw} new (cards I saw for the first time today)'],
   'rep.cardsTotal': [' · toplam {n} değerlendirme', ' · {n} ratings in total'],

@@ -5,7 +5,7 @@ import { LESSONS } from './lessons.js';
 import { MCQ } from './data/questions.js';
 import { MUSCLES, BONES, JOINTS } from './data/anatomy.js';
 import { fehlerList, odevList, todayPlan, week, upcoming } from './private.js';
-import { muscleQuestions, boneQuestions, jointQuestions, ALL_JOINT_DETAIL, exerciseQuestions } from './quizgen.js';
+import { muscleQuestions, boneQuestions, jointQuestions, ALL_JOINT_DETAIL, exerciseQuestions, recentQuestions } from './quizgen.js';
 import { todaysWords } from './words.js';
 import { ckFaecher, summary as ckSummary, emojiOf, levelOf } from './checkliste.js';
 import { t, locale } from './i18n.js';
@@ -125,6 +125,9 @@ export function buildReport({ details = false } = {}) {
   lines.push('');
   lines.push(t('rep.streak', { s: store.streak(), start: trDate(start), n: dayN, a: activeSinceStart }) + (dayN > 7 ? t('rep.last7', { a: activeDays }) : ''));
   lines.push(t('rep.weekQuiz', { n: weekQuiz.n, p: weekQuiz.n ? t('rep.pctRight', { p: Math.round((weekQuiz.r / weekQuiz.n) * 100) }) : '–' }));
+  // Neue Themen der letzten 7 Tage (Notion-Zeilen, neue Lektionen): wie viele davon schon gefragt wurden
+  const recent = recentQuestions();
+  if (recent.length) lines.push(t('rep.newTopics', { n: recent.length, a: recent.filter((q) => s.quiz[q.id] && s.quiz[q.id].r + s.quiz[q.id].w > 0).length }));
   lines.push(t('rep.cards', { l: Object.values(s.srs).filter((c) => c.int >= 1).length, r: reviewRatings, nw: newSeen }) + (d.cards ? t('rep.cardsTotal', { n: d.cards }) : ''));
   lines.push(t('rep.today', { q: d.quiz || 0, r: d.quizRight || 0, o: d.open || 0 }) + (d.morning ? t('rep.morningDone') : '') + (d.lesson ? t('rep.muscleDone') : ''));
   const tw = todaysWords();

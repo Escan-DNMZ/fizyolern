@@ -5,8 +5,8 @@ import { MCQ } from './data/questions.js';
 import { UEBUNGEN } from './data/uebungen.js';
 import { LESSONS, FAECHER } from './lessons.js';
 import * as store from './store.js';
-import { week, examFaecher } from './private.js';
-import { ckWeight, allowedInDaily, itemQuiz } from './checkliste.js';
+import { week, examFaecher, getPrivate } from './private.js';
+import { ckWeight, allowedInDaily, itemQuiz, itemsOfQuestion } from './checkliste.js';
 import { t, tx, lang } from './i18n.js';
 import './strings.js';
 
@@ -248,7 +248,7 @@ export function jointDetailQuestions(j) {
 export const ALL_JOINT_DETAIL = () => JOINTS.flatMap(jointDetailQuestions);
 
 // Fragen aus den Notion-Ders-Notları
-export const lessonMcq = (l) => l.mcq.map((q, i) => ({ id: q.id || `L:${l.id}:${i}`, cat: l.fach, lesson: l.id, q: q.q, o: q.o, a: 0, x: q.x, xEn: q.xEn, ...(q.ck ? { ck: q.ck } : {}) }));
+export const lessonMcq = (l) => l.mcq.map((q, i) => ({ id: q.id || `L:${l.id}:${i}`, cat: l.fach, lesson: l.id, q: q.q, o: q.o, a: 0, x: q.x, xEn: q.xEn, ...(q.ck ? { ck: q.ck } : {}), ...(q.created ? { created: q.created } : {}) }));
 export const ALL_LESSON_MCQ = () => LESSONS.flatMap(lessonMcq);
 export { FAECHER };
 
@@ -369,6 +369,92 @@ export function wpick(arr, n, wf) {
     .map((e) => e.x);
 }
 
+// ───── Neue Themen: Fragen aus dem Unterricht der letzten 7 Tage ─────
+// Datum einer Frage = neuestes von: Erstellzeit der Notion-Zeile („FizyoLern Sorular“), Datum der Lektion
+// (Feld date, Notion-Lektion = erste Zeile, sonst Wochenplan: die neueste mitgelieferte Lektion eines Fachs
+// gilt als am letzten Unterrichtstag dieses Fachs behandelt) und „✅ TT.MM“ eines verknüpften Checklisten-Ziels.
+export const NEW_DAYS = 7, NEW_SHARE = 0.6;
+const pad2 = (x) => String(x).padStart(2, '0');
+const isoDay = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const tsDay = (ts) => { const d = new Date(ts); return Number.isNaN(+d) ? '' : isoDay(d); };
+const addDays = (iso, k) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + k); return isoDay(d); };
+
+// Fächer, die in den Kursnamen eines Tages vorkommen („ANA 1 + O/C (…)“ → Anatomie, O/C)
+export function kursFaecher(kurse, faecher = FAECHER) {
+  const text = (kurse || []).join(' ').replace(/PT-Befund/g, 'PT Befund');
+  return faecher.filter((f) => (f.length <= 3 ? new RegExp(`(^|[^A-Za-zÄÖÜäöü])${f.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}($|[^A-Za-zÄÖÜäöü])`).test(text) : text.includes(f)) || (f === 'Anatomie' && /\bANA\b/.test(text)));
+}
+
+// Fach → letzter Unterrichtstag bis heute (aus allen Wochen des Wochenplans)
+function lastClassDays(today) {
+  const p = getPrivate();
+  const out = {};
+  for (const w of [...((p && p.weeks) || []), ...(p && p.week ? [p.week] : [])]) {
+    if (!w.from) continue;
+    for (const [k, d] of Object.entries(w.days || {})) {
+      const date = addDays(w.from, Number(k) - 1);
+      if (date > today) continue;
+      for (const f of kursFaecher(d.kurse)) if (!out[f] || out[f] < date) out[f] = date;
+    }
+  }
+  return out;
+}
+
+const lessonNum = (id) => { const m = String(id).match(/(?:^|-)(\d+)(?=-|$)/g); return m ? Number(m[m.length - 1].replace('-', '')) : 0; };
+let dateMemo = { key: '', map: {} };
+function lessonDates() {
+  const today = store.today();
+  const key = today + '|' + LESSONS.map((l) => l.id + l.mcq.length).join() + '|' + ((getPrivate() || {}).syncedAt || '');
+  if (dateMemo.key === key) return dateMemo.map;
+  const map = {};
+  const classes = lastClassDays(today);
+  const newest = {};
+  for (const l of LESSONS) if (!l.notionOnly && (!newest[l.fach] || lessonNum(l.id) >= lessonNum(newest[l.fach].id))) newest[l.fach] = l;
+  for (const l of LESSONS) {
+    const ds = [/^\d{4}-\d{2}-\d{2}$/.test(l.date || '') ? l.date : '', l.created ? tsDay(l.created) : '', newest[l.fach] === l ? classes[l.fach] || '' : ''];
+    map[l.id] = ds.reduce((a, b) => (b > a ? b : a), '');
+  }
+  dateMemo = { key, map };
+  return map;
+}
+
+// Datum, an dem das Thema der Frage dran war ('' = unbekannt / alt)
+export function questionDate(q) {
+  const ds = [q.created ? tsDay(q.created) : '', (q.lesson && lessonDates()[q.lesson]) || ''];
+  for (const it of itemsOfQuestion(q.id)) if (it.done && it.date) ds.push(it.date);
+  return ds.reduce((a, b) => (b > a ? b : a), '');
+}
+export const isRecent = (q, days = NEW_DAYS) => { const d = questionDate(q); return !!d && d >= store.today(-days) && d <= store.today(); };
+// Neue Fragen der letzten 7 Tage (für den Statusbericht)
+export const recentQuestions = () => ALL_LESSON_MCQ().filter((q) => isRecent(q));
+
+// Vortag = letzter Schultag: dienstags Montag, montags Freitag bis Sonntag
+export function prevSchoolDay(now = new Date()) {
+  const d = new Date(now);
+  do d.setDate(d.getDate() - 1); while (d.getDay() === 0 || d.getDay() === 6);
+  return isoDay(d);
+}
+
+const unasked = (q) => !store.get().quiz[q.id];
+// Ungestellte Fragen zuerst, dann die übrigen (jeweils gewichtet)
+function unaskedFirst(arr, k, wf) {
+  const a = wpick(arr.filter(unasked), k, wf);
+  return a.length >= k ? a : [...a, ...wpick(arr.filter((q) => !unasked(q)), k - a.length, wf)];
+}
+
+// Testmischung: mind. 60 % neue Themen (ungestellte zuerst), höchstens 40 % Wiederholung (✗, alte Fragen);
+// zu wenig neue → mit Wiederholung auffüllen. extra = Vortags-Themen anderer Fächer im Morgentest (stehen am Ende).
+export function mixQuiz(qs, n, wf, extra = []) {
+  const x = unaskedFirst(extra, Math.min(extra.length, Math.ceil(n * 0.3)), wf);
+  const ids = new Set(x.map((q) => q.id));
+  const m = n - x.length;
+  const pool = qs.filter((q) => !ids.has(q.id));
+  const fresh = pool.filter((q) => isRecent(q)), old = pool.filter((q) => !isRecent(q));
+  const a = unaskedFirst(fresh, Math.min(fresh.length, Math.max(Math.ceil(m * NEW_SHARE), m - old.length)), wf);
+  const b = wpick(old, m - a.length, wf);
+  return [...shuffle([...a, ...b]), ...shuffle(x)];
+}
+
 function levelFilter(q) {
   const [g, kind] = q.id.split(':');
   if (g !== 'g') return true;
@@ -388,7 +474,8 @@ export function questionsByIds(ids) {
   return all.filter((q) => want.has(q.id) && !seen.has(q.id) && seen.add(q.id));
 }
 
-export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = []) {
+// morning = Morgentest des Tages: zusätzlich die neuen Themen des Vortags aus allen Fächern
+export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = [], { morning = false } = {}) {
   if (category.startsWith('Hatalar: ')) {
     // Heute (Rückweg) bzw. diese Woche (Samstag) falsch beantwortete Fragen
     const ids = category === 'Hatalar: hafta' ? store.wrongSince(7) : (store.day().wrong || []);
@@ -435,11 +522,19 @@ export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = []) {
       ...wpickQ([...pools.Knochen(), ...JOINTS.flatMap(jointQuestions).filter(levelFilter), ...ALL_JOINT_DETAIL()], Math.ceil(n * 0.15)),
       ...wpickQ(pools.Vokabeln(), Math.ceil(n * 0.15)),
     ];
+    // neue Themen immer im Pool, nicht nur, wenn sie zufällig in der Stichprobe oben landen
+    const have = new Set(qs.map((q) => q.id));
+    qs.push(...lessonQs.filter((q) => !have.has(q.id) && isRecent(q)));
   } else {
     qs = Object.hasOwn(pools, category) ? pools[category]() : []; // unbekannte Kategorie aus einem Link
   }
-  // Morgentest / gemischter Test: nur Fragen zu Lernzielen, die schon im Unterricht behandelt wurden
-  if (category.startsWith('Ders: ') || category === 'Gemischt') qs = qs.filter((q) => allowedInDaily(q.id));
+  if (category.startsWith('Ders: ') || category === 'Gemischt') {
+    const since = prevSchoolDay();
+    const extra = morning ? ALL_LESSON_MCQ().filter((q) => questionDate(q) >= since) : [];
+    // Morgentest / gemischter Test: nur Fragen zu Lernzielen, die schon im Unterricht behandelt wurden
+    const ok = (q) => allowedInDaily(q.id);
+    return mixQuiz(qs.filter(ok), n, wq, extra.filter(ok)).map(prepare);
+  }
   return shuffle(wpickQ(qs, n)).map(prepare);
 }
 
