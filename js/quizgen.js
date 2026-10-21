@@ -474,6 +474,17 @@ export function questionsByIds(ids) {
   return all.filter((q) => want.has(q.id) && !seen.has(q.id) && seen.add(q.id));
 }
 
+// Fällige Fehler (store.mistakeDue) als Fragen: Fächer des Tages zuerst, dann die am längsten fälligen
+export function dueQuestions(faecher = [], k = 3) {
+  const quiz = store.get().quiz;
+  const qs = questionsByIds(store.dueMistakes()).filter((q) => allowedInDaily(q.id));
+  const since = (q) => { const s = quiz[q.id]; return (s.okDays && s.okDays.length ? s.okDays[s.okDays.length - 1] : s.lastWrong) || ''; };
+  return qs
+    .map((q) => ({ q, own: faecher.includes(q.cat) || faecher.includes(q.fach) || faecher.includes(fachOf(q.id)) ? 0 : 1, d: since(q), r: Math.random() }))
+    .sort((a, b) => a.own - b.own || a.d.localeCompare(b.d) || a.r - b.r)
+    .slice(0, k).map((x) => x.q);
+}
+
 // morning = Morgentest des Tages: zusätzlich die neuen Themen des Vortags aus allen Fächern
 export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = [], { morning = false } = {}) {
   if (category.startsWith('Hatalar: ')) {
@@ -533,7 +544,11 @@ export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = [], { morn
     const extra = morning ? ALL_LESSON_MCQ().filter((q) => questionDate(q) >= since) : [];
     // Morgentest / gemischter Test: nur Fragen zu Lernzielen, die schon im Unterricht behandelt wurden
     const ok = (q) => allowedInDaily(q.id);
-    return mixQuiz(qs.filter(ok), n, wq, extra.filter(ok)).map(prepare);
+    // Morgentest: 2–3 feste Plätze für fällige Fehler (vor dem Anteil neuer Themen); keine fälligen → Plätze für den Rest
+    const due = morning ? dueQuestions(category.slice(6).split(','), Math.min(n >= 10 ? 3 : 2, n)) : [];
+    const dueIds = new Set(due.map((q) => q.id));
+    const notDue = (q) => ok(q) && !dueIds.has(q.id);
+    return [...shuffle(due), ...mixQuiz(qs.filter(notDue), n - due.length, wq, extra.filter(notDue))].map(prepare);
   }
   return shuffle(wpickQ(qs, n)).map(prepare);
 }

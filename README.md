@@ -113,6 +113,8 @@ The project shows how someone with a clear idea and deep knowledge of a field ca
 
 ### 2. Tests that adapt (*Test*)
 - **Adaptive selection.** Questions I missed come back more often; questions I answered correctly yesterday are skipped today; harder question types unlock as accuracy rises.
+- **New topics first.** At least 60% of each test comes from topics of the last 7 days (unasked questions first), at most 40% is review. The morning test also includes the previous school day's new topics, even from another subject.
+- **When is a mistake learned?** Only after it was answered correctly on **two different days** in a row (twice on the same day counts once; a new wrong answer starts over). Until then it is *due*: the day after the mistake, then again 2 days after each correct day. The morning test always keeps 2–3 places for due mistakes. The status report lists only mistakes that are not learned yet, with total count, last wrong and last asked date, and how many correct days are still missing.
 - **Varied formats.** Single answer, "which statement is false", matching, ordering, case studies and numbers.
 - **Generated anatomy questions.** "Where does M. … insert?", "Which nerve supplies …?". The wrong options come from the same body region and have similar length, so the answer cannot be guessed from the layout. The explanation names the muscle each wrong option belongs to.
 - **3D button.** When a question mentions anatomy, a button after the answer opens every structure it names in the 3D model.

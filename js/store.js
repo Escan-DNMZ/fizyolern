@@ -70,7 +70,11 @@ export function sanitize(raw) {
   return {
     ...d,
     srs: dict(s.srs, (v) => (isObj(v) ? { int: num(v.int, 0, 3650), due: date(v.due) || today(), reps: num(v.reps), lapses: num(v.lapses), ...(date(v.first) ? { first: v.first } : {}) } : undefined)),
-    quiz: dict(s.quiz, (v) => (isObj(v) ? { r: num(v.r), w: num(v.w), st: num(v.st), ...(date(v.last) ? { last: v.last } : {}) } : undefined)),
+    quiz: dict(s.quiz, (v) => (isObj(v) ? {
+      r: num(v.r), w: num(v.w), st: num(v.st), ...(date(v.last) ? { last: v.last } : {}),
+      // Fehler-Logik: letzter Fehltag + Tage mit richtiger Antwort danach (siehe mistakeLearned)
+      ...(date(v.lastWrong) ? { lastWrong: v.lastWrong } : {}), ...(Array.isArray(v.okDays) ? { okDays: [...new Set(strArr(v.okDays).filter((x) => DATE.test(x)))].sort().slice(-5) } : {}),
+    } : undefined)),
     open: dict(s.open, (v) => (isObj(v) ? { score: num(v.score, 0, 1), ...(date(v.last) ? { last: v.last } : {}) } : undefined)),
     days: dict(s.days, (v, k) => (DATE.test(k) ? cleanDay(v) : undefined)),
     start: date(s.start) || null,
@@ -120,6 +124,20 @@ const MIGRATIONS = {
       if (q && q.r) s.quiz[id] = { ...q, w: 0 };
       else delete s.quiz[id];
       for (const d of Object.values(s.days)) if (d.wrong) d.wrong = d.wrong.filter((x) => x !== id);
+    }
+  },
+  // Fehler-Logik mit lastWrong/okDays: ältere Stände ableiten (nichts löschen).
+  // lastWrong = letzter Tag, an dem die Frage in days[].wrong steht, sonst last (wenn die Serie 0 ist);
+  // war die letzte Antwort richtig und später als der Fehltag, zählt dieser Tag als ein richtiger Tag.
+  mistakeDays2026(s) {
+    const wrongDay = {};
+    for (const [d, v] of Object.entries(s.days)) for (const id of v.wrong || []) if (!wrongDay[id] || wrongDay[id] < d) wrongDay[id] = d;
+    for (const [id, q] of Object.entries(s.quiz)) {
+      if (!q.w || q.lastWrong) continue;
+      const st = q.st ?? (q.w ? 0 : q.r);
+      const lw = wrongDay[id] || (st === 0 ? q.last : undefined);
+      if (lw) q.lastWrong = lw;
+      q.okDays = st >= 1 && q.last && (!lw || q.last > lw) ? [q.last] : [];
     }
   },
 };
@@ -306,6 +324,9 @@ export function recordQuiz(qid, correct) {
   const s = state.quiz[qid] || { r: 0, w: 0 };
   if (correct) s.r++; else s.w++;
   s.st = correct ? (s.st || 0) + 1 : 0; // richtige Antworten in Folge
+  // Fehler-Logik: falsch → Tage zurücksetzen; richtig nach einem Fehler → Tag merken (mehrmals am selben Tag zählt einmal)
+  if (!correct) { s.lastWrong = today(); s.okDays = []; }
+  else if (s.w) s.okDays = [...new Set([...(s.okDays || []), today()])].slice(-5);
   s.last = today();
   state.quiz[qid] = s;
   const d = day();
@@ -326,6 +347,23 @@ export function rateCk(id, lv, { auto = false } = {}) {
 }
 
 // Falsch beantwortete Fragen der letzten n Tage (ohne Duplikate)
+// ───── Fehler: gelernt / fällig ─────
+// Gelernt = nach dem letzten Fehler an zwei verschiedenen Tagen richtig (mit Fehler dazwischen beginnt es neu)
+export const LEARN_DAYS = 2;
+export const okDaysOf = (q) => (q && q.okDays) || [];
+export const mistakeLearned = (q) => !!q && q.w > 0 && okDaysOf(q).length >= LEARN_DAYS;
+// Tag, an dem der Fehler als gelernt gilt (zweiter richtiger Tag) – '' wenn noch nicht
+export const learnedOn = (q) => (mistakeLearned(q) ? okDaysOf(q)[LEARN_DAYS - 1] : '');
+// Fällig: gestern (oder früher) falsch → heute; danach einmal richtig → wieder 2 Tage später
+export function mistakeDue(q, date = today()) {
+  if (!q || !q.w || mistakeLearned(q)) return false;
+  const ok = okDaysOf(q);
+  if (!ok.length) return !!q.lastWrong && q.lastWrong < date;
+  return ok[ok.length - 1] <= addDays(date, -2);
+}
+const addDays = (iso, k) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + k); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+export const dueMistakes = (date = today()) => Object.entries(state.quiz).filter(([, q]) => mistakeDue(q, date)).map(([id]) => id);
+
 export function wrongSince(n = 7) {
   const ids = new Set();
   for (let k = 0; k < n; k++) ((state.days[today(-k)] || {}).wrong || []).forEach((id) => ids.add(id));

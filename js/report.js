@@ -84,16 +84,21 @@ export function buildReport({ details = false } = {}) {
 
   // Test-Treffer der letzten 7 Tage nach Fach
   const byFach = Object.create(null); // Fachnamen kommen auch aus Notion (z. B. „__proto__“)
-  const wrongRecent = [];
+  // Fehler: nur noch nicht gelernte (store.mistakeLearned: nach dem letzten Fehler an 2 Tagen richtig), egal wie alt
+  const unlearned = [];
+  let learnedWeek = 0;
   for (const [id, q] of Object.entries(s.quiz)) {
-    if (!q.last || q.last < since) continue;
     const info = lookup(id);
     if (info.missing) continue; // Frage gibt es nicht mehr – nicht als ID in den Bericht
+    if (store.learnedOn(q) >= since) learnedWeek++;
+    if (q.w > 0 && !store.mistakeLearned(q)) unlearned.push({ ...info, w: q.w, last: q.last || '', lastWrong: q.lastWrong || '', ok: store.okDaysOf(q).length });
+    if (!q.last || q.last < since) continue;
     const f = (byFach[info.fach] = byFach[info.fach] || { r: 0, w: 0 });
     f.r += q.r; f.w += q.w;
-    if (q.w > 0 && q.w >= q.r) wrongRecent.push({ ...info, w: q.w, r: q.r, last: q.last });
   }
-  wrongRecent.sort((a, b) => b.w - a.w || b.last.localeCompare(a.last));
+  unlearned.sort((a, b) => b.lastWrong.localeCompare(a.lastWrong) || b.w - a.w);
+  // heute falsch (später am Tag richtig beantwortete stehen nicht mehr in der Liste)
+  const wrongToday = (d.wrong || []).map(lookup).filter((x) => !x.missing);
 
   // Aktivität: seit dem ersten Nutzungstag, erst ab Tag 8 zusätzlich die letzten 7 Tage
   const start = store.startDate();
@@ -128,6 +133,7 @@ export function buildReport({ details = false } = {}) {
   // Neue Themen der letzten 7 Tage (Notion-Zeilen, neue Lektionen): wie viele davon schon gefragt wurden
   const recent = recentQuestions();
   if (recent.length) lines.push(t('rep.newTopics', { n: recent.length, a: recent.filter((q) => s.quiz[q.id] && s.quiz[q.id].r + s.quiz[q.id].w > 0).length }));
+  lines.push(t('rep.learnedWeek', { n: learnedWeek }));
   lines.push(t('rep.cards', { l: Object.values(s.srs).filter((c) => c.int >= 1).length, r: reviewRatings, nw: newSeen }) + (d.cards ? t('rep.cardsTotal', { n: d.cards }) : ''));
   lines.push(t('rep.today', { q: d.quiz || 0, r: d.quizRight || 0, o: d.open || 0 }) + (d.morning ? t('rep.morningDone') : '') + (d.lesson ? t('rep.muscleDone') : ''));
   const tw = todaysWords();
@@ -165,10 +171,18 @@ export function buildReport({ details = false } = {}) {
     fachRows.forEach(([f, p, n]) => lines.push(t('rep.fachRow', { f, p, n })));
   }
 
-  if (wrongRecent.length) {
+  if (unlearned.length || wrongToday.length) {
+    const dm = (iso) => (iso ? trDate(iso).slice(0, 5) : '–');
+    const row = (q) => `- [${q.fach}] ${q.text}${q.answer ? t('rep.correct', { a: q.answer }) : ''}`;
     lines.push('');
-    lines.push(t('rep.wrong'));
-    wrongRecent.slice(0, 8).forEach((q) => lines.push(`- [${q.fach}] ${q.text}${q.answer ? t('rep.correct', { a: q.answer }) : ''}${t('rep.wrongN', { n: q.w })}`));
+    lines.push(t('rep.wrong', { n: unlearned.length }));
+    // Kontext für die KI: Gesamtzahlen ≠ Fehler von heute
+    lines.push(t('rep.wrongHint', { n: wrongToday.length }));
+    unlearned.slice(0, 8).forEach((q) => lines.push(row(q) + t('rep.wrongInfo', { w: q.w, lw: dm(q.lastWrong), l: dm(q.last), k: q.ok, need: store.LEARN_DAYS })));
+    if (wrongToday.length) {
+      lines.push(t('rep.todayWrong', { n: wrongToday.length }));
+      wrongToday.slice(0, 5).forEach((q) => lines.push(row(q)));
+    }
   }
 
   if (fehler.length) {
