@@ -138,6 +138,33 @@ export function weekdayOf(cell) {
 }
 const DASH = /^[\s—–-]*$|^\s*—/;
 
+// ───── Unterrichtsende eines Tages (für den Rückweg) ─────
+// Kopfzeile „Ders 2 (11:30–15:00)“ / „Class 2 (11:30–15:00)“ / „2. Stunde 11.30 - 15.00“ → Ende der Spalte;
+// steht im Tag selbst eine Zeit, gilt sie: „13:30 boş“, „frei ab 13:30“, „bis 13:30“, „11:30–13:30“.
+const HM = '(\\d{1,2})[:.](\\d{2})';
+const hm = (h, m) => (+h < 24 && +m < 60 ? `${String(+h).padStart(2, '0')}:${m}` : '');
+const RANGE = new RegExp(`${HM}\\s*(?:[–—-]|bis|to|until|till)\\s*${HM}`, 'gi');
+const FREE_AFTER = new RegExp(`${HM}\\s*(?:uhr\\s*|h\\s*)?(?:'?(?:dan|den|ten|tan)\\s*(?:sonra\\s*)?)?(?:boş|bos|serbest|frei|free|off|schluss|schluß|ende|end|bitiş|bitis|biter)`, 'i');
+const FREE_BEFORE = new RegExp(`(?<![a-zäöüß])(?:frei ab|ab|bis|until|till|ends?|ende|schluss|bitiş|bitis|free from|off from|finish(?:es)?(?: at)?)\\s*${HM}`, 'i');
+export function endTimeIn(text) {
+  const s = String(text || '');
+  let m = s.match(FREE_AFTER) || s.match(FREE_BEFORE);
+  if (m) return hm(m[1], m[2]);
+  let end = '';
+  for (const r of s.matchAll(RANGE)) end = hm(r[3], r[4]) || end;
+  return end;
+}
+// Ende des letzten Unterrichts: letzte belegte Unterrichtsspalte; Zeit in der Zelle vor Zeit in der Kopfzeile
+export function dayEnd(head, cells, cols = [1, 2]) {
+  let end = '';
+  for (const c of cols) {
+    const cell = cells[c];
+    if (!cell || DASH.test(cell)) continue;
+    end = endTimeIn(cell) || endTimeIn((head || [])[c]) || end;
+  }
+  return end;
+}
+
 // ───── Wochenplan + Fehlerliste aus der Seite „Haftalık Plan“ ─────
 export async function parsePlanPage(blocks, faecher, loadChildren) {
   // Alle Wochen der Seite lesen („## … KW 42 (…)“, „## KW 43 (…)“ unter „Gelecek haftalar“ usw.)
@@ -167,11 +194,13 @@ export async function parsePlanPage(blocks, faecher, loadChildren) {
     }
     if (type === 'table' && week && !Object.keys(week.days).length) {
       const rows = await loadChildren(b.id);
+      const head = b.table.has_column_header && rows.length ? rows[0].table_row.cells.map(plain) : [];
       for (const row of rows.slice(b.table.has_column_header ? 1 : 0)) {
         const cells = row.table_row.cells.map(plain);
         const wd = weekdayOf(cells[0]);
         if (!wd) continue;
         const kurse = [cells[1], cells[2]].filter((c) => c && !DASH.test(c));
+        const end = dayEnd(head, cells);
         const tekrar = cells[3] || '';
         // „Sabah testi: …“ / „Morning test: …“ / „Morgentest: …“
         const sabah = tekrar.match(/(?:Sabah testi|Morning test|Morgen-?test):\s*([^·]+)/i);
@@ -180,6 +209,7 @@ export async function parsePlanPage(blocks, faecher, loadChildren) {
           kurse,
           test: sabah ? faecherIn(sabah[1], faecher) : [],
           note: [rest, cells[4]].filter((c) => c && !DASH.test(c)).join(' · '),
+          ...(end ? { end } : {}),
         };
       }
     }

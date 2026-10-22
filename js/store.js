@@ -18,7 +18,8 @@ const DEFAULT = () => ({
   mig: [],          // bereits ausgeführte Migrationen (Namen, siehe MIGRATIONS)
   revx: {},         // Ters kartlar nicht ganz gewusst (✗-Liste): kartId -> { k: gewusst, n: Muskeln, last }
   quizRun: null,    // laufender Test (übersteht 3D-Ansicht/Neuladen, nur für heute): { date, cat, donus, qs, i, right, wrong: [index], answers, finished, endAt }
-  settings: { cardsGoal: 15, quizGoal: 10, newPerDay: 10, reverse: false, lang: 'tr' }, // lang = Hilfssprache (tr | en)
+  // lang = Hilfssprache (tr | en); classEnd = Unterrichtsende, wenn der Wochenplan keine Zeit hat; donusAfter = Rückweg so viele Minuten danach
+  settings: { cardsGoal: 15, quizGoal: 10, newPerDay: 10, reverse: false, lang: 'tr', classEnd: '15:00', donusAfter: 0 },
 });
 
 // ───── Daten prüfen: gespeicherter Stand und importierte Sicherungen werden auf die erwarteten Typen gebracht ─────
@@ -130,6 +131,8 @@ export function sanitize(raw) {
       newPerDay: int(set.newPerDay, 0, 100, d.settings.newPerDay),
       reverse: !!set.reverse,
       lang: set.lang === 'en' ? 'en' : 'tr',
+      classEnd: typeof set.classEnd === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(set.classEnd) ? set.classEnd : d.settings.classEnd,
+      donusAfter: int(set.donusAfter, 0, 240, d.settings.donusAfter),
       ...(typeof set.oralText === 'boolean' ? { oralText: set.oralText } : {}),
     },
   };

@@ -68,10 +68,13 @@ For each week a heading and a simple table (not a database):
 
 ## Week <ISO week number> (<Mon date>–<Fri date with year, e.g. 19.–23.10.2026>)
 
-| Day | Class 1 | Class 2 | Review | Notes |
+| Day | Class 1 (<start>–<end>) | Class 2 (<start>–<end>) | Review | Notes |
 |---|---|---|---|---|
 | Mon 19.10 | <subject> | <subject or —> | Morning test: <subject(s) of the day, joined with +> | <note> |
 ... one row per day, Mon to Sun (use — for no class).
+Put the usual class times into the header, e.g. "Class 2 (11:30–15:00)", taken from my
+timetable. If a day ends at a different time, write it in that day's class cell,
+e.g. "13:30 free". The app opens my way-home program when the last class ends.
 
 Use these subject names when they fit, exactly as written:
 Anatomie, Physiologie, PT Grundlagen, PT Befund, O/C, Trainingslehre, KMT, Hygiene, PPS.

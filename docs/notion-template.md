@@ -26,13 +26,13 @@ Copy everything from here to the next line of dashes into a page called **Weekly
 ```markdown
 ## Week 43 (19.–23.10.2026)
 
-| Day | Class 1 | Class 2 | Review | Notes |
+| Day | Class 1 (08:00–11:15) | Class 2 (11:30–15:00) | Review | Notes |
 |---|---|---|---|---|
 | Mon 19.10 | Anatomie | PT Befund | Morning test: Anatomie | Record the lesson |
 | Tue 20.10 | Physiologie | Trainingslehre | Morning test: Physiologie | |
 | Wed 21.10 | PT Grundlagen | PT Befund | Morning test: PT Grundlagen + PT Befund | |
 | Thu 22.10 | Anatomie | — | Morning test: Anatomie | Best day for review |
-| Fri 23.10 | Hygiene | PPS | Morning test: Hygiene | |
+| Fri 23.10 | Hygiene | PPS · 13:30 free | Morning test: Hygiene | |
 | Sat 24.10 | — | — | Weekly review | |
 | Sun 25.10 | — | — | Rest | |
 

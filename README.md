@@ -102,7 +102,7 @@ The project shows how someone with a clear idea and deep knowledge of a field ca
 ### 1. A plan for every day (*Bugün* = Today)
 - Today's and tomorrow's classes, read from my weekly timetable in Notion. If several weeks are planned ahead, the right one is picked by date.
 - A checklist with a progress ring and a streak: morning test for today's subjects, mistake cards, homework cards, 5 words of the day, the muscle and bone of the day.
-- **Way-home mode** (after 14:30), steps that can each be skipped with one tap:
+- **Way-home mode** (opens when the day's last class ends, read from the weekly plan; no classes that day = no way-home mode), steps that can each be skipped with one tap:
   1. today's wrong answers;
   2. mistake cards for today's subjects;
   3. homework;
@@ -352,6 +352,7 @@ The app finds the pages by title. Titles work in **English, German or Turkish**.
 - One heading per week: `## Week 43 (19.–23.10.2026)` (also *KW / Woche / Hafta*). The dates tell the app which week is now, so you can plan weeks ahead.
 - Below it, a **simple table** (not a database) with the columns *Day · Class 1 · Class 2 · Review · Notes*. Days start with `Mon`, `Tue` … (or `Mo`, `Di` … / `Pzt`, `Sal` …).
 - `Morning test: Anatomie` in the review column sets the morning test (also *Morgentest:* / *Sabah testi:*).
+- **Class times (optional):** write them in the header, e.g. `Class 2 (11:30–15:00)` (also *Ders 2 (…)* / *Stunde 2 …*). The way-home mode opens when the day's last class ends. A time in the day's own cell wins, e.g. `13:30 free` / `13:30 boş` / `bis 13:30`. Days with `—` in both class columns have no way-home mode. Without times, the app uses *Settings → Way home → Class end* (default 15:00); you can also add minutes after class there.
 - **Mistakes:** under a subject heading (`### Anatomie`), a line starting with `✗`, then one bullet per mistake starting with `✗` or `½`. The **bold** part is the answer: `✗ Fossa = **Grube**`. At most 20 mistake cards come per day.
 - **Homework:** the same, but the `✗` line contains *Homework*, *Hausaufgabe*, *Ezber* or *Ödev*. These cards go to the 📌 homework deck and have no daily limit.
 - Subject names the app knows: Anatomie, Physiologie, PT Grundlagen, PT Befund, O/C, Trainingslehre, KMT, Hygiene, PPS.

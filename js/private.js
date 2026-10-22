@@ -12,12 +12,13 @@ const strs = (x, max = 500) => (Array.isArray(x) ? x.filter((v) => typeof v === 
 const date = (x) => (typeof x === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x) ? x : '');
 // Zeitstempel wie bei Notion („2026-10-20T08:15:00.000Z“), sonst leer
 const iso = (x) => (typeof x === 'string' && x.length <= 40 && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,6})?)?(Z|[+-]\d{2}:?\d{2})$/.test(x) && Number.isFinite(Date.parse(x)) ? x : '');
+export const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 const objs = (x, n = 5000) => (Array.isArray(x) ? x.filter(isObj).slice(0, n) : []);
 const BAD = new Set(['__proto__', 'constructor', 'prototype']);
 function cleanWeek(w) {
   if (!isObj(w)) return null;
   const days = {};
-  if (isObj(w.days)) for (const [k, d] of Object.entries(w.days)) if (/^[1-7]$/.test(k) && isObj(d)) days[k] = { kurse: strs(d.kurse), test: strs(d.test, 100), note: str(d.note, 1000) };
+  if (isObj(w.days)) for (const [k, d] of Object.entries(w.days)) if (/^[1-7]$/.test(k) && isObj(d)) days[k] = { kurse: strs(d.kurse), test: strs(d.test, 100), note: str(d.note, 1000), ...(HHMM.test(d.end) ? { end: d.end } : {}) };
   const kw = Number(w.kw);
   return { kw: Number.isFinite(kw) ? Math.round(kw) : 0, range: str(w.range, 100), from: date(w.from), to: date(w.to), days };
 }
@@ -154,6 +155,20 @@ export function todayPlan(date = new Date()) {
   const wd = ((date.getDay() + 6) % 7) + 1;
   return w.days[wd] || null;
 }
+
+// Ab wann der Rückweg (Dönüş yolu) angeboten wird, in Minuten seit Mitternacht; null = heute nicht.
+// Mit Wochenplan: nur an Tagen mit Unterricht, Ende aus der Tabelle (day.end), sonst die eingestellte Endzeit.
+// Ohne Plan für heute: Montag–Freitag mit der eingestellten Endzeit. after = Minuten nach dem Unterricht.
+export function donusStart(plan, { classEnd = '15:00', donusAfter = 0 } = {}, date = new Date(), hasPlan = !!(data && allWeeks().length)) {
+  const toMin = (s) => +s.slice(0, 2) * 60 + +s.slice(3);
+  if (plan) {
+    if (!(plan.kurse || []).length) return null;
+  } else if (hasPlan && todayWeekKnown(date)) return null; // Tag steht im Plan, aber ohne Eintrag → kein Unterricht
+  else if ([0, 6].includes(date.getDay())) return null;
+  const end = plan && HHMM.test(plan.end || '') ? plan.end : HHMM.test(classEnd) ? classEnd : '15:00';
+  return Math.min(toMin(end) + (Number(donusAfter) || 0), 24 * 60 - 1);
+}
+const todayWeekKnown = (date) => { const iso = isoDate(date); return allWeeks().some((x) => x.from <= iso && iso <= x.to); };
 
 // Plan für morgen (für die Zeile „Yarın: …“), auch über die Wochengrenze hinweg
 export function tomorrowPlan(date = new Date()) {

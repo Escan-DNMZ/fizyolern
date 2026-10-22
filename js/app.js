@@ -6,7 +6,7 @@ import { GRUNDWORTSCHATZ, BASE_VOCAB } from './data/vocab.js';
 import { OPEN } from './data/questions.js';
 import { LESSONS, FAECHER, refreshLessons } from './lessons.js';
 import { cleanSegments, cleanText, cardFront } from './private.js';
-import { NOTION_URL, getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, odevList, notionLink, week, todayPlan, tomorrowPlan, upcoming, examFaecher } from './private.js';
+import { NOTION_URL, getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, odevList, notionLink, week, todayPlan, tomorrowPlan, upcoming, examFaecher, donusStart, HHMM } from './private.js';
 import { getToken, setToken, clearToken, looksLikeToken, syncFromNotion } from './notion.js';
 import { renderReport } from './report.js';
 import { containsFuzzy } from './fuzzy.js';
@@ -346,9 +346,10 @@ function renderToday() {
 
     ${[6, 0].includes(new Date().getDay()) ? `<a class="card row" href="#/cumartesi" style="text-decoration:none;color:inherit;border:2px solid var(--accent)"><span class="grow"><div class="eyebrow">${t('today.weekly')}</div><h2>${t('today.weeklyH')}</h2><div class="muted small">${t('today.weeklySub')}</div></span><span class="chev">›</span></a>` : ''}
     ${(() => {
+      // Rückweg ab Unterrichtsende (Wochenplan bzw. Einstellung) + eingestellte Minuten; an Tagen ohne Unterricht nicht
       const now = new Date();
-      if ([6, 0].includes(now.getDay())) return '';
-      if (now.getHours() * 60 + now.getMinutes() < 14 * 60 + 30) return '';
+      const from = donusStart(todayPlan(now), s.settings, now);
+      if (from === null || now.getHours() * 60 + now.getMinutes() < from) return '';
       const { steps, total } = donusInfo();
       const left = steps.filter((x) => x.state === 'open').length;
       return `<a class="card row" href="#/donus" style="text-decoration:none;color:inherit;border:2px solid var(--accent)"><span class="grow"><div class="eyebrow">${t('today.donus')}</div><h2>${left ? t('today.donusLeft', { n: left, min: total }) : t('today.donusDone')}</h2><div class="muted small">${t('today.donusSub')}</div></span><span class="chev">›</span></a>`;
@@ -1675,6 +1676,12 @@ function renderSettings() {
       <label><span class="grow">${t('set.quizGoal')}</span><input type="number" min="1" max="50" id="quizGoal" value="${s.quizGoal}" style="width:80px"></label>
       <label><span class="grow">${t('set.newPerDay')}</span><input type="number" min="0" max="100" id="newPerDay" value="${s.newPerDay}" style="width:80px"></label>
     </div>
+    <div class="section-title">${t('set.donus')}</div>
+    <div class="list">
+      <label><span class="grow">${t('set.donusAfter')}</span><input type="number" min="0" max="240" step="5" id="donusAfter" value="${s.donusAfter}" style="width:80px"></label>
+      <label><span class="grow">${t('set.classEnd')}</span><input type="time" id="classEnd" value="${esc(s.classEnd)}" style="width:110px"></label>
+    </div>
+    <p class="muted small" style="padding:0 4px">${t('set.donusNote')}</p>
     <div class="section-title">${t('set.backup')}</div>
     <p class="muted small" style="padding:0 4px">${t('set.backupNote')}</p>
     <div class="grid2">
@@ -1704,8 +1711,14 @@ function renderSettings() {
     <p class="muted small" style="padding:0 4px">${t('set.wipeNote')}</p>
     <p class="muted small" style="margin-top:24px;padding:0 4px">${t('set.credits', { lic: '<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>' })}</p>
   `;
-  const LIMITS = { cardsGoal: [1, 200], quizGoal: [1, 50], newPerDay: [0, 100] };
-  ['cardsGoal', 'quizGoal', 'newPerDay'].forEach((k) => $('#' + k).addEventListener('change', (e) => {
+  $('#classEnd').addEventListener('change', (e) => {
+    if (!HHMM.test(e.target.value)) { e.target.value = s.classEnd; return; }
+    s.classEnd = e.target.value;
+    store.save();
+    toast(t('savedPlain'));
+  });
+  const LIMITS = { cardsGoal: [1, 200], quizGoal: [1, 50], newPerDay: [0, 100], donusAfter: [0, 240] };
+  ['cardsGoal', 'quizGoal', 'newPerDay', 'donusAfter'].forEach((k) => $('#' + k).addEventListener('change', (e) => {
     const v = parseInt(e.target.value, 10);
     if (isNaN(v)) { e.target.value = s[k]; return; }
     s[k] = Math.min(LIMITS[k][1], Math.max(LIMITS[k][0], v));
