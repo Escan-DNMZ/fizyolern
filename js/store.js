@@ -156,6 +156,13 @@ const MIGRATIONS = {
   lmTrochMinor2026(s) { clearLmWrong(s, ['lm:trochanter_minor', 'lm:i:iliopsoas']); },
   // SIAI lag im Einschnitt direkt unter der SIAS (Ursprung des M. rectus femoris), Incisura ischiadica major am oberen Rand
   lmSiai2026(s) { clearLmWrong(s, ['lm:siai', 'lm:o:rectus_femoris', 'lm:incisura_ischiadica_major']); },
+  // Geprüfte „TODO: prüfen“-Punkte verschoben (Linea m. solei, Tubercula supra-/infraglenoidale, Cavitas glenoidalis,
+  // Tuberositas radii, Basis MC II dorsal/palmar getrennt, Proc. costales L1–L4)
+  lmTodo2026(s) {
+    clearLmWrong(s, ['lm:linea_musculi_solei', 'lm:o:soleus', 'lm:tuberculum_supraglenoidale', 'lm:o:biceps_brachii', 'lm:tuberculum_infraglenoidale',
+      'lm:o:triceps_brachii', 'lm:cavitas_glenoidalis', 'lm:tuberositas_radii', 'lm:i:biceps_brachii', 'lm:basis_ossis_metacarpalis_ii',
+      'lm:i:flexor_carpi_radialis', 'lm:i:extensor_carpi_radialis_longus', 'lm:i:quadratus_lumborum']);
+  },
   // Fehler-Logik mit lastWrong/okDays: ältere Stände ableiten (nichts löschen).
   // lastWrong = letzter Tag, an dem die Frage in days[].wrong steht, sonst last (wenn die Serie 0 ist);
   // war die letzte Antwort richtig und später als der Fehltag, zählt dieser Tag als ein richtiger Tag.

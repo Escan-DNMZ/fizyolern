@@ -11,9 +11,8 @@ export const LANDMARKS = [
     o: ['rectus_femoris'], i: [] },
   { id: 'sips', la: 'Spina iliaca posterior superior (SIPS)', de: 'Hinterer oberer Darmbeinstachel', tr: 'Arka üst iliak çıkıntı', en: 'Back upper iliac spine', bone: 'os_coxae', pos: [0.046, 0.9785, -0.0787],
     o: ['gluteus_maximus'], i: [] },
-  // TODO: prüfen – im groben Modell kein eigener Höcker sichtbar; Punkt = obere Ecke der Incisura ischiadica major
   { id: 'sipi', la: 'Spina iliaca posterior inferior (SIPI)', de: 'Hinterer unterer Darmbeinstachel', tr: 'Arka alt iliak çıkıntı', en: 'Back lower iliac spine', bone: 'os_coxae', pos: [0.0494, 0.939, -0.0553],
-    o: [], i: [], note: 'oberer Rand der Incisura ischiadica major' },
+    o: [], i: [], note: 'klein, nicht tastbar; ca. 2–3 cm unter der SIPS, oberes Ende der Incisura ischiadica major' },
   { id: 'crista_iliaca', la: 'Crista iliaca', de: 'Darmbeinkamm', tr: 'İliak kanat kenarı (kalça kemiği tepesi)', en: 'Iliac crest (top edge of the hip bone)', bone: 'os_coxae', pos: [0.1049, 1.0281, -0.02],
     o: ['quadratus_lumborum', 'latissimus_dorsi', 'erector_spinae', 'transversus_abdominis', 'gluteus_maximus'], i: ['obliquus_externus'] },
   { id: 'tuberculum_iliacum', la: 'Tuberculum iliacum', de: 'Darmbeinhöcker', tr: 'İliak tümsek', en: 'Iliac tubercle', bone: 'os_coxae', pos: [0.143, 1.0017, 0.0129],
@@ -78,9 +77,8 @@ export const LANDMARKS = [
     o: [], i: [], note: 'Tuberculum Gerdy: Ansatz des Tractus iliotibialis' },
   { id: 'pes_anserinus_superficialis', la: 'Pes anserinus superficialis', de: 'Gänsefuß (oberflächlich)', tr: 'Kaz ayağı (yüzeyel)', en: 'Pes anserinus (goose foot)', bone: 'tibia', pos: [0.0552, 0.3946, 0.0102],
     o: [], i: ['sartorius', 'gracilis', 'semitendinosus'], note: 'medial der Tuberositas tibiae' },
-  // TODO: prüfen – schräge Linie, im Modell nicht ausgeprägt; Punkt = Mitte der oberen Tibia-Rückseite
-  { id: 'linea_musculi_solei', la: 'Linea musculi solei', de: 'Soleuslinie (Rückseite der Tibia)', tr: 'Tibia arkasındaki soleus çizgisi', en: 'Soleal line (back of the tibia)', bone: 'tibia', pos: [0.0722, 0.3651, -0.0024],
-    o: ['soleus'], i: [] },
+  { id: 'linea_musculi_solei', la: 'Linea musculi solei', de: 'Soleuslinie (Rückseite der Tibia)', tr: 'Tibia arkasındaki soleus çizgisi', en: 'Soleal line (back of the tibia)', bone: 'tibia', pos: [0.076, 0.3726, -0.0044],
+    o: ['soleus'], i: [], note: 'Rückseite, oberes Drittel: schräg von lateral-proximal nach medial-distal; Ursprung eines Teils des M. soleus' },
   { id: 'margo_anterior_tibiae', la: 'Margo anterior tibiae', de: 'Schienbeinkante', tr: 'Tibia ön kenarı (kaval kemiği)', en: 'Front edge of the tibia (shin)', bone: 'tibia', pos: [0.0688, 0.2409, 0.0088],
     o: [], i: [], note: 'direkt unter der Haut tastbar' },
   { id: 'facies_lateralis_tibiae', la: 'Facies lateralis tibiae', de: 'Seitenfläche des Schienbeins', tr: 'Tibianın dış yüzü', en: 'Lateral surface of the tibia', bone: 'tibia', pos: [0.0943, 0.3285, 0.0232],
@@ -152,20 +150,17 @@ export const LANDMARKS = [
     o: [], i: [], note: 'Ansatz des M. levator scapulae' },
   { id: 'angulus_inferior_scapulae', la: 'Angulus inferior scapulae', de: 'Unterer Schulterblattwinkel', tr: 'Skapulanın alt köşesi', en: 'Lower angle of the scapula', bone: 'scapula', pos: [0.0944, 1.2539, -0.0747],
     o: ['teres_major'], i: [] },
-  { id: 'cavitas_glenoidalis', la: 'Cavitas glenoidalis', de: 'Schultergelenkpfanne', tr: 'Omuz eklem çukuru (glenoid)', en: 'Glenoid cavity (shoulder socket)', bone: 'scapula', pos: [0.1514, 1.3668, -0.0173],
+  { id: 'cavitas_glenoidalis', la: 'Cavitas glenoidalis', de: 'Schultergelenkpfanne', tr: 'Omuz eklem çukuru (glenoid)', en: 'Glenoid cavity (shoulder socket)', bone: 'scapula', pos: [0.1517, 1.373, -0.0239],
     o: [], i: [] },
-  // TODO: prüfen – kleiner Höcker, im Modell nicht abgesetzt; Punkt = oberer Pfannenrand
   { id: 'tuberculum_supraglenoidale', la: 'Tuberculum supraglenoidale', de: 'Höcker über der Schulterpfanne', tr: 'Glenoid üstü tümsek', en: 'Supraglenoid tubercle', bone: 'scapula', pos: [0.1401, 1.3973, -0.0115],
-    o: ['biceps_brachii'], i: [], note: 'Caput longum des M. biceps brachii' },
-  // TODO: prüfen – kleiner Höcker, im Modell nicht abgesetzt; Punkt = unterer Pfannenrand
-  { id: 'tuberculum_infraglenoidale', la: 'Tuberculum infraglenoidale', de: 'Höcker unter der Schulterpfanne', tr: 'Glenoid altı tümsek', en: 'Infraglenoid tubercle', bone: 'scapula', pos: [0.1304, 1.3354, -0.0376],
-    o: ['triceps_brachii'], i: [], note: 'Caput longum des M. triceps brachii' },
+    o: ['biceps_brachii'], i: [], note: 'direkt über der Cavitas glenoidalis, nahe der Basis des Proc. coracoideus; Ursprung des Caput longum des M. biceps brachii' },
+  { id: 'tuberculum_infraglenoidale', la: 'Tuberculum infraglenoidale', de: 'Höcker unter der Schulterpfanne', tr: 'Glenoid altı tümsek', en: 'Infraglenoid tubercle', bone: 'scapula', pos: [0.1407, 1.3525, -0.0238],
+    o: ['triceps_brachii'], i: [], note: 'direkt unter der Cavitas glenoidalis, Beginn des Margo lateralis; Ursprung des Caput longum des M. triceps brachii' },
   // Radius und Ulna
   { id: 'caput_radii', la: 'Caput radii', de: 'Speichenköpfchen', tr: 'Radius başı', en: 'Head of the radius', bone: 'radius', pos: [0.2313, 1.105, -0.0024],
     o: [], i: [] },
-  // TODO: prüfen – Ausrichtung (medial/vorne) im groben Radius-Modell nur ungefähr
-  { id: 'tuberositas_radii', la: 'Tuberositas radii', de: 'Speichenrauigkeit', tr: 'Radius pürüzlülüğü', en: 'Radial tuberosity', bone: 'radius', pos: [0.2242, 1.0708, 0.0],
-    o: [], i: ['biceps_brachii'] },
+  { id: 'tuberositas_radii', la: 'Tuberositas radii', de: 'Speichenrauigkeit', tr: 'Radius pürüzlülüğü', en: 'Radial tuberosity', bone: 'radius', pos: [0.227, 1.0816, 0.0011],
+    o: [], i: ['biceps_brachii'], note: 'direkt distal des Collum radii, vorne-ulnar (medial)' },
   { id: 'processus_styloideus_radii', la: 'Processus styloideus radii', de: 'Griffelfortsatz der Speiche', tr: 'Radiusun stiloid çıkıntısı', en: 'Styloid process of the radius', bone: 'radius', pos: [0.2775, 0.8762, 0.0383],
     o: [], i: ['brachioradialis'] },
   { id: 'olecranon', la: 'Olecranon', de: 'Ellenhaken', tr: 'Olekranon (dirsek ucu)', en: 'Olecranon (point of the elbow)', bone: 'ulna', pos: [0.2147, 1.1216, -0.0259],
@@ -193,9 +188,10 @@ export const LANDMARKS = [
     o: [], i: [], note: 'größter Handwurzelknochen' },
   { id: 'os_hamatum', la: 'Os hamatum', de: 'Hakenbein', tr: 'Hamatum (çengel kemiği)', en: 'Hamate bone', bone: 'carpus', pos: [0.2469, 0.8552, 0.0333],
     o: [], i: [], note: 'Hamulus ossis hamati liegt palmar' },
-  // TODO: prüfen – Punkt dorsal; FCR setzt palmar an derselben Basis an
-  { id: 'basis_ossis_metacarpalis_ii', la: 'Basis ossis metacarpalis II', de: 'Basis des 2. Mittelhandknochens', tr: '2. el tarak kemiği tabanı', en: 'Base of the 2nd metacarpal', bone: 'manus', pos: [0.2727, 0.8556, 0.0391],
-    o: [], i: ['extensor_carpi_radialis_longus', 'flexor_carpi_radialis'], note: 'ECRL dorsal, FCR palmar' },
+  { id: 'basis_ossis_metacarpalis_ii', la: 'Basis ossis metacarpalis II, dorsal', de: 'Basis des 2. Mittelhandknochens (Handrücken)', tr: '2. el tarak kemiği tabanı (el sırtı)', en: 'Base of the 2nd metacarpal (back of the hand)', bone: 'manus', pos: [0.2727, 0.8556, 0.0391],
+    o: [], i: ['extensor_carpi_radialis_longus'] },
+  { id: 'basis_ossis_metacarpalis_ii_palmar', la: 'Basis ossis metacarpalis II, palmar', de: 'Basis des 2. Mittelhandknochens (Handfläche)', tr: '2. el tarak kemiği tabanı (avuç içi)', en: 'Base of the 2nd metacarpal (palm side)', bone: 'manus', pos: [0.2642, 0.8544, 0.0517],
+    o: [], i: ['flexor_carpi_radialis'], note: 'zum Teil auch Basis des Os metacarpale III' },
   // Wirbelsäule (Mittellinie)
   { id: 'tuberculum_anterius_atlantis', la: 'Tuberculum anterius atlantis', de: 'Vorderer Höcker des Atlas', tr: 'Atlasın ön tümseği', en: 'Front tubercle of the atlas', bone: 'hws', pos: [0, 1.5379, 0.0076], mid: true,
     o: [], i: [] },
@@ -205,9 +201,14 @@ export const LANDMARKS = [
     o: ['trapezius', 'rhomboidei'], i: [], note: 'am Nacken am deutlichsten tastbar' },
   { id: 'processus_spinosus_l4', la: 'Processus spinosus L4', de: 'Dornfortsatz L4', tr: 'L4 diken çıkıntısı', en: 'Spinous process of L4', bone: 'lws', pos: [0, 1.0246, -0.0538], mid: true,
     o: [], i: [], note: 'auf Höhe der Beckenkämme (Tastpunkt)' },
-  // TODO: prüfen – Quadratus lumborum: Proc. costales L1–L4, hier stellvertretend L3
+  { id: 'processus_costalis_l1', la: 'Processus costalis L1', de: 'Rippenfortsatz L1', tr: 'L1 kostal (yan) çıkıntısı', en: 'Costal (transverse) process of L1', bone: 'lws', pos: [0.0345, 1.1205, -0.0224],
+    o: [], i: ['quadratus_lumborum'], note: 'M. quadratus lumborum: Ansatz Proc. costales L1–L4 + Costa XII, Ursprung Crista iliaca' },
+  { id: 'processus_costalis_l2', la: 'Processus costalis L2', de: 'Rippenfortsatz L2', tr: 'L2 kostal (yan) çıkıntısı', en: 'Costal (transverse) process of L2', bone: 'lws', pos: [0.0391, 1.0941, -0.0207],
+    o: [], i: ['quadratus_lumborum'], note: 'M. quadratus lumborum: Ansatz Proc. costales L1–L4 + Costa XII, Ursprung Crista iliaca' },
   { id: 'processus_costalis_l3', la: 'Processus costalis L3', de: 'Rippenfortsatz L3', tr: 'L3 kostal (yan) çıkıntısı', en: 'Costal (transverse) process of L3', bone: 'lws', pos: [0.0388, 1.065, -0.0148],
-    o: [], i: ['quadratus_lumborum'] },
+    o: [], i: ['quadratus_lumborum'], note: 'M. quadratus lumborum: Ansatz Proc. costales L1–L4 + Costa XII, Ursprung Crista iliaca' },
+  { id: 'processus_costalis_l4', la: 'Processus costalis L4', de: 'Rippenfortsatz L4', tr: 'L4 kostal (yan) çıkıntısı', en: 'Costal (transverse) process of L4', bone: 'lws', pos: [0.0414, 1.0406, -0.019],
+    o: [], i: ['quadratus_lumborum'], note: 'M. quadratus lumborum: Ansatz Proc. costales L1–L4 + Costa XII, Ursprung Crista iliaca' },
 ];
 
 export const findLandmark = (id) => LANDMARKS.find((l) => l.id === id);

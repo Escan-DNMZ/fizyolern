@@ -485,7 +485,7 @@ export const MUSCLES = [
   {
     id: 'quadratus_lumborum', de: 'Viereckiger Lendenmuskel', la: 'M. quadratus lumborum', tr: 'Kuadratus lumborum kası', en: 'Quadratus lumborum muscle', region: 'Rücken',
     o: 'Crista iliaca, Lig. iliolumbale',
-    i: '12. Rippe, Proc. costales L1–L4',
+    i: 'Proc. costales L1–L4, Costa XII (12. Rippe)',
     inn: 'N. subcostalis (T12), Rr. anteriores L1–L4',
     f: 'Einseitig: Lateralflexion der LWS, Hochziehen des Beckens; beidseitig: Fixierung der 12. Rippe (Inspiration), Extension LWS',
     ftr: 'Gövdeyi yana büker, kalçayı (pelvis) aynı tarafta yukarı çeker.',

@@ -4,7 +4,7 @@ globalThis.localStorage = { getItem: (k) => mem[k] ?? null, setItem: (k, v) => {
 // alter Stand ohne „mig“: Trochanter-minor-Fehler aus dem falsch platzierten Punkt
 mem['fizyo.v1'] = JSON.stringify({
   srs: {}, days: { '2026-10-18': { quiz: 3, wrong: ['lm:trochanter_minor', 'lm:sias', 'lm:i:iliopsoas'] } },
-  quiz: { 'lm:trochanter_minor': { r: 2, w: 3, st: 1 }, 'lm:i:iliopsoas': { r: 0, w: 1 }, 'lm:sias': { r: 0, w: 2 }, 'lm:siai': { r: 1, w: 2 }, 'lm:o:rectus_femoris': { r: 0, w: 1 } },
+  quiz: { 'lm:trochanter_minor': { r: 2, w: 3, st: 1 }, 'lm:i:iliopsoas': { r: 0, w: 1 }, 'lm:sias': { r: 0, w: 2 }, 'lm:siai': { r: 1, w: 2 }, 'lm:o:rectus_femoris': { r: 0, w: 1 }, 'lm:tuberositas_radii': { r: 0, w: 2 }, 'lm:i:flexor_carpi_radialis': { r: 3, w: 1, lastWrong: '2026-10-21' } },
 });
 const root = new URL('../', import.meta.url).href;
 const store = await import(root + 'js/store.js');
@@ -19,6 +19,7 @@ ok(s.quiz['lm:sias'].w === 2, 'andere Punkte unverändert');
 ok(s.days['2026-10-18'].wrong.join() === 'lm:sias', 'Fehlerliste des Tages bereinigt');
 ok(s.mig.includes('lmTrochMinor2026'), 'Migration gemerkt');
 ok(s.quiz['lm:siai'].w === 0 && s.quiz['lm:siai'].r === 1 && !s.quiz['lm:o:rectus_femoris'], 'SIAI-Fehler (falsche Position) gelöscht');
+ok(!s.quiz['lm:tuberositas_radii'] && s.quiz['lm:i:flexor_carpi_radialis'].w === 0 && !s.quiz['lm:i:flexor_carpi_radialis'].lastWrong, 'verschobene Punkte (TODO-Liste): Fehler gelöscht');
 ok(JSON.parse(mem['fizyo.v1']).mig.includes('lmTrochMinor2026'), 'migrierter Stand gespeichert');
 
 // zweiter Lauf: neue Fehler bleiben (Migration läuft nur einmal)
