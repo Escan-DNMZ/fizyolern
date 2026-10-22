@@ -216,8 +216,10 @@ function navigate() {
   $('#title').textContent = t(r.title);
   $$('.tabbar a').forEach((a) => a.classList.toggle('active', a.dataset.tab === r.tab));
   const back = $('#backBtn');
-  back.hidden = !r.back;
-  back.onclick = () => (r.back === 'history' ? history.back() : (location.hash = r.back));
+  // 3D-Ansicht aus einer Frage/Lektion geöffnet (#/3d?ids=…): Zurück führt dorthin (z. B. zur laufenden Testfrage)
+  const backTo = name === '3d' && (params.get('ids') || params.get('id')) && history.length > 1 ? 'history' : r.back;
+  back.hidden = !backTo;
+  back.onclick = () => (backTo === 'history' ? history.back() : (location.hash = backTo));
   $('#settingsBtn').hidden = name !== 'bugun';
 
   const is3d = name === '3d';
@@ -264,7 +266,8 @@ function renderToday() {
     { done: d.lesson, label: t('task.muscle', { name: esc(m.la) }), href: `#/ders/${m.id}` },
     { done: d.lesson2, label: t(b.kind === 'bone' ? 'task.bone' : 'task.joint', { name: esc(b.de) }), href: `#/ders/${b.id}` },
     { done: d.cards >= s.settings.cardsGoal, label: `${t('task.cards', { n: s.settings.cardsGoal })} <span class="muted">(${d.cards}/${s.settings.cardsGoal})</span>`, href: '#/oturum/vocab' },
-    { done: d.quiz >= s.settings.quizGoal, label: `${t('task.quiz', { n: s.settings.quizGoal })} <span class="muted">(${d.quiz}/${s.settings.quizGoal})</span>`, href: '#/test' },
+    // fertiger Morgentest zählt auch für das Tagesziel (er hat so viele Fragen wie das Ziel, außer das Fach hat weniger)
+    { done: d.quiz >= s.settings.quizGoal || !!d.morning, label: `${t('task.quiz', { n: s.settings.quizGoal })} <span class="muted">(${d.quiz}/${s.settings.quizGoal})</span>`, href: '#/test' },
     { done: d.open >= 1, label: t('task.open'), href: `#/soru/${encodeURIComponent(nextOpenQuestion().id)}` },
   ];
   const doneN = tasks.filter((t) => t.done).length;
@@ -837,7 +840,21 @@ function renderReading() {
 }
 
 // ───────────────────────── Quiz ─────────────────────────
-let quiz = null;
+// Laufender Test liegt auch im Speicher (store.quizRun): 3D-Ansicht, Tab-Wechsel oder Neuladen setzen ihn nicht zurück
+function saveQuiz() {
+  store.get().quizRun = quiz ? {
+    date: quiz.date || store.today(), cat: quiz.cat || '', donus: !!quiz.donus, qs: quiz.qs, i: quiz.i, right: quiz.right,
+    wrong: quiz.wrong.map((q) => quiz.qs.indexOf(q)).filter((i) => i >= 0), answers: quiz.answers || {}, finished: !!quiz.finished, endAt: quiz.endAt || 0,
+  } : null;
+  store.save();
+}
+function loadQuiz() {
+  const r = store.get().quizRun;
+  return r && r.date === store.today() ? { ...r, wrong: r.wrong.map((i) => r.qs[i]).filter(Boolean) } : null;
+}
+let quiz = loadQuiz();
+// neuer Test: heutiges Datum mitgeben und sofort speichern
+const startQuiz = (q) => { quiz = { date: store.today(), ...q }; saveQuiz(); };
 
 const topicLabel = (c) => (c.startsWith('Ders: ') ? t('topic.ders', { f: c.slice(6) }) : c === 'Knochenpunkte' ? t('topic.lm') : catLabel(c));
 // Beschriftung einer Test-Kategorie (die Kategorie selbst bleibt der interne Schlüssel)
@@ -846,14 +863,18 @@ let quizCat = 'Gemischt';
 
 function renderQuizStart(_, params = new URLSearchParams()) {
   const kat = params.get('kat');
+  if (quiz && quiz.date && quiz.date !== store.today()) { quiz = null; saveQuiz(); } // Test von gestern nicht fortsetzen
   if (kat) {
     // Direktstart, z. B. Morgentest aus dem Tagesplan oder Test zu einer Lektion
     quizCat = kat;
     history.replaceState(null, '', '#/test');
+    // derselbe Test läuft noch (z. B. zurück aus der 3D-Ansicht über den Tagesplan) → dort weitermachen
+    if (quiz && !quiz.finished && quiz.cat === kat) return renderQuizQuestion();
     const donus = params.get('donus') === '1' || kat.startsWith('Dönüş: ');
     const n = donus ? 5 : kat.startsWith('Hatalar: ') ? 30 : store.get().settings.quizGoal;
-    quiz = { qs: buildQuiz(kat, n, store.get().customVocab, { morning: !donus && kat === morningKat() }), i: 0, right: 0, wrong: [], finished: false, cat: kat, donus };
-    if (!quiz.qs.length) { quiz = null; toast(t('quiz.none')); } else return renderQuizQuestion();
+    const qs = buildQuiz(kat, n, store.get().customVocab, { morning: !donus && kat === morningKat() });
+    if (!qs.length) toast(t('quiz.none'));
+    else { startQuiz({ qs, i: 0, right: 0, wrong: [], finished: false, cat: kat, donus }); return renderQuizQuestion(); }
   }
   if (quiz && !quiz.finished) return renderQuizQuestion();
   // gerade beendet (z. B. zurück aus der 3D-Ansicht): Ergebnis statt Kategorieauswahl zeigen
@@ -875,7 +896,7 @@ function renderQuizStart(_, params = new URLSearchParams()) {
   $$('[data-cat]').forEach((b) => b.addEventListener('click', () => { quizCat = b.dataset.cat; renderQuizStart(); }));
   $('#startQuiz').addEventListener('click', () => {
     const qs = buildQuiz(quizCat, store.get().settings.quizGoal, store.get().customVocab, { morning: quizCat === morningKat() });
-    quiz = { qs, i: 0, right: 0, wrong: [], answered: false, finished: false, cat: quizCat };
+    startQuiz({ qs, i: 0, right: 0, wrong: [], finished: false, cat: quizCat });
     renderQuizQuestion();
   });
 }
@@ -899,10 +920,11 @@ function renderQuizQuestion() {
       quiz.answers = { ...(quiz.answers || {}), [quiz.i]: i };
       if (!ok) quiz.wrong.push(q); else quiz.right++;
       if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(ok ? 15 : [30, 40, 30]);
+      saveQuiz();
       store.recordQuiz(q.id, ok);
     }
     $('#after').innerHTML = `<div class="explain">${ok ? t('quiz.right') : t('quiz.wrong')}${esc(tx(q, 'x'))}</div>${btn3d(`${q.q} ${q.opts[q.ans]} ${q.x}`, { style: 'margin:0 0 10px' })}<button class="btn block" id="next">${quiz.i + 1 < quiz.qs.length ? t('quiz.next') : t('quiz.result')}</button>`;
-    $('#next').addEventListener('click', () => { quiz.i++; renderQuizQuestion(); });
+    $('#next').addEventListener('click', () => { quiz.i++; saveQuiz(); renderQuizQuestion(); });
     if (record) $('#next').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
   $$('.opt').forEach((btn) => btn.addEventListener('click', () => answer(+btn.dataset.i, true)));
@@ -914,6 +936,7 @@ function renderQuizQuestion() {
 function renderQuizEnd() {
   quiz.finished = true;
   quiz.endAt = quiz.endAt || Date.now();
+  saveQuiz();
   const plan = todayPlan();
   if (morningKat() && quiz.cat === morningKat() && quiz.qs.length) { store.day().morning = true; store.save(); }
   if (quiz.cat === 'Hatalar: bugün') markDonus('hatalar');
@@ -937,10 +960,10 @@ function renderQuizEnd() {
       <button class="btn" id="again">${t('quiz.again')}</button>
     </div>
   `;
-  $('#again').addEventListener('click', () => { quiz = null; renderQuizStart(); });
+  $('#again').addEventListener('click', () => { quiz = null; saveQuiz(); renderQuizStart(); });
   const rw = $('#retryWrong');
   if (rw) rw.addEventListener('click', () => {
-    quiz = { qs: shuffle(quiz.wrong).map((q) => prepare({ ...q, o: [q.opts[q.ans], ...q.opts.filter((_, i) => i !== q.ans)], a: 0 })), i: 0, right: 0, wrong: [], finished: false };
+    startQuiz({ qs: shuffle(quiz.wrong).map((q) => prepare({ ...q, o: [q.opts[q.ans], ...q.opts.filter((_, i) => i !== q.ans)], a: 0 })), i: 0, right: 0, wrong: [], finished: false });
     renderQuizQuestion();
   });
 }

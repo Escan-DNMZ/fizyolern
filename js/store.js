@@ -17,6 +17,7 @@ const DEFAULT = () => ({
   ck: {},           // Checkliste-Selbsteinschätzung: lernzielId -> { lv: 0 😵 … 3 😊, last, auto: durch falsche Antwort gesenkt }
   mig: [],          // bereits ausgeführte Migrationen (Namen, siehe MIGRATIONS)
   revx: {},         // Ters kartlar nicht ganz gewusst (✗-Liste): kartId -> { k: gewusst, n: Muskeln, last }
+  quizRun: null,    // laufender Test (übersteht 3D-Ansicht/Neuladen, nur für heute): { date, cat, donus, qs, i, right, wrong: [index], answers, finished, endAt }
   settings: { cardsGoal: 15, quizGoal: 10, newPerDay: 10, reverse: false, lang: 'tr' }, // lang = Hilfssprache (tr | en)
 });
 
@@ -63,6 +64,27 @@ function cleanDay(v) {
   }
   return d;
 }
+// Laufender Test: nur vom heutigen Tag und nur, wenn jede Frage vollständig ist (sonst neu starten)
+function cleanQuizRun(r) {
+  if (!isObj(r) || date(r.date) !== today() || !Array.isArray(r.qs) || !r.qs.length || r.qs.length > 60) return null;
+  const qs = [];
+  for (const q of r.qs) {
+    if (!isObj(q) || typeof q.id !== 'string' || typeof q.q !== 'string') return null;
+    const opts = strArr(q.opts).map((o) => o.slice(0, 2000));
+    if (opts.length < 2 || opts.length > 8 || !Number.isInteger(q.ans) || q.ans < 0 || q.ans >= opts.length) return null;
+    qs.push({
+      id: str(q.id, 300), cat: str(q.cat, 100), q: str(q.q, 3000), opts, ans: q.ans, x: str(q.x, 3000),
+      ...(q.xEn ? { xEn: str(q.xEn, 3000) } : {}), ...(q.lesson ? { lesson: str(q.lesson, 200) } : {}), ...(q.fach ? { fach: str(q.fach, 100) } : {}),
+    });
+  }
+  const n = qs.length;
+  return {
+    date: r.date, cat: str(r.cat, 300), donus: !!r.donus, qs, i: int(r.i, 0, n, 0), right: int(r.right, 0, n, 0),
+    wrong: (Array.isArray(r.wrong) ? r.wrong : []).filter((i) => Number.isInteger(i) && i >= 0 && i < n),
+    answers: dict(r.answers, (v, k) => (/^\d{1,2}$/.test(k) && +k < n && Number.isInteger(v) && v >= 0 && v < qs[+k].opts.length ? v : undefined)),
+    finished: !!r.finished, endAt: num(r.endAt, 0, 1e15),
+  };
+}
 export function sanitize(raw) {
   const s = isObj(raw) ? raw : {};
   const d = DEFAULT();
@@ -100,6 +122,7 @@ export function sanitize(raw) {
     caseRun: isObj(s.caseRun) && typeof s.caseRun.id === 'string' && Array.isArray(s.caseRun.seen || []) && isObj(s.caseRun.f || {}) ? { ...s.caseRun, seen: strArr(s.caseRun.seen), f: dict(s.caseRun.f, (v) => (typeof v === 'string' ? v.slice(0, 5000) : undefined)) } : null,
     ck: dict(s.ck, (v, k) => (isObj(v) && /^ck:[0-9a-f]{16}$/.test(k) ? { lv: int(v.lv, 0, 3, 1), ...(date(v.last) ? { last: v.last } : {}), ...(v.auto ? { auto: true } : {}) } : undefined)),
     mig: strArr(s.mig).slice(0, 100),
+    quizRun: cleanQuizRun(s.quizRun),
     revx: dict(s.revx, (v, k) => (isObj(v) && k.startsWith('rv:') ? { k: int(v.k, 0, 50, 0), n: int(v.n, 1, 50, 1), ...(date(v.last) ? { last: v.last } : {}) } : undefined)),
     settings: {
       cardsGoal: int(set.cardsGoal, 1, 200, d.settings.cardsGoal),
