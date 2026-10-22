@@ -674,7 +674,15 @@ addStrings({
   'ck.lv1': ['unsicher – emin değilim', 'unsicher – not sure'],
   'ck.lv0': ['kann ich nicht – bilmiyorum', "kann ich nicht – I can't do it"],
   // ───── Noktayı bul: Femur ─────
-  'pq.toFemur': ['Femur noktalarına geç ›', 'Switch to femur points ›'],
-  'pq.toPelvis': ['Pelvis noktalarına geç ›', 'Switch to pelvis points ›'],
+  'pq.otherSets': ['Başka bölge:', 'Another region:'],
+  'pq.set.pelvis': ['Pelvis + kalça', 'Pelvis + hip'],
+  'pq.set.femur': ['Femur', 'Femur'],
+  'pq.set.unterschenkel': ['Bacak (tibia/fibula)', 'Lower leg'],
+  'pq.set.fuss': ['Ayak', 'Foot'],
+  'pq.set.schulter': ['Omuz (skapula)', 'Shoulder (scapula)'],
+  'pq.set.arm': ['Kol (dirsek/önkol)', 'Arm (elbow/forearm)'],
+  'pq.set.hand': ['El bileği', 'Wrist'],
+  'pq.set.wirbelsaeule': ['Omurga', 'Spine'],
+  'pq.boneBtn': ['🎯 Noktayı bul ({n} kemik noktası)', '🎯 Find the point ({n} landmarks)'],
   'pq.femurBtn': ['🦴 Noktayı bul: Femur (3D)', '🦴 Find the point: femur (3D)'],
 });

@@ -88,7 +88,7 @@ const structureOfDay = () => dailyPick([...BONES.map((b) => ({ ...b, kind: 'bone
 function revCard(c, tag = '⇄ ' + t('rev.kind.' + c.kind)) {
   return {
     id: c.id, tag, front: c.q, frontSub: t('rev.hint', { n: c.parts.length }), parts: c.parts,
-    back: `<div class="detail"><b>${esc(c.name)}</b><ol class="rv-list">${c.parts.map((p) => `<li><b>${esc(p.la)}</b> <span class="muted">– ${esc(p.seg)}</span></li>`).join('')}</ol><div class="muted small">${t('rev.scope')}</div></div>`,
+    back: `<div class="detail"><b>${esc(c.name)}</b><ol class="rv-list">${c.parts.map((p) => `<li><b>${esc(p.la)}</b> <span class="muted">– ${esc(p.seg)}</span></li>`).join('')}</ol><div class="muted small">${t('rev.scope')}</div>${c.kind !== 'n' && findLandmark(c.key) ? btn3d(findLandmark(c.key).la, { stop: true }) : ''}</div>`,
   };
 }
 // nicht ganz gewusste Ters kartlar (✗-Liste), falls es die Karte noch gibt
@@ -488,6 +488,7 @@ function renderLesson([id]) {
       ${facts}
       ${s.k || s.klinik ? `<div class="klinik small">🩺 <b>Klinik:</b> ${esc(s.k || s.klinik)}</div>` : ''}
       <a class="btn ghost block" style="margin-top:14px" href="#/3d?id=${s.id}">${t('btn.show3dModel')}</a>
+      ${s.kind === 'bone' && Object.hasOwn(PQ_OF_BONE, s.id) && LANDMARKS.some((l) => l.bone === s.id) ? `<a class="btn ghost block" style="margin-top:10px" href="#/3d?quiz=${PQ_OF_BONE[s.id]}">${t('pq.boneBtn', { n: LANDMARKS.filter((l) => l.bone === s.id).length })}</a>` : ''}
     </div>
     ${related.length ? `<div class="section-title">${t('lesson.related')}</div><div class="list">${related.map((m) => `<a href="#/ders/${m.id}"><span class="grow">${esc(m.la)}<div class="muted small">${esc(tx(m))}</div></span><span class="chev">›</span></a>`).join('')}</div>` : ''}
     ${mini.length ? `<div class="section-title">${t('lesson.mini')}</div><div id="miniQuiz"></div>` : ''}
@@ -1401,16 +1402,33 @@ function renderFocusSheet(k) {
 }
 
 // ───── Quiz „Noktayı bul“: Knochenpunkt bzw. Ursprung/Ansatz eines Muskels am Modell antippen ─────
-const PQ_SETS = { pelvis: ['os_coxae', 'sacrum', 'femur'], femur: ['femur'] };
-// Becken-Quiz: nur das obere Femur (Knie-Punkte gehören zum Femur-Quiz, sonst müsste man weit herauszoomen)
-const PQ_ONLY = { pelvis: (l) => l.bone !== 'femur' || l.pos[1] > 0.6 };
+// Regionen des Quiz: welche Knochen gezeigt werden; PQ_ONLY = welche Punkte gefragt werden
+const PQ_SETS = {
+  pelvis: ['os_coxae', 'sacrum', 'femur'], femur: ['femur'], unterschenkel: ['tibia', 'fibula', 'patella'], fuss: ['talus', 'calcaneus', 'pes'],
+  schulter: ['scapula', 'humerus', 'clavicula'], arm: ['humerus', 'radius', 'ulna'], hand: ['carpus', 'manus'], wirbelsaeule: ['hws', 'bws', 'lws', 'sacrum'],
+};
+// Becken-Quiz: nur das obere Femur (Knie-Punkte gehören zum Femur-Quiz, sonst müsste man weit herauszoomen);
+// Schulter = Scapula + oberer Humerus, Arm = unterer Humerus + Unterarm
+const PQ_ONLY = {
+  pelvis: (l) => l.bone !== 'femur' || l.pos[1] > 0.6,
+  schulter: (l) => l.bone !== 'humerus' || l.pos[1] > 1.25,
+  arm: (l) => l.bone !== 'humerus' || l.pos[1] <= 1.25,
+};
+// Quiz-Region eines Knochens (Knopf „Noktayı bul“ in der Knochen-Lektion)
+const PQ_OF_BONE = { os_coxae: 'pelvis', sacrum: 'pelvis', femur: 'femur', tibia: 'unterschenkel', fibula: 'unterschenkel', patella: 'unterschenkel',
+  talus: 'fuss', calcaneus: 'fuss', pes: 'fuss', scapula: 'schulter', clavicula: 'schulter', humerus: 'schulter', radius: 'arm', ulna: 'arm',
+  carpus: 'hand', manus: 'hand', hws: 'wirbelsaeule', bws: 'wirbelsaeule', lws: 'wirbelsaeule' };
+const pqSetChips = (cur) => `<div class="chips" style="margin-top:8px">${Object.keys(PQ_SETS).filter((k) => k !== cur).map((k) => `<button class="chip" data-pqset="${k}">${t('pq.set.' + k)}</button>`).join('')}</div>`;
 // Toleranz in Metern; lange oder flächige Strukturen großzügiger (sy < 1: in der Höhe großzügiger).
 // Tuberculum adductorium und Epicondylus medialis liegen nur ~1,6 cm auseinander → enger.
 // area = Fläche/Loch/Linie: feste Toleranz, nicht durch Nachbarpunkte verkleinert
 const PQ_TOL = { crista_iliaca: { tol: 0.035, area: true }, linea_aspera: { tol: 0.02, sy: 0.2, area: true }, foramen_obturatum: { tol: 0.025, area: true }, acetabulum: { tol: 0.025, area: true },
   linea_intertrochanterica: { tol: 0.025 }, tuberositas_glutea: { tol: 0.02, sy: 0.5 },
   condylus_medialis_femoris: { tol: 0.022 }, condylus_lateralis_femoris: { tol: 0.022 },
-  tuberculum_adductorium: { tol: 0.013 }, epicondylus_medialis_femoris: { tol: 0.013 } };
+  tuberculum_adductorium: { tol: 0.013 }, epicondylus_medialis_femoris: { tol: 0.013 },
+  fossa_supraspinata: { tol: 0.025, area: true }, fossa_infraspinata: { tol: 0.025, area: true }, fossa_subscapularis: { tol: 0.025, area: true },
+  margo_medialis_scapulae: { tol: 0.02, sy: 0.3, area: true }, margo_lateralis_scapulae: { tol: 0.02, sy: 0.4, area: true },
+  margo_anterior_tibiae: { tol: 0.02, sy: 0.15, area: true }, facies_lateralis_tibiae: { tol: 0.025, area: true }, linea_musculi_solei: { tol: 0.025, area: true } };
 const PQ_ROUNDS = 10;
 let pq = null; // { set, qs, k, results, answer }
 
@@ -1551,7 +1569,7 @@ function renderPointQuizSheet() {
         <button class="btn" id="pqAgain">${t('pq.again')}</button>
       </div>
       ${wrong.length ? `<button class="btn plain block" id="pqExit" style="margin-top:8px">${t('finish')}</button>` : ''}
-      <button class="btn ghost block" id="pqOther" style="margin-top:8px">${t(pq.set === 'femur' ? 'pq.toPelvis' : 'pq.toFemur')}</button>`;
+      <div class="small muted" style="margin-top:10px">${t('pq.otherSets')}</div>${pqSetChips(pq.set)}`;
   } else {
     const q = pq.qs[pq.k];
     const a = pq.answer;
@@ -1569,7 +1587,8 @@ function renderPointQuizSheet() {
       <div class="grid2" style="margin-top:8px">
         ${a ? '<span></span>' : `<button class="btn plain" id="pqSkip">${t('pq.skip')}</button>`}
         ${a ? `<button class="btn" id="pqNext">${pq.k + 1 < n ? t('next') : t('pq.resultBtn')}</button>` : `<span class="muted small" style="align-self:center">${t('pq.tapHint')}</span>`}
-      </div>`;
+      </div>
+      ${pq.k === 0 && !a ? `<details class="small" style="margin-top:6px"><summary class="muted">${t('pq.otherSets')} ${t('pq.set.' + pq.set)}</summary>${pqSetChips(pq.set)}</details>` : ''}`;
   }
   sheet.innerHTML = body;
   $('.close', sheet).addEventListener('click', exitFocus);
@@ -1578,7 +1597,7 @@ function renderPointQuizSheet() {
   on('pqNext', nextPoint);
   on('pqExit', exitFocus);
   on('pqAgain', () => startPointQuiz(pq.set));
-  on('pqOther', () => startPointQuiz(pq.set === 'femur' ? 'pelvis' : 'femur'));
+  $$('[data-pqset]', sheet).forEach((b) => b.addEventListener('click', () => startPointQuiz(b.dataset.pqset)));
   on('pqRetry', () => startPointQuiz(pq.set, pq.results.filter((x) => !x.ok).map((x) => x.q.id)));
 }
 
@@ -1605,7 +1624,7 @@ function setup3DControls() {
     viewer.setDepth(+b.dataset.depth);
   }));
   $('#focusExitBtn').addEventListener('click', exitFocus);
-  $('#pqBtn').addEventListener('click', () => viewer.ready.then(() => startPointQuiz('pelvis')));
+  $('#pqBtn').addEventListener('click', () => viewer.ready.then(() => startPointQuiz((focusState && Object.hasOwn(PQ_OF_BONE, focusState.id) && PQ_OF_BONE[focusState.id]) || 'pelvis')));
   $$('[data-view]').forEach((b) => b.addEventListener('click', () => viewer.view(b.dataset.view)));
   $('#resetView').addEventListener('click', () => viewer.resetView());
 

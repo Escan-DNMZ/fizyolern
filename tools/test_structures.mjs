@@ -15,7 +15,7 @@ const cases = [
   ['Die Mm. gemelli entspringen an der Spina ischiadica und am Tuber ischiadicum', 'gemellus_superior,gemellus_inferior,spina_ischiadica,tuber_ischiadicum'],
   ['die Wirbelsäule (WS)', 'hws,bws,lws,sacrum'],
   ['Der M. sartorius entspringt an der SIAS, der M. rectus femoris an der SIAI.', 'sartorius,sias,rectus_femoris,siai'],
-  ['M. tibialis anterior setzt am Os cuneiforme mediale an', 'tibialis_anterior'],           // nicht „Tibia“
+  ['M. tibialis anterior setzt am Os cuneiforme mediale an', 'tibialis_anterior,os_cuneiforme_mediale'], // nicht „Tibia“; Knochenpunkt ja
   ['Das Hüftgelenk hat 3 Freiheitsgrade', 'art_coxae'],
   ['M. rectus femoris (M. quadriceps femoris)', 'rectus_femoris'],                             // Klammerzusatz zählt nicht
   ['Die ischiocrurale Muskulatur', 'biceps_femoris,semitendinosus,semimembranosus'],
@@ -24,6 +24,8 @@ const cases = [
   ['Abduktoren: Mm. glutaei medius et minimus + M. tensor fasciae latae', 'gluteus_medius,gluteus_minimus,tensor_fasciae_latae'],
   ['Trochanter major → Ansatz Gluteus medius/minimus', 'trochanter_major,gluteus_medius,gluteus_minimus'],
   ['Crista iliaca → Ansatz der Bauchmuskeln', 'crista_iliaca,rectus_abdominis,obliquus_externus,transversus_abdominis'],
+  ['Ansatz am Tuberculum majus, Ursprung am Epicondylus lateralis humeri', 'tuberculum_majus,epicondylus_lateralis_humeri'],
+  ['Der Außenknöchel steht tiefer als der Innenknöchel', 'malleolus_lateralis,malleolus_medialis'],
   ['Heute lernen wir Vokabeln', ''],
 ];
 let fail = 0;

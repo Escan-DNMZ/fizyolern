@@ -4,6 +4,7 @@
 // „Spina iliaca anterior superior“) – welche Muskeln dazugehören, ergibt sich allein aus den Muskeldaten.
 // Karten mit nur einem Muskel entfallen (das wäre keine Gruppe).
 import { MUSCLES } from './data/anatomy.js';
+import { LANDMARKS } from './data/landmarks.js';
 
 // f = in welchen Feldern gesucht wird ('o' Ursprung, 'i' Ansatz); at = „am …“-Form für die Frage;
 // re = Schreibweisen; not = Stellen, die nur scheinbar passen (werden vor der Suche entfernt)
@@ -106,6 +107,18 @@ export function buildReverseCards(muscles = MUSCLES) {
     if (parts.length >= 2) out.push({ id: `rv:${kind}:${p.key}`, kind, key: p.key, name: p.name, q: question(kind, p), parts });
   };
   for (const p of POINTS) for (const k of p.f) add(k, p);
+  // Knochenpunkte aus js/data/landmarks.js (o/i-Listen): zusätzliche Gruppen, wenn es noch keine Karte
+  // mit denselben (oder mehr) Muskeln gibt – so kommen neue Punkte (z. B. Caput fibulae) automatisch dazu
+  for (const l of LANDMARKS) {
+    for (const kind of ['o', 'i']) {
+      const ids = (l[kind] || []).filter((id) => muscles.some((m) => m.id === id));
+      if (ids.length < 2 || POINTS.some((p) => p.key === l.id)) continue;
+      if (out.some((c) => c.kind === kind && ids.every((id) => c.parts.some((x) => x.id === id)))) continue;
+      const name = l.la.replace(/\s*\(.*\)$/, '');
+      const parts = ids.map((id) => { const m = muscles.find((x) => x.id === id); return { id, la: shortLa(m.la), seg: m[FIELD[kind]] }; });
+      out.push({ id: `rv:${kind}:${l.id}`, kind, key: l.id, name: `${name} (${l.de})`, q: question(kind, { at: `am Knochenpunkt „${name}“` }), parts });
+    }
+  }
   for (const n of NERVES) add('n', n);
   return out;
 }
