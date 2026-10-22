@@ -369,6 +369,7 @@ addStrings({
   'pq.right': ['Doğru nokta', 'Correct point'],
   'pq.rights': ['Doğru noktalar', 'Correct points'],
   'pq.wrongD': ['✗ Yanlış – {d} uzakta. ', '✗ Wrong – {d} away. '],
+  'pq.wrongOther': ['✗ Bu {x} – ', '✗ That is {x} – '],
   'pq.wrongX': ['✗ Yanlış – ', '✗ Wrong – '],
   'pq.marked': ['(🟣 işaretli)', '(🟣 marked)'],
   'pq.skip': ['Bilmiyorum', "I don't know"],

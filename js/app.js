@@ -1405,7 +1405,8 @@ const PQ_SETS = { pelvis: ['os_coxae', 'sacrum', 'femur'], femur: ['femur'] };
 const PQ_ONLY = { pelvis: (l) => l.bone !== 'femur' || l.pos[1] > 0.6 };
 // Toleranz in Metern; lange oder flächige Strukturen großzügiger (sy < 1: in der Höhe großzügiger).
 // Tuberculum adductorium und Epicondylus medialis liegen nur ~1,6 cm auseinander → enger.
-const PQ_TOL = { crista_iliaca: { tol: 0.035 }, linea_aspera: { tol: 0.02, sy: 0.2 }, foramen_obturatum: { tol: 0.025 }, acetabulum: { tol: 0.025 },
+// area = Fläche/Loch/Linie: feste Toleranz, nicht durch Nachbarpunkte verkleinert
+const PQ_TOL = { crista_iliaca: { tol: 0.035, area: true }, linea_aspera: { tol: 0.02, sy: 0.2, area: true }, foramen_obturatum: { tol: 0.025, area: true }, acetabulum: { tol: 0.025, area: true },
   linea_intertrochanterica: { tol: 0.025 }, tuberositas_glutea: { tol: 0.02, sy: 0.5 },
   condylus_medialis_femoris: { tol: 0.022 }, condylus_lateralis_femoris: { tol: 0.022 },
   tuberculum_adductorium: { tol: 0.013 }, epicondylus_medialis_femoris: { tol: 0.013 } };
@@ -1442,7 +1443,7 @@ function startPointQuiz(set = 'pelvis', only = null) {
   if (!Object.hasOwn(PQ_SETS, set)) set = 'pelvis'; // unbekannter Name aus einem Link
   const info = viewer.enterPointQuiz(PQ_SETS[set]);
   if (!info) { toast(t('pq.notReady')); return; }
-  pq = { set, qs: buildPointQuiz(set, only), k: 0, results: [], answer: null };
+  pq = { set, qs: buildPointQuiz(set, only), k: 0, results: [], answer: null, ...pqNeighbors(set) };
   focusState = { id: null, s: null, info };
   document.body.classList.add('focus3d', 'pq3d'); // pq3d: Ansicht-Knöpfe ausblenden, damit sie keine Punkte verdecken
   $('#hint3d').hidden = true;
@@ -1451,24 +1452,49 @@ function startPointQuiz(set = 'pelvis', only = null) {
 
 const pqCm = (d) => dec((d * 100).toFixed(1)) + ' cm';
 
+// Faire Toleranz: nie mehr als 60 % des Abstands zum nächsten anderen Punkt der Runde (mind. 1,2 cm),
+// damit nah beieinander liegende Punkte (SIAS/SIAI, Epicondylus/Tuberculum adductorium) nicht beide zählen
+function pqNeighbors(set) {
+  const bones = PQ_SETS[set] || PQ_SETS.pelvis;
+  const only = (Object.hasOwn(PQ_ONLY, set) && PQ_ONLY[set]) || (() => true);
+  const lms = LANDMARKS.filter((l) => bones.includes(l.bone) && only(l));
+  const nn = {};
+  for (const l of lms) nn[l.id] = Math.min(Infinity, ...lms.filter((o) => o !== l).map((o) => Math.hypot(o.pos[0] - l.pos[0], o.pos[1] - l.pos[1], o.pos[2] - l.pos[2])));
+  return { lms, nn };
+}
+function pqTol(l) {
+  const base = PQ_TOL[l.id] || {};
+  const nn = (pq && pq.nn && pq.nn[l.id]) || Infinity;
+  if (base.area) return base;
+  return { ...base, tol: Math.min(base.tol || 0.02, Math.max(0.012, nn * 0.6)) };
+}
+
 function onQuizTap(hit, ray) {
   if (!pq || pq.answer || pq.k >= pq.qs.length) return;
   const q = pq.qs[pq.k];
   let best = null;
   for (const l of q.ans) {
-    const r = viewer.judgePoint(l, hit, ray, PQ_TOL[l.id]);
+    const r = viewer.judgePoint(l, hit, ray, pqTol(l));
     if (!best || r.d < best.d) best = { ...r, l };
   }
   if (!hit && !best.ok) { toast(t('pq.tapBone')); return; }
+  // näher an einem anderen Punkt als am gefragten → falsch, und sagen, welcher es war
+  if (best.ok) {
+    for (const o of pq.lms || []) {
+      if (q.ans.includes(o)) continue;
+      const r = viewer.judgePoint(o, hit, ray, { ...pqTol(o), tol: 0 });
+      if (r.d < best.d && r.d <= pqTol(o).tol) { best = { ...best, ok: false, other: o }; break; }
+    }
+  }
   // knapp daneben, aber so weit herausgezoomt, dass 2 cm kaum ein Fingertipp sind → nicht werten
-  if (!best.ok && best.d < 0.05 && viewer.pxPer(best.pos, 0.02) < 22) { toast(t('pq.zoom')); return; }
+  if (!best.ok && !best.other && best.d < 0.05 && viewer.pxPer(best.pos, 0.02) < 22) { toast(t('pq.zoom')); return; }
   answerPoint(q, best.ok, { tap: hit, best });
 }
 
 function answerPoint(q, ok, { tap = null, best = null } = {}) {
   store.recordQuiz(q.id, ok);
   pq.results.push({ q, ok });
-  pq.answer = { ok, skipped: !tap && !best, d: best ? best.d : null, hitLm: best && best.l };
+  pq.answer = { ok, skipped: !tap && !best, d: best ? best.d : null, hitLm: best && best.l, other: best && best.other };
   if (tap) viewer.quizMark(tap, ok ? 0x16a34a : 0xdc2626, null, 0.004);
   // richtige Punkte zeigen – auf der Seite, auf die getippt wurde
   const right = tap && tap.x < 0 ? -1 : 1;
@@ -1533,7 +1559,7 @@ function renderPointQuizSheet() {
       const where = q.ans.map((l) => `<b lang="la">${esc(shortLa(l))}</b>`).join(', ');
       fb = a.ok
         ? `<div class="pq-fb ok">${t('pq.ok')} ${a.hitLm && q.ans.length > 1 ? `<b lang="la">${esc(shortLa(a.hitLm))}</b> · ` : ''}<span class="muted">${t('pq.dist', { d: pqCm(a.d) })}</span></div>`
-        : `<div class="pq-fb bad">${a.skipped ? '' : a.d < 1 ? t('pq.wrongD', { d: pqCm(a.d) }) : t('pq.wrongX')}${t(q.ans.length > 1 ? 'pq.rights' : 'pq.right')}: ${where} ${t('pq.marked')}</div>`;
+        : `<div class="pq-fb bad">${a.skipped ? '' : a.other ? t('pq.wrongOther', { x: `<b lang="la">${esc(shortLa(a.other))}</b>` }) : a.d < 1 ? t('pq.wrongD', { d: pqCm(a.d) }) : t('pq.wrongX')}${t(q.ans.length > 1 ? 'pq.rights' : 'pq.right')}: ${where} ${t('pq.marked')}</div>`;
       if (q.kind !== 'point') fb += `<div class="muted small" style="margin-top:4px">${q.ans.map((l) => `<span lang="de">${esc(l.de)}</span>`).join(' · ')}</div>`;
     }
     body = `${close}<div class="stepper"><span class="eyebrow" style="flex:1">${t('pq.title')} · ${pq.k + 1}/${n}</span><span class="muted small">${pq.results.filter((x) => x.ok).length} ✓</span></div>

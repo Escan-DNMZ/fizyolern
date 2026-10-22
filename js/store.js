@@ -138,17 +138,21 @@ export function sanitize(raw) {
 export const looksLikeBackup = (x) => isObj(x) && isObj(x.srs) && isObj(x.days) && (x.settings === undefined || isObj(x.settings));
 
 // ───── Migrationen: laufen einmal pro Stand (auch nach dem Einspielen einer älteren Sicherung) ─────
+// Antworten zu Knochenpunkten, die falsch im Modell lagen: Fehler zählen nicht (Richtige bleiben)
+function clearLmWrong(s, ids) {
+  for (const id of ids) {
+    const q = s.quiz[id];
+    if (q && q.r) { const { lastWrong, okDays, ...rest } = q; s.quiz[id] = { ...rest, w: 0 }; } // kein Eintrag in der Fehlerliste mehr
+    else delete s.quiz[id];
+    for (const d of Object.values(s.days)) if (d.wrong) d.wrong = d.wrong.filter((x) => x !== id);
+  }
+}
 const MIGRATIONS = {
   // „Noktayı bul“: Trochanter minor lag im Modell auf Höhe des Trochanter major. Wer die richtige Stelle angetippt hat,
   // bekam einen Fehler – diese Fehler zählen nicht (auch Iliopsoas-Ansatz, dessen einzige Antwort der Trochanter minor ist).
-  lmTrochMinor2026(s) {
-    for (const id of ['lm:trochanter_minor', 'lm:i:iliopsoas']) {
-      const q = s.quiz[id];
-      if (q && q.r) s.quiz[id] = { ...q, w: 0 };
-      else delete s.quiz[id];
-      for (const d of Object.values(s.days)) if (d.wrong) d.wrong = d.wrong.filter((x) => x !== id);
-    }
-  },
+  lmTrochMinor2026(s) { clearLmWrong(s, ['lm:trochanter_minor', 'lm:i:iliopsoas']); },
+  // SIAI lag im Einschnitt direkt unter der SIAS (Ursprung des M. rectus femoris), Incisura ischiadica major am oberen Rand
+  lmSiai2026(s) { clearLmWrong(s, ['lm:siai', 'lm:o:rectus_femoris', 'lm:incisura_ischiadica_major']); },
   // Fehler-Logik mit lastWrong/okDays: ältere Stände ableiten (nichts löschen).
   // lastWrong = letzter Tag, an dem die Frage in days[].wrong steht, sonst last (wenn die Serie 0 ist);
   // war die letzte Antwort richtig und später als der Fehltag, zählt dieser Tag als ein richtiger Tag.
