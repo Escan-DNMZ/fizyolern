@@ -3,7 +3,7 @@
 Anleitung für Claude (und andere KI-Agenten), die an diesem Repo arbeiten. Vor jeder Änderung lesen.
 
 ## Was das ist
-FizyoLern ist eine offline-fähige Lern-PWA für die Physiotherapie-Ausbildung (VIDACTA Essen) von Escan Dönmez.
+FizyoLern ist eine offline-fähige Lern-PWA für die Physiotherapie-Ausbildung von Escan Dönmez.
 Live: https://escan-dnmz.github.io/fizyolern/ (GitHub Pages, Branch `main`, Root-Ordner).
 Escan nutzt sie täglich auf dem iPhone (Start: 15.10.2026). Die Prüfungen sind auf Deutsch.
 
