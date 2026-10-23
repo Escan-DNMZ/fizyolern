@@ -441,6 +441,7 @@ python tools/bump_sw.py             # after any change, so phones load the new v
 ## Credits
 
 - 3D anatomy models: **BodyParts3D**, © The Database Center for Life Science (DBCLS), licensed CC BY 4.0.
+- Font: **Atkinson Hyperlegible** by the Braille Institute, SIL Open Font License 1.1 (`fonts/OFL.txt`).
 - 3D rendering: [Three.js](https://threejs.org) (MIT).
 - Idea, concept and content: **Escan Dönmez** ([LinkedIn](https://www.linkedin.com/in/escan-donmez/)).
 - Code and design: [Claude Code](https://claude.com/claude-code) by Anthropic.

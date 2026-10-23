@@ -8,8 +8,10 @@ import zlib
 
 OUT = os.path.join(os.path.dirname(__file__), '..', 'icons')
 
-TOP = (20, 184, 166)     # teal-500
-BOTTOM = (15, 118, 110)  # teal-700
+# Thema „Adaçayı“: flaches Salbeigrün, Figur in gebrochenem Weiß
+TOP = (79, 122, 99)
+BOTTOM = (79, 122, 99)
+FG = (247, 250, 246)
 
 
 def seg_dist(px, py, ax, ay, bx, by):
@@ -48,7 +50,7 @@ def make(size):
                     y = (py + (sy + 0.5) / ss) / size
                     hits += inside_figure(x, y)
             a = hits / (ss * ss)
-            row += bytes(round(bg[i] * (1 - a) + 255 * a) for i in range(3))
+            row += bytes(round(bg[i] * (1 - a) + FG[i] * a) for i in range(3))
         rows.append(bytes(row))
     raw = b''.join(rows)
 
