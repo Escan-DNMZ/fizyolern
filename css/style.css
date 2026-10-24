@@ -355,3 +355,5 @@ details.ck-sec[open] > summary::before { transform: rotate(90deg); }
 .ck-lv { min-height: 42px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); font-size: 22px; cursor: pointer; filter: grayscale(.6); opacity: .75; }
 .ck-lv.on { border-color: var(--accent); background: var(--accent-soft); filter: none; opacity: 1; box-shadow: 0 0 0 2px var(--accent) inset; }
 .ck-more { margin-top: 10px; display: grid; gap: 8px; }
+/* Quiz: Punkt liegt hinter dem Knochen */
+.lbl3d.lbl-behind { opacity: .45; }

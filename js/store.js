@@ -163,6 +163,12 @@ const MIGRATIONS = {
       'lm:o:triceps_brachii', 'lm:cavitas_glenoidalis', 'lm:tuberositas_radii', 'lm:i:biceps_brachii', 'lm:basis_ossis_metacarpalis_ii',
       'lm:i:flexor_carpi_radialis', 'lm:i:extensor_carpi_radialis_longus', 'lm:i:quadratus_lumborum']);
   },
+  // Linea aspera in Labium mediale/laterale geteilt (Muskeln dorthin), Tuberculum pubicum nach lateral;
+  // die alte Regel „anderer Punkt näher = falsch“ hat Treffer neben der Symphyse als Fehler gezählt
+  lmLabia2026(s) {
+    clearLmWrong(s, ['lm:tuberculum_pubicum', 'lm:symphysis_pubica', 'lm:o:adductor_longus', 'lm:o:gracilis', 'lm:o:rectus_abdominis', 'lm:linea_aspera', 'lm:o:vastus_medialis',
+      'lm:o:vastus_lateralis', 'lm:o:biceps_femoris', 'lm:i:adductor_longus', 'lm:i:adductor_brevis', 'lm:i:adductor_magnus']);
+  },
   // Fehler-Logik mit lastWrong/okDays: ältere Stände ableiten (nichts löschen).
   // lastWrong = letzter Tag, an dem die Frage in days[].wrong steht, sonst last (wenn die Serie 0 ist);
   // war die letzte Antwort richtig und später als der Fehltag, zählt dieser Tag als ein richtiger Tag.

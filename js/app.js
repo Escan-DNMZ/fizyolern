@@ -1422,7 +1422,9 @@ const pqSetChips = (cur) => `<div class="chips" style="margin-top:8px">${Object.
 // Toleranz in Metern; lange oder flächige Strukturen großzügiger (sy < 1: in der Höhe großzügiger).
 // Tuberculum adductorium und Epicondylus medialis liegen nur ~1,6 cm auseinander → enger.
 // area = Fläche/Loch/Linie: feste Toleranz, nicht durch Nachbarpunkte verkleinert
-const PQ_TOL = { crista_iliaca: { tol: 0.035, area: true }, linea_aspera: { tol: 0.02, sy: 0.2, area: true }, foramen_obturatum: { tol: 0.025, area: true }, acetabulum: { tol: 0.025, area: true },
+const PQ_TOL = { crista_iliaca: { tol: 0.035, area: true }, linea_aspera: { tol: 0.02, sy: 0.2, area: true },
+  // die Lippen der Linea aspera liegen ~1 cm auseinander: eng in der Breite, großzügig in der Höhe
+  labium_mediale_lineae_asperae: { tol: 0.008, sy: 0.3, area: true }, labium_laterale_lineae_asperae: { tol: 0.008, sy: 0.3, area: true }, foramen_obturatum: { tol: 0.025, area: true }, acetabulum: { tol: 0.025, area: true },
   linea_intertrochanterica: { tol: 0.025 }, tuberositas_glutea: { tol: 0.02, sy: 0.5 },
   condylus_medialis_femoris: { tol: 0.022 }, condylus_lateralis_femoris: { tol: 0.022 },
   tuberculum_adductorium: { tol: 0.013 }, epicondylus_medialis_femoris: { tol: 0.013 },
@@ -1497,13 +1499,16 @@ function onQuizTap(hit, ray) {
     if (!best || r.d < best.d) best = { ...r, l };
   }
   if (!hit && !best.ok) { toast(t('pq.tapBone')); return; }
-  // näher an einem anderen Punkt als am gefragten → falsch, und sagen, welcher es war
-  if (best.ok) {
+  // Innerhalb der Toleranz des gefragten Punkts = richtig, auch wenn ein Nachbarpunkt näher liegt.
+  // Nur daneben: liegt der Tipp in der Toleranz eines anderen Punkts, sagen, welcher das war („Bu X“).
+  if (!best.ok) {
+    let near = null;
     for (const o of pq.lms || []) {
       if (q.ans.includes(o)) continue;
-      const r = viewer.judgePoint(o, hit, ray, { ...pqTol(o), tol: 0 });
-      if (r.d < best.d && r.d <= pqTol(o).tol) { best = { ...best, ok: false, other: o }; break; }
+      const r = viewer.judgePoint(o, hit, ray, pqTol(o));
+      if (r.ok && (!near || r.d < near.d)) near = { d: r.d, o };
     }
+    if (near) best = { ...best, other: near.o };
   }
   // knapp daneben, aber so weit herausgezoomt, dass 2 cm kaum ein Fingertipp sind → nicht werten
   if (!best.ok && !best.other && best.d < 0.05 && viewer.pxPer(best.pos, 0.02) < 22) { toast(t('pq.zoom')); return; }

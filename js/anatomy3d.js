@@ -904,9 +904,33 @@ export class Anatomy3D {
     const f = this.focus;
     if (!f || f.kind !== 'quiz') return;
     const tmp = { root: f.marks, labels: [] };
-    this._dot(tmp, pos, color, text, 'lbl-lm', null, r);
+    const dot = this._dot(tmp, pos, color, text, 'lbl-lm', null, r);
+    dot.material.transparent = true;
     f.markLabels.push(...tmp.labels);
     f.labels.push(...tmp.labels);
+    (f.markInfo = f.markInfo || []).push({ dot, label: tmp.labels[0] || null, pos: pos.clone() });
+    this._quizOcclusion(true);
+  }
+
+  // Punkte hinter dem Knochen (von der Kamera aus verdeckt) blass zeichnen – sonst wirkt z. B. die Linea aspera,
+  // als läge sie vorne. Läuft nur im Quiz und nur alle paar Bilder.
+  _quizOcclusion(force = false) {
+    const f = this.focus;
+    if (!f || f.kind !== 'quiz' || !f.markInfo || !f.markInfo.length) return;
+    this._occN = (this._occN || 0) + 1;
+    if (!force && this._occN % 6) return;
+    const ray = new THREE.Raycaster();
+    const cam = this.camera.position;
+    for (const m of f.markInfo) {
+      const dir = m.pos.clone().sub(cam);
+      const dist = dir.length();
+      ray.set(cam, dir.normalize());
+      ray.far = dist;
+      const hit = ray.intersectObjects(f.bones, false)[0];
+      const behind = !!hit && hit.distance < dist - 0.004;
+      m.dot.material.opacity = behind ? 0.3 : 1;
+      if (m.label) m.label.el.classList.toggle('lbl-behind', behind);
+    }
   }
 
   quizClear() {
@@ -917,15 +941,28 @@ export class Anatomy3D {
     this.labels = this.labels.filter((l) => !f.markLabels.includes(l));
     f.labels = f.labels.filter((l) => !f.markLabels.includes(l));
     f.markLabels = [];
+    f.markInfo = [];
   }
 
   // Kamera auf einen Punkt richten, von außen (weg von der Beckenmitte)
+  // Blickrichtung = Außenseite des Knochens an dieser Stelle (Punkt minus Mitte der Knochenpunkte in 3 cm Umkreis):
+  // so dreht sich die Kamera bei Punkten auf der Rückseite (Linea aspera, Spina scapulae) nach hinten
   quizLook(pos) {
     const f = this.focus;
     if (!f || f.kind !== 'quiz') return;
-    const out = pos.clone().sub(f.home.box.getCenter(new THREE.Vector3()));
+    const c = new THREE.Vector3(), v = new THREE.Vector3();
+    let n = 0;
+    for (const b of f.bones) {
+      const a = b.geometry.attributes.position;
+      for (let i = 0; i < a.count; i++) {
+        v.fromBufferAttribute(a, i).applyMatrix4(b.matrixWorld);
+        if (v.distanceTo(pos) < 0.03) { c.add(v); n++; }
+      }
+    }
+    let out = n >= 8 ? pos.clone().sub(c.divideScalar(n)) : pos.clone().sub(f.home.box.getCenter(new THREE.Vector3()));
+    if (out.length() < 0.002) out = pos.clone().sub(f.home.box.getCenter(new THREE.Vector3()));
     out.y *= 0.3;
-    if (Math.abs(out.z) < 0.01) out.z = 0.02;
+    if (Math.abs(out.x) + Math.abs(out.z) < 1e-4) out.z = 0.02;
     out.normalize();
     this.focusBox(new THREE.Box3().setFromCenterAndSize(pos, new THREE.Vector3(0.14, 0.14, 0.14)), 2.4, out);
   }
@@ -1214,6 +1251,7 @@ export class Anatomy3D {
       this.controls.update();
       this.renderer.render(this.scene, this.camera);
       this.updateLabels();
+      this._quizOcclusion();
       requestAnimationFrame(loop);
     };
     loop();
