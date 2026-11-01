@@ -182,6 +182,12 @@ Add to "Exams & Homework": Exam · <Fach> · <topic> · <date>.
 
 ---
 
+## For a whole class (Kurs-Modus)
+
+The same rows also feed the class version: an editor imports the CSV of "FizyoLern Questions" into the local review page **FizyoLern Redaktion** (`node tools/redaktion/server.mjs`, "Entwurf importieren"), a teacher approves them in German, and the app receives them in a course pack. The column **Erklärung TR** may stay empty there: the review page fills the Turkish and English helper texts automatically. See [kurs-modus.md](kurs-modus.md).
+
+---
+
 ## Check that it worked
 - In the app: ⚙️ → **Update now**. The message lists weeks, mistake cards, words and questions.
 - **Lesson notes:** your new lesson appears with its summary, test and terms.

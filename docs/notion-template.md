@@ -115,6 +115,8 @@ New questions without an app update. **This database is the only way new lessons
 
 ## 5. Checkliste – learning goals per subject (optional)
 
+> Kurs-Modus: a class course pack carries the same Checkliste fields (`id`, `fach`, `sec`, `text`, `done`, `date`), so the 📋 screen also works for classmates without Notion. If both exist, both are shown; for the same goal your own Notion version wins. See [kurs-modus.md](kurs-modus.md).
+
 Many teachers hand out a checklist of learning goals for the whole year ("this is what the exam asks"). Put it into Notion as one page per subject; the app then shows a **📋 Checkliste** screen for that subject: which goals were covered in class, how sure you are about each goal (😊 🙂 😕 😵), and quick tests for each goal. Without such a page the feature stays hidden.
 
 The texts stay private: the app reads them only from your Notion on your phone; they are never part of the public app.

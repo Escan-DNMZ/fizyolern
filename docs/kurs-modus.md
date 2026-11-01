@@ -195,9 +195,15 @@ Teams subject folder ──► list new PDFs ──► AI drafts rows ──► 
 |---|---|
 | Pack format, validator, merge into the app | `js/kurs.js`, hooks in `js/private.js`, `js/lessons.js` |
 | Setup screen (link / file), Settings section, "Ödev ekle" | `js/kurs.js` + small hooks in `js/app.js` |
-| Tests (format, merge, "nothing changed without a pack") | `tools/test_kurs.mjs` |
-| Build a pack from the private Notion bundle | `tools/build_kurs.mjs` |
-| Review page with local PDFs / JSON drafts | `tools/redaktion/` (`node tools/redaktion/server.mjs`) |
-| Made-up example pack | `examples/kurs-beispiel.json` |
+| Tests: pack format, install, merge, update | `tools/test_kurs.mjs` |
+| Regression: every existing flow (Notion sync, morning test, mistakes, backup, reverse cards, Checkliste) equals the state before Kurs-Modus, with and without a pack | `tools/test_unchanged.mjs` + `tools/fixtures/unchanged.json` |
+| Build a pack from a private bundle (`fizyolern-private`; no mistakes, vocabulary or Notion links) → `private/kurs/` | `tools/build_kurs.mjs` |
+| Review page with local PDFs / CSV / JSON drafts; data in `private/redaktion/` (gitignored) | `tools/redaktion/` (`node tools/redaktion/server.mjs --beispiel`), tested by `tools/test_redaktion.mjs` |
+| Made-up example pack / example editorial data | `examples/kurs-beispiel.json`, `tools/redaktion/beispiel/` |
+
+Try it locally: serve the repo (`python -m http.server 8765`), open `http://localhost:8765/#/kurs?paket=examples/kurs-beispiel.json`,
+tap "Bu paketi yükle". Remove it again under ⚙️ → Sınıf paketi.
 
 Not done on purpose: no Microsoft app registration, no Graph calls, no CSP change.
+Known gaps: the row field `ck` is stored but the Checkliste still matches questions to goals automatically (as with Notion rows);
+the Teams "Aufgaben" view (e) and Microsoft login (d, f) wait for the school.

@@ -38,6 +38,10 @@ In short:
 - Checkliste – <Subject> (optional, one page per subject; the title must contain "Checkliste"). A line "Fach: <subject>" near the top; "##" headings = sections; to-do items = learning goals (ticked = covered in class). In the goal text: "✅ 14.10" = date covered, "→ Skript 2.4" = reference only, "→ Notu 1" = lesson note number 1 of that subject. The app shows a checklist screen with self-ratings (😊 🙂 😕 😵) and uses only covered goals in the morning test. Without such pages the feature is hidden. Do not copy the teacher's checklist into public files.
 - Subject names used by the app: Anatomie, Physiologie, PT Grundlagen, PT Befund, O/C, Trainingslehre, KMT, Hygiene, PPS.
 
+## Class mode (Kurs-Modus, prototype)
+For classes on school devices without Notion. A teacher-reviewed course pack (JSON, kind "fizyolern-kurs") holds a shared question bank (rows in the same fields as "FizyoLern Questions" plus optional erklEn/antwortEn English helper texts and a "ck" goal id) and the class part (weekly plan, Checkliste, exams). Students open the app at #/kurs (or #/kurs?paket=<address>) and install the pack from a link or file; nothing is installed without confirming. The feature is invisible without a pack, and the personal Notion flow is unchanged. Teachers only see and edit German; TR/EN helper texts are machine-generated and marked auto. Format and plan: https://github.com/Escan-DNMZ/fizyolern/blob/main/docs/kurs-modus.md
+If you help an editor create pack content: produce the same rows as for "FizyoLern Questions" (German learning content); never include teacher names, timetables of real people or private Notion links in public files.
+
 ## Troubleshooting
 - "This doesn't look like a Notion key": the key must start with ntn_ (older keys: secret_). Copy it again without spaces.
 - "Invalid key (401)": the key was deleted or renewed in Notion. Create or copy a new one.
@@ -54,3 +58,4 @@ There is no server and no account. Progress is stored only in the browser on the
 - README (full feature list, screenshots): https://github.com/Escan-DNMZ/fizyolern#readme
 - Notion template: https://github.com/Escan-DNMZ/fizyolern/blob/main/docs/notion-template.md
 - AI setup guide (slides → Notion): https://github.com/Escan-DNMZ/fizyolern/blob/main/docs/ai-setup.md
+- Class mode plan and course pack format: https://github.com/Escan-DNMZ/fizyolern/blob/main/docs/kurs-modus.md

@@ -253,6 +253,7 @@ Much of the first year is homework like *"learn the pelvic landmarks and the hip
 - **The daily report shares only what you choose.** It contains statistics and course names without teachers or rooms. Your own mistake texts and exam topics are only added if you tick the box.
 - **Imported files are checked.** Backup and data files are validated field by field before use, so a broken or manipulated file cannot break the app or inject content.
 - **One app per web address.** Browser storage belongs to the whole address `escan-dnmz.github.io`, so no other website is published from this GitHub account.
+- **Class packs (Kurs-Modus) stay separate.** A pack is stored under its own key on the device and checked field by field; Notion sync never mixes it into your personal data. Removing the pack leaves your progress untouched.
 - **Delete everything:** ⚙️ Settings → *Delete all data on this device* removes progress, the Notion key, the Notion data and the offline files, for example before giving the phone to someone else.
 ---
 
@@ -301,6 +302,16 @@ If the AI can write to Notion (e.g. Claude or ChatGPT with the Notion connector)
 *Tested:* an AI that only had the guide, a sample timetable and nine slides about the knee joint produced a weekly plan and 44 questions. The app's own Notion parser read all of them: 12 key sentences, 14 multiple choice, 5 open questions and 13 terms, a complete new lesson and the right morning tests.
 
 ➡️ **[Step-by-step guide and copy-paste prompts](docs/ai-setup.md)**
+
+## Class mode (Kurs-Modus, prototype)
+
+A version for a whole class on school iPads, **without Notion**. A teacher or editor reviews AI-made questions once per slide deck in German; the app gets them as a **course pack** (shared question bank + the class's weekly plan, Checkliste and exam dates). Plan and design: **[docs/kurs-modus.md](docs/kurs-modus.md)**.
+
+- **Invisible until a pack is installed.** The personal Notion flow and all progress work exactly as before (a regression test compares every existing flow with the state before Kurs-Modus).
+- **Install:** open `…/#/kurs?paket=<address>` (e.g. from a QR code) or `…/#/kurs` and choose the pack file. The app shows class, subjects and question count first; nothing is installed without a tap.
+- **Ödev ekle:** with a pack, students turn facts they must memorise into homework cards (📌 deck).
+- **Editors:** `node tools/build_kurs.mjs --id klasse-1a --name "Klasse 1A"` builds a pack from a private bundle; `node tools/redaktion/server.mjs --beispiel` opens the local review page *FizyoLern Redaktion* (German only, made-up example data). TR/EN helper texts are generated automatically (`FIZYO_KI=anthropic` + `ANTHROPIC_API_KEY` on the editor's computer; never in the repo).
+- **Not built yet (needs the school):** Microsoft login, reading packs and *Aufgaben* from Teams via Graph, CSP entries for Microsoft.
 
 ## Connecting your Notion (step by step)
 
