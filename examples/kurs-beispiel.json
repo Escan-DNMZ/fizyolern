@@ -1,0 +1,227 @@
+{
+ "kind": "fizyolern-kurs",
+ "version": 1,
+ "id": "beispielschule-1a",
+ "built": "2026-11-01T09:00:00Z",
+ "class": {
+  "id": "1a",
+  "name": "Klasse 1A (Beispiel)",
+  "year": 1
+ },
+ "bank": {
+  "id": "jahr1-beispiel",
+  "rows": [
+   {
+    "h": "216c2c340f7af8e2",
+    "auto": true,
+    "created": "2026-10-28T08:00:00Z",
+    "typ": "Kern",
+    "fach": "Trainingslehre",
+    "lektion": "Kraft – Beispiel",
+    "frage": "Die Maximalkraft ist die Basisfähigkeit für Schnellkraft, Reaktivkraft und Kraftausdauer.",
+    "erkl": "Maksimal kuvvet; çabuk kuvvet, reaktif kuvvet ve kuvvette dayanıklılığın temelidir.",
+    "erklEn": "Maximal strength is the basis for speed strength, reactive strength and strength endurance.",
+    "ck": "ck:8fb362f130ad983a"
+   },
+   {
+    "h": "f2d9e84cd2181986",
+    "auto": true,
+    "created": "2026-10-28T08:00:00Z",
+    "typ": "MCQ",
+    "fach": "Trainingslehre",
+    "lektion": "Kraft – Beispiel",
+    "frage": "Welche Kraftfähigkeit gilt als Basis für die anderen Kraftfähigkeiten?",
+    "antwort": "Maximalkraft",
+    "ablenker": [
+     "Schnellkraft",
+     "Reaktivkraft",
+     "Kraftausdauer"
+    ],
+    "erkl": "Maksimal kuvvet diğer kuvvet türlerinin temelidir.",
+    "erklEn": "Maximal strength is the basis of the other strength abilities.",
+    "ck": "ck:8fb362f130ad983a"
+   },
+   {
+    "h": "5a614b7a2c355b72",
+    "auto": true,
+    "created": "2026-10-28T08:00:00Z",
+    "typ": "MCQ",
+    "fach": "Trainingslehre",
+    "lektion": "Kraft – Beispiel",
+    "frage": "Bei welcher Arbeitsweise verlängert sich der Muskel unter Spannung?",
+    "antwort": "exzentrisch",
+    "ablenker": [
+     "konzentrisch",
+     "isometrisch",
+     "auxotonisch"
+    ],
+    "erkl": "Eksantrik çalışmada kas gerilim altında uzar.",
+    "erklEn": "In eccentric work the muscle lengthens under tension."
+   },
+   {
+    "h": "6fc126eac232fd31",
+    "auto": true,
+    "created": "2026-10-28T08:00:00Z",
+    "typ": "Offen",
+    "fach": "Trainingslehre",
+    "lektion": "Kraft – Beispiel",
+    "frage": "Erklären Sie den Dehnungs-Verkürzungs-Zyklus an einem Beispiel.",
+    "antwort": "Beim Dehnungs-Verkürzungs-Zyklus wird der Muskel zuerst exzentrisch gedehnt und unmittelbar danach konzentrisch verkürzt. Ein Beispiel ist der Niedersprung.",
+    "kw": [
+     "exzentrisch",
+     "konzentrisch",
+     "Niedersprung"
+    ]
+   },
+   {
+    "h": "40f64ddbc47d3c38",
+    "auto": true,
+    "created": "2026-10-28T08:00:00Z",
+    "typ": "Wort",
+    "fach": "Trainingslehre",
+    "lektion": "Kraft – Beispiel",
+    "frage": "die Kraftausdauer",
+    "antwort": "kuvvette dayanıklılık",
+    "antwortEn": "strength endurance",
+    "erkl": "Kraftausdauer braucht man beim Treppensteigen."
+   },
+   {
+    "h": "5bb233e653bd7147",
+    "auto": true,
+    "created": "2026-10-28T08:00:00Z",
+    "typ": "Wort",
+    "fach": "Trainingslehre",
+    "lektion": "Kraft – Beispiel",
+    "frage": "auf|wärmen",
+    "antwort": "ısınmak",
+    "antwortEn": "to warm up",
+    "erkl": "Vor dem Training wärmen wir uns auf."
+   },
+   {
+    "h": "acbfd93f1ca5a7a4",
+    "auto": true,
+    "created": "2026-10-28T08:00:00Z",
+    "typ": "MCQ",
+    "fach": "Hygiene",
+    "lektion": "Händehygiene – Beispiel",
+    "frage": "Wie lange dauert die hygienische Händedesinfektion mindestens?",
+    "antwort": "30 Sekunden",
+    "ablenker": [
+     "5 Sekunden",
+     "3 Minuten",
+     "10 Minuten"
+    ],
+    "erkl": "Hijyenik el dezenfeksiyonu en az 30 saniye sürer.",
+    "erklEn": "Hygienic hand disinfection takes at least 30 seconds.",
+    "ck": "ck:bcf9a924a4259520"
+   },
+   {
+    "h": "557d88b6a959a59a",
+    "auto": true,
+    "created": "2026-10-28T08:00:00Z",
+    "typ": "Kern",
+    "fach": "Hygiene",
+    "lektion": "Händehygiene – Beispiel",
+    "frage": "Vor und nach jedem Patientenkontakt werden die Hände desinfiziert.",
+    "erkl": "Her hasta temasından önce ve sonra eller dezenfekte edilir.",
+    "erklEn": "Hands are disinfected before and after every patient contact.",
+    "ck": "ck:bcf9a924a4259520"
+   }
+  ]
+ },
+ "plan": {
+  "weeks": [
+   {
+    "kw": 45,
+    "range": "02.–06.11.2026",
+    "from": "2026-11-02",
+    "to": "2026-11-08",
+    "days": {
+     "1": {
+      "kurse": [
+       "Trainingslehre"
+      ],
+      "test": [
+       "Trainingslehre"
+      ],
+      "note": ""
+     },
+     "2": {
+      "kurse": [
+       "Hygiene"
+      ],
+      "test": [
+       "Hygiene",
+       "Trainingslehre"
+      ],
+      "note": ""
+     },
+     "3": {
+      "kurse": [
+       "Trainingslehre"
+      ],
+      "test": [
+       "Trainingslehre"
+      ],
+      "note": "",
+      "end": "13:30"
+     },
+     "4": {
+      "kurse": [
+       "Hygiene"
+      ],
+      "test": [
+       "Hygiene"
+      ],
+      "note": ""
+     },
+     "5": {
+      "kurse": [],
+      "test": [],
+      "note": "Beispiel: Selbststudium"
+     }
+    }
+   }
+  ]
+ },
+ "ck": [
+  {
+   "id": "ck:8fb362f130ad983a",
+   "fach": "Trainingslehre",
+   "sec": "Kraft",
+   "text": "Kraftfähigkeiten unterscheiden",
+   "done": true,
+   "date": "2026-10-28"
+  },
+  {
+   "id": "ck:b8c9b423a1e78ab5",
+   "fach": "Trainingslehre",
+   "sec": "Kraft",
+   "text": "Dehnungs-Verkürzungs-Zyklus erklären",
+   "done": false,
+   "date": ""
+  },
+  {
+   "id": "ck:bcf9a924a4259520",
+   "fach": "Hygiene",
+   "sec": "Händehygiene",
+   "text": "Hygienische Händedesinfektion durchführen",
+   "done": true,
+   "date": "2026-10-27"
+  }
+ ],
+ "exams": [
+  {
+   "typ": "Prüfung",
+   "fach": "Trainingslehre",
+   "topic": "Kraft (Beispiel)",
+   "date": "2026-11-20"
+  },
+  {
+   "typ": "Hausaufgabe",
+   "fach": "Hygiene",
+   "topic": "Plakat Händehygiene (Beispiel)",
+   "date": "2026-11-06"
+  }
+ ]
+}

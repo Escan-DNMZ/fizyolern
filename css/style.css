@@ -357,3 +357,11 @@ details.ck-sec[open] > summary::before { transform: rotate(90deg); }
 .ck-more { margin-top: 10px; display: grid; gap: 8px; }
 /* Quiz: Punkt liegt hinter dem Knochen */
 .lbl3d.lbl-behind { opacity: .45; }
+
+/* ───── Kurs-Modus (js/kurs.js): nur auf #/kurs ───── */
+.kform label { display: block; margin: 10px 0 4px; }
+.kform textarea { min-height: 70px; }
+.kform select, .kform input[type=url] {
+  width: 100%; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--text);
+  font: inherit; font-size: 16px; padding: 10px 12px;
+}

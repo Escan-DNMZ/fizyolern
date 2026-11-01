@@ -38,7 +38,9 @@ export function cleanPrivate(obj) {
       ...(f.a !== undefined ? { a: str(f.a, 2000) } : {}), ...(f.tr !== undefined ? { tr: str(f.tr, 2000) } : {}),
     })).filter((f) => f.id),
     gw: objs(obj.gw, 5000).map((w) => ({ id: str(w.id, 300), de: str(w.de, 300), tr: str(w.tr, 500), ...(w.en ? { en: str(w.en, 500) } : {}), ex: str(w.ex, 1000), cat: str(w.cat, 100), stufe: str(w.stufe, 50), next: date(w.next) })).filter((w) => w.id && w.de),
-    lessonRows: objs(obj.lessonRows, 5000).filter((r) => /^[0-9a-f]{16}$/.test(r.h)).map((r) => ({ h: r.h, fach: str(r.fach, 100), lektion: str(r.lektion, 200), typ: str(r.typ, 20), frage: str(r.frage), antwort: str(r.antwort), ablenker: strs(r.ablenker, 1000).slice(0, 3), erkl: str(r.erkl), kw: strs(r.kw, 200).slice(0, 20), ...(iso(r.created) ? { created: r.created } : {}) })),
+    lessonRows: objs(obj.lessonRows, 20000).filter((r) => /^[0-9a-f]{16}$/.test(r.h)).map((r) => ({ h: r.h, fach: str(r.fach, 100), lektion: str(r.lektion, 200), typ: str(r.typ, 20), frage: str(r.frage), antwort: str(r.antwort), ablenker: strs(r.ablenker, 1000).slice(0, 3), erkl: str(r.erkl), kw: strs(r.kw, 200).slice(0, 20), ...(iso(r.created) ? { created: r.created } : {}),
+      // nur Kurspaket (js/kurs.js): englische Hilfstexte und Checklisten-Ziel – fehlen bei Notion-Zeilen
+      ...(r.erklEn ? { erklEn: str(r.erklEn) } : {}), ...(r.antwortEn ? { antwortEn: str(r.antwortEn, 500) } : {}), ...(typeof r.ck === 'string' && /^ck:[0-9a-f]{16}$/.test(r.ck) ? { ck: r.ck } : {}) })),
     exams: objs(obj.exams, 500).map((e) => ({ typ: e.typ === 'Sınav' ? 'Sınav' : 'Ödev', fach: str(e.fach, 100), topic: str(e.topic, 300), date: date(e.date), done: !!e.done, note: str(e.note, 500) })).filter((e) => e.date),
     // Checklisten-Lernziele (Texte der Lehrkraft – nur auf dem Gerät)
     ck: objs(obj.ck, 2000).filter((c) => typeof c.id === 'string' && /^ck:[0-9a-f]{16}$/.test(c.id)).map((c) => ({
@@ -60,16 +62,58 @@ function load() {
 
 let data = load(); // nach den Prüffunktionen (sonst Zugriff vor der Definition)
 
-export function getPrivate() { return data; }
+// ───── Kurs-Modus (js/kurs.js, docs/kurs-modus.md): Klassenteil eines Kurspakets als zweite Ebene ─────
+// Ohne Kurspaket ist kurs = null und view === data – alles verhält sich genau wie vorher.
+// Notion-Sync und „Özel veriler“ arbeiten nur mit der eigenen Ebene (ownPrivate), Kursdaten landen nie in fizyo.private.
+export const KURS_KEY = 'fizyo.kurs';
+function loadKurs() {
+  try {
+    const raw = localStorage.getItem(KURS_KEY);
+    const k = raw && JSON.parse(raw);
+    if (isObj(k) && isObj(k.layer)) return cleanPrivate(k.layer);
+  } catch (e) { /* kaputte Daten: ohne Kurspaket weiter */ }
+  return null;
+}
+let kurs = loadKurs();
+// Beide Ebenen zusammen: eigene Notion-Daten haben Vorrang (Plan, Wörter, Links), Fragen/Checkliste/Termine kommen dazu
+export function mergeLayers(own, k) {
+  if (!k) return own;
+  if (!own) return k;
+  const seen = new Set();
+  const ownWeeks = (own.weeks && own.weeks.length) || own.week;
+  return {
+    ...own,
+    lessonRows: [...k.lessonRows, ...own.lessonRows], // spätere Zeilen gewinnen bei gleicher Frage → eigene
+    ...(ownWeeks ? {} : { week: k.week, weeks: k.weeks }),
+    fehler: [...own.fehler, ...k.fehler],
+    exams: [...own.exams, ...k.exams.filter((e) => !own.exams.some((o) => o.date === e.date && o.fach === e.fach && o.topic === e.topic))],
+    ck: [...own.ck, ...k.ck].filter((c) => !seen.has(c.id) && seen.add(c.id)),
+  };
+}
+let view = mergeLayers(data, kurs);
+const remerge = () => { view = mergeLayers(data, kurs); };
+
+// was die App sieht (mit Kurspaket: beide Ebenen) – ohne Kurspaket genau das eigene Objekt
+export function getPrivate() { return view; }
+// nur die eigene Ebene (Notion / importierte Datei)
+export function ownPrivate() { return data; }
+export const kursLayer = () => kurs;
+// von js/kurs.js aufgerufen (null = Kurspaket entfernt)
+export function setKursLayer(obj) {
+  kurs = obj ? cleanPrivate(obj) : null;
+  remerge();
+}
 
 // gibt false zurück, wenn der Speicher voll ist (die Daten gelten dann nur bis zum Neuladen)
 export function setPrivate(obj) {
   data = cleanPrivate(obj);
+  remerge();
   try { localStorage.setItem(KEY, JSON.stringify(data)); return true; } catch (e) { return false; }
 }
 
 export function clearPrivate() {
   data = null;
+  remerge();
   try { localStorage.removeItem(KEY); } catch (e) { /* ignorieren */ }
 }
 
@@ -128,14 +172,14 @@ export function cardFront(seg) {
 }
 
 // Notion-✗-Liste: echte Fehler und Hausaufgaben („Ezber kartları“) getrennt
-export const fehlerList = () => ((data && data.fehler) || []).filter((f) => !f.odev);
-export const odevList = () => ((data && data.fehler) || []).filter((f) => f.odev);
-export const ckList = () => ((data && data.ck) || []);
-export const notionLink = (lessonId) => data && data.notion && data.notion[lessonId];
+export const fehlerList = () => ((view && view.fehler) || []).filter((f) => !f.odev);
+export const odevList = () => ((view && view.fehler) || []).filter((f) => f.odev);
+export const ckList = () => ((view && view.ck) || []);
+export const notionLink = (lessonId) => view && view.notion && view.notion[lessonId];
 const isoDate = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 
 // Alle bekannten Wochen (neue Notion-Synchronisierung: data.weeks; ältere Daten: nur data.week)
-const allWeeks = () => (data ? (data.weeks && data.weeks.length ? data.weeks : data.week ? [data.week] : []) : []);
+const allWeeks = () => (view ? (view.weeks && view.weeks.length ? view.weeks : view.week ? [view.week] : []) : []);
 
 // Woche für ein Datum: die Woche, die das Datum enthält; sonst die nächste zukünftige; sonst die letzte
 export function weekFor(date = new Date()) {
@@ -144,7 +188,7 @@ export function weekFor(date = new Date()) {
   return ws.find((w) => w.from <= iso && iso <= w.to)
     || ws.filter((w) => w.from > iso).sort((a, b) => a.from.localeCompare(b.from))[0]
     || ws.slice().sort((a, b) => b.from.localeCompare(a.from))[0]
-    || (data && data.week) || null;
+    || (view && view.week) || null;
 }
 export const week = () => weekFor(new Date());
 
@@ -159,7 +203,7 @@ export function todayPlan(date = new Date()) {
 // Ab wann der Rückweg (Dönüş yolu) angeboten wird, in Minuten seit Mitternacht; null = heute nicht.
 // Mit Wochenplan: nur an Tagen mit Unterricht, Ende aus der Tabelle (day.end), sonst die eingestellte Endzeit.
 // Ohne Plan für heute: Montag–Freitag mit der eingestellten Endzeit. after = Minuten nach dem Unterricht.
-export function donusStart(plan, { classEnd = '15:00', donusAfter = 0 } = {}, date = new Date(), hasPlan = !!(data && allWeeks().length)) {
+export function donusStart(plan, { classEnd = '15:00', donusAfter = 0 } = {}, date = new Date(), hasPlan = !!(view && allWeeks().length)) {
   const toMin = (s) => +s.slice(0, 2) * 60 + +s.slice(3);
   if (plan) {
     if (!(plan.kurse || []).length) return null;
@@ -179,7 +223,7 @@ export function tomorrowPlan(date = new Date()) {
 
 // ───── Prüfungen & Hausaufgaben (Notion-Seite „Sınav & Ödev Takibi“) ─────
 // { typ: 'Sınav' | 'Ödev', fach, topic, date: 'YYYY-MM-DD', done, note }
-export const examList = () => ((data && data.exams) || []);
+export const examList = () => ((view && view.exams) || []);
 // Tage bis zu einem Datum (heute = 0)
 export function daysUntil(iso, now = new Date()) {
   const t = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());

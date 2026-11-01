@@ -5,7 +5,7 @@
 //  • Keine Seiten-IDs im öffentlichen Code: Seiten werden per Suche gefunden – die Integration
 //    sieht nur, was in Notion ausdrücklich mit ihr geteilt wurde.
 //  • Die Content-Security-Policy in index.html erlaubt Verbindungen nur zu 'self' und api.notion.com.
-import { setPrivate, getPrivate, cleanSegments, cleanText, cardFront } from './private.js';
+import { setPrivate, ownPrivate, cleanSegments, cleanText, cardFront } from './private.js';
 import { t } from './i18n.js';
 import './strings.js';
 
@@ -477,7 +477,8 @@ export async function syncFromNotion({ faecher, lessons }) {
   ]);
   if (!planPage && !db && !dersler && !sorular && !sinav) throw new Error(t('nt.nothing'));
 
-  const old = getPrivate() || {};
+  // nur die eigene Ebene: Daten eines Kurspakets (js/kurs.js) dürfen nie in fizyo.private landen
+  const old = ownPrivate() || {};
   const result = { kind: 'fizyolern-private', version: 2, source: 'notion', syncedAt: new Date().toISOString() };
   const report = [];
 

@@ -22,17 +22,18 @@ function findLesson(list, fach, lektion) {
 // Eine Notion-Zeile in einen Lektionseintrag umwandeln (null = unvollständig)
 export function rowToItem(r) {
   switch (r.typ) {
+    // erklEn/antwortEn gibt es nur in Kurspaketen (js/kurs.js) – Notion-Zeilen bleiben wie bisher
     case 'Kern':
-      return r.frage ? { de: r.frage, tr: r.erkl || r.antwort || '' } : null;
+      return r.frage ? { de: r.frage, tr: r.erkl || r.antwort || '', ...(r.erklEn ? { en: r.erklEn } : {}) } : null;
     case 'MCQ': {
       const o = [r.antwort, ...r.ablenker].map((s) => (s || '').trim()).filter(Boolean);
       if (o.length !== 4 || new Set(o).size !== 4 || !r.frage) return null;
-      return { id: 'N:' + r.h, q: r.frage, o, x: r.erkl || '' };
+      return { id: 'N:' + r.h, q: r.frage, o, x: r.erkl || '', ...(r.erklEn ? { xEn: r.erklEn } : {}) };
     }
     case 'Offen':
       return r.frage && r.kw.length ? { id: 'NO:' + r.h, q: r.frage, a: r.antwort || '', kw: r.kw } : null;
     case 'Wort':
-      return r.frage && r.antwort ? { de: r.frage, tr: r.antwort, ex: r.erkl || '' } : null;
+      return r.frage && r.antwort ? { de: r.frage, tr: r.antwort, ex: r.erkl || '', ...(r.antwortEn ? { en: r.antwortEn } : {}) } : null;
     default:
       return null;
   }

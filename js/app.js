@@ -6,7 +6,7 @@ import { GRUNDWORTSCHATZ, BASE_VOCAB } from './data/vocab.js';
 import { OPEN } from './data/questions.js';
 import { LESSONS, FAECHER, refreshLessons } from './lessons.js';
 import { cleanSegments, cleanText, cardFront } from './private.js';
-import { NOTION_URL, getPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, odevList, notionLink, week, todayPlan, tomorrowPlan, upcoming, examFaecher, donusStart, HHMM } from './private.js';
+import { NOTION_URL, getPrivate, ownPrivate, setPrivate, clearPrivate, loadLocalDevFile, fehlerList, odevList, notionLink, week, todayPlan, tomorrowPlan, upcoming, examFaecher, donusStart, HHMM } from './private.js';
 import { getToken, setToken, clearToken, looksLikeToken, syncFromNotion } from './notion.js';
 import { renderReport } from './report.js';
 import { containsFuzzy } from './fuzzy.js';
@@ -22,6 +22,8 @@ import { initBefund, renderCases } from './befund.js';
 import { renderChecklist, ckFaecher, hasChecklist, summary as ckSummary } from './checkliste.js';
 import { sayBtn } from './speech.js';
 import { reverseCards, findReverse, partsRating } from './reverse.js';
+// Kurs-Modus: ohne installiertes Kurspaket unsichtbar (nur über den Link #/kurs erreichbar)
+import { renderKurs, kursActive, kursMeta, autoUpdateKurs } from './kurs.js';
 import { buildQuiz, quizCategories, lessonMcq, muscleQuestions, boneQuestions, jointQuestions, jointDetailQuestions, prepare, shuffle, weakTopics, muscleLevel, romUnlocked, weight, wpick, kursFaecher } from './quizgen.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -201,6 +203,7 @@ const routes = {
   deneme: { title: 'route.deneme', tab: 'test', render: renderMock, back: '#/test' },
   vaka: { title: 'route.vaka', tab: 'test', render: renderCases, back: 'history' },
   sozlu: { title: 'route.sozlu', tab: 'sorular', render: renderOral, back: '#/sorular' },
+  kurs: { title: 'route.kurs', tab: null, render: (args, params) => renderKurs(view, args, params, { toast }), back: 'history' },
 };
 
 function navigate() {
@@ -319,6 +322,8 @@ function renderToday() {
     </div>` : ''}
 
     ${ckFaecher().map((f) => { const c = ckSummary(f); return `<a class="card row" href="#/ck/${encodeURIComponent(f)}" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">${t('ck.eyebrow')}</div><h2 lang="de">${esc(f)}</h2><div class="muted small">${t('ck.doneOf', { a: c.done, b: c.total })} · 😊 ${c.good} · 😕/😵 ${c.weak}</div></span><span class="chev">›</span></a>`; }).join('')}
+
+    ${kursActive() ? `<a class="card row" href="#/kurs/odev" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">🎓 <span lang="de">${esc(kursMeta().class.name)}</span></div><h2>${t('kurs.odevAdd')}</h2><div class="muted small">${t('kurs.todaySub')}</div></span><span class="chev">›</span></a>` : ''}
 
     ${LESSONS.length ? `<a class="card row" href="#/dersler" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">${t('today.fromNotion')}</div><h2>${t('today.lessonNotes')}</h2><div class="muted small">${t('today.lessonNotesSub', { n: LESSONS.length })}</div></span><span class="chev">›</span></a>` : ''}
 
@@ -1712,10 +1717,12 @@ function renderSettings() {
       <button class="btn ghost" id="exportBtn">${t('set.export')}</button>
       <label class="btn ghost">${t('set.import')}<input type="file" id="importFile" accept="application/json" hidden></label>
     </div>
+    ${kursActive() ? `<div class="section-title">${t('kurs.eyebrow')}</div>
+    <a class="card row" href="#/kurs" style="margin-top:0;text-decoration:none;color:inherit"><span class="grow"><b lang="de">${esc(kursMeta().class.name)}</b><div class="muted small">${t('kurs.settingsSub')}</div></span><span class="chev">›</span></a>` : ''}
     <div class="section-title">${t('set.notion')}</div>
     <div class="card small" style="margin-top:0">
       ${getToken()
-        ? `${t('set.connected')} · ${getPrivate() && getPrivate().syncedAt ? t('set.lastSync', { d: esc(new Date(getPrivate().syncedAt).toLocaleString(locale())) }) : t('set.neverSync')}
+        ? `${t('set.connected')} · ${ownPrivate() && ownPrivate().syncedAt ? t('set.lastSync', { d: esc(new Date(ownPrivate().syncedAt).toLocaleString(locale())) }) : t('set.neverSync')}
            <div class="grid2" style="margin-top:10px"><button class="btn" id="nSync">${t('set.syncNow')}</button><button class="btn danger" id="nDisconnect">${t('set.disconnect')}</button></div>`
         : `${t('set.notionInfo')}
            <input type="password" id="nToken" placeholder="ntn_… (Notion Internal Integration Secret)" autocomplete="off" autocapitalize="off" spellcheck="false" style="margin-top:10px">
@@ -1724,10 +1731,10 @@ function renderSettings() {
     </div>
     <div class="section-title">${t('set.private')}</div>
     <p class="muted small" style="padding:0 4px">${t('set.privateNote')}</p>
-    <div class="card small" style="margin-top:0">${getPrivate() ? `${t('set.loaded', { kw: esc(week()?.kw ?? '–'), n: fehlerList().length })}${odevList().length ? t('set.odevN', { n: odevList().length }) : ''}` : t('set.notLoaded')}</div>
+    <div class="card small" style="margin-top:0">${ownPrivate() ? `${t('set.loaded', { kw: esc(week()?.kw ?? '–'), n: fehlerList().length })}${odevList().length ? t('set.odevN', { n: odevList().length }) : ''}` : t('set.notLoaded')}</div>
     <div class="grid2">
       <label class="btn ghost">${t('set.loadPrivate')}<input type="file" id="privFile" accept="application/json,.json" hidden></label>
-      <button class="btn plain" id="privClear" ${getPrivate() ? '' : 'disabled'}>${t('set.remove')}</button>
+      <button class="btn plain" id="privClear" ${ownPrivate() ? '' : 'disabled'}>${t('set.remove')}</button>
     </div>
     <div class="section-title">${t('set.other')}</div>
     <button class="btn danger block" id="resetBtn">${t('set.reset')}</button>
@@ -1808,7 +1815,7 @@ function renderSettings() {
     if (!confirm(t('set.confirmDisc'))) return;
     clearToken();
     // auch die aus Notion gelesenen Daten (Plan, Fehler, Ödev, Prüfungen) vom Gerät löschen?
-    if (getPrivate() && confirm(t('set.confirmDiscData'))) { clearPrivate(); refreshLessons(); }
+    if (ownPrivate() && confirm(t('set.confirmDiscData'))) { clearPrivate(); refreshLessons(); }
     toast(t('set.keyDeleted'));
     renderSettings();
   });
@@ -1860,12 +1867,19 @@ loadLocalDevFile().then((loaded) => { if (loaded) { refreshLessons(); if (curren
 
 // Beim Start automatisch aus Notion aktualisieren (höchstens alle 3 Stunden, still im Hintergrund)
 if (getToken() && navigator.onLine) {
-  const last = getPrivate() && getPrivate().syncedAt ? Date.parse(getPrivate().syncedAt) : 0;
+  const last = ownPrivate() && ownPrivate().syncedAt ? Date.parse(ownPrivate().syncedAt) : 0;
   if (Date.now() - last > 3 * 3600 * 1000) {
     syncFromNotion({ faecher: FAECHER, lessons: LESSONS })
       .then(() => { refreshLessons(); toast(t('set.synced')); if (['bugun', 'kartlar', 'dersler'].includes(current)) navigate(); })
       .catch(() => { /* offline oder Token ungültig – alte Daten bleiben */ });
   }
+}
+
+// Kurspaket: neuere Fassung von der Update-Adresse holen (höchstens alle 3 Stunden, still; ohne Paket nichts)
+if (kursActive() && navigator.onLine) {
+  autoUpdateKurs()
+    .then((changed) => { if (changed) { toast(t('kurs.updated')); if (['bugun', 'kartlar', 'dersler'].includes(current)) navigate(); } })
+    .catch(() => { /* offline oder ungültig – altes Paket bleibt */ });
 }
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
