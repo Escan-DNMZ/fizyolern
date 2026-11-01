@@ -1,0 +1,129 @@
+{
+ "deck": {
+  "id": "kraft-beispiel-a1b2c3",
+  "datei": "",
+  "fach": "Trainingslehre",
+  "lektion": "Kraft – Teil 2 (Beispiel)",
+  "erstellt": "2026-10-30T09:12:00.000Z"
+ },
+ "klassen": [
+  "1a",
+  "1b"
+ ],
+ "rows": [
+  {
+   "id": "bb894df235666336",
+   "quelle": "Folie 7",
+   "hinweis": "",
+   "ck": "ck:4c459c34cc9fc93f",
+   "ablenker": [
+    "Schnellkraft",
+    "Reaktivkraft",
+    "Kraftausdauer"
+   ],
+   "kw": [],
+   "antwort": "Maximalkraft",
+   "erkl": "Maksimal kuvvet diğer kuvvet türlerinin temelidir.",
+   "status": "ok",
+   "auto": true,
+   "uebersetzung": "ok",
+   "typ": "MCQ",
+   "frage": "Welche Kraftfähigkeit gilt als Basis für die anderen Kraftfähigkeiten?",
+   "erklEn": "Maximal strength is the basis of the other strength abilities.",
+   "deHash": "14ab95901d561d09"
+  },
+  {
+   "id": "fc107589e8404f2b",
+   "quelle": "Folie 12",
+   "hinweis": "",
+   "ck": "ck:1a62bc3141ea9802",
+   "ablenker": [],
+   "kw": [
+    "exzentrisch",
+    "konzentrisch",
+    "Niedersprung"
+   ],
+   "antwort": "Beim Dehnungs-Verkürzungs-Zyklus wird der Muskel zuerst exzentrisch gedehnt und unmittelbar danach konzentrisch verkürzt. Ein Beispiel ist der Niedersprung.",
+   "erkl": "Kas önce eksantrik gerilir, hemen ardından konsantrik kısalır (ör. derinlik sıçraması).",
+   "status": "neu",
+   "auto": true,
+   "uebersetzung": "ok",
+   "typ": "Offen",
+   "frage": "Erklären Sie den Dehnungs-Verkürzungs-Zyklus an einem Beispiel.",
+   "erklEn": "The muscle is first stretched eccentrically, then shortened concentrically (e.g. drop jump).",
+   "deHash": "f9d7a01112556a73"
+  },
+  {
+   "id": "be60c14d93e31a8f",
+   "quelle": "Folie 14",
+   "hinweis": "Auf der Folie steht 5 %, Lehrbücher nennen 5–10 %.",
+   "ck": "ck:fe9ec6951066c03f",
+   "ablenker": [
+    "unter 15 %",
+    "unter 30 %",
+    "unter 50 %"
+   ],
+   "kw": [],
+   "antwort": "unter 5 %",
+   "erkl": "…",
+   "status": "neu",
+   "auto": true,
+   "uebersetzung": "ok",
+   "typ": "MCQ",
+   "frage": "Ab welchem Kraftdefizit gilt ein Athlet als „gut trainiert“ (erfundenes Beispiel)?",
+   "erklEn": "…",
+   "deHash": "ef1252a50c66a57a"
+  },
+  {
+   "id": "6c87308488824c4c",
+   "quelle": "Folie 9",
+   "hinweis": "",
+   "ck": "",
+   "ablenker": [],
+   "kw": [],
+   "antwort": "",
+   "erkl": "Kuvvette dayanıklılık, kuvvet performansını uzun süre tekrarlayabilme yeteneğidir.",
+   "status": "neu",
+   "auto": true,
+   "uebersetzung": "ok",
+   "typ": "Kern",
+   "frage": "Die Kraftausdauer ist die Fähigkeit, Kraftleistungen über längere Zeit zu wiederholen.",
+   "erklEn": "Strength endurance is the ability to repeat strength efforts over a longer time.",
+   "deHash": "33c577ad0a9714d8"
+  },
+  {
+   "id": "6df59800445344f5",
+   "quelle": "Folie 9",
+   "hinweis": "",
+   "ck": "",
+   "ablenker": [],
+   "kw": [],
+   "antwort": "kuvvette dayanıklılık",
+   "erkl": "Für das Treppensteigen braucht man Kraftausdauer.",
+   "status": "neu",
+   "auto": true,
+   "uebersetzung": "ok",
+   "typ": "Wort",
+   "frage": "die Kraftausdauer",
+   "antwortEn": "strength endurance",
+   "deHash": "c2248129c6e509db"
+  },
+  {
+   "id": "de2e431d8d1e10d8",
+   "quelle": "Folie 2",
+   "hinweis": "",
+   "ck": "",
+   "ablenker": [],
+   "kw": [],
+   "antwort": "kuvvet",
+   "erkl": "",
+   "status": "geloescht",
+   "auto": true,
+   "uebersetzung": "ok",
+   "typ": "Wort",
+   "frage": "die Kraft",
+   "antwortEn": "strength",
+   "deHash": "9a493827d5a0130e"
+  }
+ ]
+}

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>FizyoLern Redaktion</title>
+  <link rel="stylesheet" href="/redaktion.css">
+</head>
+<body>
+  <header class="top">
+    <b>🌿 FizyoLern Redaktion</b>
+    <span class="pill" id="kiPill">…</span>
+    <span class="sp"></span>
+    <span class="muted" id="topNote">Nur auf diesem Rechner · Schüler sehen nur Freigegebenes</span>
+    <button class="btn" id="publish">Freigeben &amp; veröffentlichen</button>
+  </header>
+  <div id="meldung" class="meldung" hidden></div>
+
+  <main class="wrap">
+    <!-- links: Foliensätze -->
+    <section class="card">
+      <h3><span class="num">1</span>Neue Folien</h3>
+      <div id="folien"></div>
+      <h3 style="margin-top:18px">Entwürfe</h3>
+      <div id="decks"></div>
+      <details class="import">
+        <summary>Entwurf importieren (CSV/JSON)</summary>
+        <label>Fach <select id="impFach"></select></label>
+        <label>Lektion <input id="impLektion" placeholder="z. B. Kraft – Teil 2"></label>
+        <label>CSV aus der KI (Format wie in docs/ai-setup.md) oder JSON
+          <textarea id="impText" rows="6" placeholder="Frage,Typ,Fach,Lektion,Antwort,Ablenker 1,…"></textarea></label>
+        <button class="btn ghost" id="impBtn">Importieren</button>
+      </details>
+    </section>
+
+    <!-- Mitte: Entwürfe prüfen -->
+    <section class="card">
+      <h3><span class="num">2</span><span id="midTitle">Entwürfe prüfen</span></h3>
+      <div class="filter" id="filter">
+        <button data-f="neu" class="on">Zu prüfen</button><button data-f="ok">Freigegeben</button><button data-f="geloescht">Gelöscht</button><button data-f="">Alle</button>
+      </div>
+      <div id="rows"><p class="muted">Links einen Foliensatz wählen.</p></div>
+    </section>
+
+    <!-- rechts: Klassen und Zahlen -->
+    <aside>
+      <section class="card">
+        <h3><span class="num">3</span>Für welche Klassen?</h3>
+        <div id="klassen"><p class="muted">Erst einen Foliensatz wählen.</p></div>
+        <p class="muted small">Gleiche Fragen für alle Klassen eines Jahrgangs. Plan, Checkliste und Termine bleiben pro Klasse.</p>
+      </section>
+      <section class="card">
+        <h3>Stand</h3>
+        <div class="stat"><span>Neue Folien</span><b id="sNeu">0</b></div>
+        <div class="stat"><span>Freigegeben</span><b id="sOk">0</b></div>
+        <div class="stat"><span>Noch zu prüfen</span><b id="sOffen">0</b></div>
+        <div class="stat"><span>Prüfzeit (Schätzung)</span><b id="sZeit">–</b></div>
+      </section>
+      <section class="card">
+        <h3>Was die Schüler sehen</h3>
+        <p class="small">Nach „Veröffentlichen“ entsteht pro Klasse ein Kurspaket. Die iPads holen es beim nächsten Öffnen der App. Die neuen Fragen kommen <b>am selben Tag</b> im Morgentest.</p>
+        <p class="small muted">Sie sehen und bearbeiten nur Deutsch. Türkische und englische Hilfstexte für die Lernenden entstehen automatisch und werden nach jeder Änderung neu erzeugt.</p>
+      </section>
+    </aside>
+  </main>
+  <script type="module" src="/redaktion.js"></script>
+</body>
+</html>

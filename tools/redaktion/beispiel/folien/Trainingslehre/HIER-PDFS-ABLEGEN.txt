@@ -1,0 +1,1 @@
+Neue Foliensätze als PDF in diesen Ordner (ein Unterordner pro Fach) legen.

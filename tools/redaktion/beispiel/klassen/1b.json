@@ -1,0 +1,70 @@
+{
+ "id": "1b",
+ "paketId": "beispiel-1b",
+ "name": "Klasse 1B (Beispiel)",
+ "year": 1,
+ "plan": {
+  "weeks": [
+   {
+    "kw": 45,
+    "range": "02.–06.11.2026",
+    "from": "2026-11-02",
+    "to": "2026-11-08",
+    "days": {
+     "1": {
+      "kurse": [
+       "Trainingslehre"
+      ],
+      "test": [
+       "Trainingslehre"
+      ],
+      "note": ""
+     },
+     "3": {
+      "kurse": [
+       "Hygiene"
+      ],
+      "test": [
+       "Hygiene"
+      ],
+      "note": ""
+     }
+    }
+   }
+  ]
+ },
+ "ck": [
+  {
+   "id": "ck:4c459c34cc9fc93f",
+   "fach": "Trainingslehre",
+   "sec": "Kraft",
+   "text": "Kraftfähigkeiten unterscheiden",
+   "done": true,
+   "date": "2026-10-30"
+  },
+  {
+   "id": "ck:1a62bc3141ea9802",
+   "fach": "Trainingslehre",
+   "sec": "Kraft",
+   "text": "Dehnungs-Verkürzungs-Zyklus erklären",
+   "done": false,
+   "date": ""
+  },
+  {
+   "id": "ck:fe9ec6951066c03f",
+   "fach": "Trainingslehre",
+   "sec": "Kraft",
+   "text": "Kraftdefizit berechnen",
+   "done": false,
+   "date": ""
+  }
+ ],
+ "exams": [
+  {
+   "typ": "Prüfung",
+   "fach": "Trainingslehre",
+   "topic": "Kraft (Beispiel)",
+   "date": "2026-11-20"
+  }
+ ]
+}
