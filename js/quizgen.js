@@ -436,6 +436,11 @@ export function questionDate(q) {
 export const isRecent = (q, days = NEW_DAYS) => { const d = questionDate(q); return !!d && d >= store.today(-days) && d <= store.today(); };
 // Neue Fragen der letzten 7 Tage (für den Statusbericht)
 export const recentQuestions = () => ALL_LESSON_MCQ().filter((q) => isRecent(q));
+// Heute in Notion angelegte Fragen (meist während des Unterrichts geschrieben), neueste zuerst
+export const createdToday = () => ALL_LESSON_MCQ().filter((q) => q.created && tsDay(q.created) === store.today())
+  .sort((a, b) => b.created.localeCompare(a.created));
+// Rückweg-Test: höchstens so viele Fragen, auch wenn heute mehr neue angelegt wurden
+export const DONUS_MAX = 10;
 
 // Vortag = letzter Schultag: dienstags Montag, montags Freitag bis Sonntag
 export function prevSchoolDay(now = new Date()) {
@@ -502,7 +507,8 @@ export function dueQuestions(faecher = [], k = 3, maxOther = k) {
 }
 
 // morning = Morgentest des Tages: zusätzlich die neuen Themen des Vortags aus allen Fächern
-export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = [], { morning = false } = {}) {
+// donus = Rückweg-Test: zuerst die heute angelegten Fragen (bis DONUS_MAX), Rest aus den gelesenen Lektionen
+export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = [], { morning = false, donus = false } = {}) {
   if (category.startsWith('Hatalar: ')) {
     // Heute (Rückweg) bzw. diese Woche (Samstag) falsch beantwortete Fragen
     const ids = category === 'Hatalar: hafta' ? store.wrongSince(7) : (store.day().wrong || []);
@@ -554,6 +560,15 @@ export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = [], { morn
     qs.push(...lessonQs.filter((q) => !have.has(q.id) && isRecent(q)));
   } else {
     qs = Object.hasOwn(pools, category) ? pools[category]() : []; // unbekannte Kategorie aus einem Link
+  }
+  if (donus) {
+    // Heute angelegt = heute im Unterricht dran → ohne Checklisten-Filter; ungestellte zuerst, dann die neuesten
+    const fresh = createdToday().sort((a, b) => Number(!unasked(a)) - Number(!unasked(b)));
+    const k = Math.max(n, Math.min(fresh.length, DONUS_MAX));
+    const a = fresh.slice(0, k);
+    const ids = new Set(a.map((q) => q.id));
+    const b = wpickQ(qs.filter((q) => !ids.has(q.id) && allowedInDaily(q.id)), k - a.length);
+    return shuffle([...a, ...b]).map(prepare);
   }
   if (category.startsWith('Ders: ') || category === 'Gemischt') {
     const since = prevSchoolDay();

@@ -15,7 +15,7 @@ import { axesOf } from './data/axes.js';
 import { todaysWords, weekWords, markKnown, recordWord, questionFor, checkTyped, typeLabel, WORDS_PER_DAY } from './words.js';
 import * as M3 from './data/muscle3d.js';
 import { UEBUNGEN } from './data/uebungen.js';
-import { masteredLessons, vocabTr } from './quizgen.js';
+import { masteredLessons, vocabTr, createdToday, DONUS_MAX } from './quizgen.js';
 import { initExam, renderMock } from './exam.js';
 import { initOral, renderOral, leaveOral } from './oral.js';
 import { initBefund, renderCases } from './befund.js';
@@ -773,11 +773,18 @@ function todayFaecher(plan = todayPlan()) {
   return [...new Set([...examFaecher(7), ...(plan.test || []), ...hit])];
 }
 
-// Höchstens 2 Lektionen pro Rückweg: Fächer des Morgentests zuerst, je Fach die am längsten nicht gelesene
+// Höchstens 2 Lektionen pro Rückweg: Lektionen mit heute angelegten Fragen zuerst (auch bei unbekanntem Fachnamen),
+// dann Fächer des Morgentests, je Fach die am längsten nicht gelesene
 function readingLessons(fs = todayFaecher()) {
   const read = store.get().learned;
   const out = [];
+  for (const id of new Set(createdToday().map((q) => q.lesson))) {
+    const l = LESSONS.find((x) => x.id === id);
+    if (l && out.length < 2) out.push(l);
+  }
   for (const f of fs) {
+    if (out.length === 2) break;
+    if (out.some((x) => x.fach === f)) continue; // Fach schon mit der heutigen Lektion dabei
     const l = LESSONS.filter((x) => x.fach === f).sort((a, b) => (read['les:' + a.id] || '').localeCompare(read['les:' + b.id] || ''))[0];
     if (l && !out.includes(l)) out.push(l);
     if (out.length === 2) break;
@@ -794,13 +801,14 @@ function donusInfo() {
   const odevOpen = deckCards('odev').filter((c) => store.isNew(c.id) || store.isDue(c.id)).length;
   const lessons = readingLessons(fs);
   const kern = lessons.reduce((n, l) => n + l.kern.length, 0);
+  const neu = createdToday().length;
   const steps = [
     // Test „Hatalar: bugün“ fragt höchstens 30 Fragen
     { key: 'hatalar', icon: '❌', title: t('don.hatalar'), sub: wrong ? `${t('don.hatalarSub', { n: wrong })}${wrong > 30 ? t('don.max30') : ''}` : t('don.noWrong'), min: Math.ceil(Math.min(wrong, 30) * 1.5), href: '#/test?kat=' + encodeURIComponent('Hatalar: bugün'), empty: !wrong },
     { key: 'fehler', icon: '✗', title: t('don.fehler'), sub: fs.length ? `${t('n.cards', { n: fehlerCards })} · ${fs.join(' + ')}` : t('don.noClass'), min: fehlerCards, href: '#/oturum/' + encodeURIComponent('fehler:' + fs.join(',')), empty: !fehlerCards },
     ...(odevOpen ? [{ key: 'odev', icon: '📌', title: t('don.odev'), sub: `${t('n.cards', { n: odevOpen })} · ${[...new Set(odevList().map((f) => f.odev))].join(', ')}`, min: Math.ceil(Math.min(odevOpen, 20) * 0.75), href: '#/oturum/odev' }] : []),
     { key: 'kelime', icon: '🔤', title: t('don.words'), sub: t('don.wordsSub', { n: WORDS_PER_DAY }), min: 8, href: '#/kelime/donus', done: !!d.wordsReturn },
-    { key: 'notlar', icon: '📖', title: t('don.notes'), sub: lessons.length ? t('don.notesSub', { n: lessons.length, k: kern }) : t('don.noNotes'), min: lessons.length ? Math.ceil(kern * 0.75) + 6 : 0, href: '#/oku', empty: !lessons.length },
+    { key: 'notlar', icon: '📖', title: t('don.notes'), sub: lessons.length ? t('don.notesSub', { n: lessons.length, k: kern, q: Math.max(5, Math.min(neu, DONUS_MAX)) }) + (neu ? t('don.newQs', { n: neu }) : '') : t('don.noNotes'), min: lessons.length ? Math.ceil(kern * 0.75) + 6 : 0, href: '#/oku', empty: !lessons.length },
   ];
   for (const s of steps) s.state = s.done ? 'done' : st[s.key] || (s.empty ? 'empty' : 'open');
   return { steps, total: steps.filter((s) => s.state === 'open').reduce((n, s) => n + s.min, 0), fs };
@@ -881,7 +889,7 @@ function renderQuizStart(_, params = new URLSearchParams()) {
     if (quiz && !quiz.finished && quiz.cat === kat) return renderQuizQuestion();
     const donus = params.get('donus') === '1' || kat.startsWith('Dönüş: ');
     const n = donus ? 5 : kat.startsWith('Hatalar: ') ? 30 : store.get().settings.quizGoal;
-    const qs = buildQuiz(kat, n, store.get().customVocab, { morning: !donus && kat === morningKat() });
+    const qs = buildQuiz(kat, n, store.get().customVocab, { morning: !donus && kat === morningKat(), donus });
     if (!qs.length) toast(t('quiz.none'));
     else { startQuiz({ qs, i: 0, right: 0, wrong: [], finished: false, cat: kat, donus, want: n }); return renderQuizQuestion(); }
   }

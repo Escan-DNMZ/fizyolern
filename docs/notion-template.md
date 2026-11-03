@@ -56,7 +56,7 @@ Copy everything from here to the next line of dashes into a page called **Weekly
 **Rules the app follows**
 - **Week heading:** `## Week 43 (19.–23.10.2026)` (also `## KW 43 …`, `## Woche 43 …`, `## Hafta 43 …`). Several weeks can be planned ahead on the same page.
 - **Days:** `Mon`, `Tue` … (also German `Mo`, `Di` … or Turkish `Pzt`, `Sal` …) at the start of the first column.
-- **Morning test:** `Morning test: Anatomie` in the 4th column (also `Morgentest:` / `Sabah testi:`). The subject names must match the app's subjects: Anatomie, Physiologie, PT Grundlagen, PT Befund, O/C, Trainingslehre, KMT, Hygiene, PPS (spellings like *PT-Befund*, *ANA 1*, *Allg. Anatomie*, *OC* are understood). The morning test asks only about these subjects.
+- **Morning test:** `Morning test: Anatomie` in the 4th column (also `Morgentest:` / `Sabah testi:`). The subject names must match the app's subjects: Anatomie, Physiologie, PT Grundlagen, PT Befund, O/C, Trainingslehre, KMT, Hygiene, PPS (spellings like *PT-Befund*, *ANA 1*, *Allg. Anatomie*, *OC* are understood). The morning test asks only about these subjects. Questions you add to the questions database on the same day (e.g. during class) come first in that afternoon's way-home quiz.
 - **Mistakes:** under a subject heading (`###`), a line starting with `✗`, followed by bullets starting with `✗` (wrong) or `½` (half right). The **bold** part is the answer and becomes a gap on the card.
 - **Homework:** the same, but the `✗` line contains *Homework*, *Memorisation*, *Hausaufgabe*, *Ezber* or *Ödev*. These cards go to the 📌 homework deck, not to the mistakes.
 
