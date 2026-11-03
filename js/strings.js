@@ -285,6 +285,8 @@ addStrings({
   'quiz.romOpen': [' · ROM soruları açık', ' · ROM questions unlocked'],
   'quiz.weakInfo': [' Şu ana kadar <b>{n}</b> soruda daha çok hata yaptın.', ' So far you have more wrong than right answers on <b>{n}</b> questions.'],
   'quiz.quit': ['Testi bitir', 'End quiz'],
+  'quiz.reviewTag': ['Tekrar · {f}', 'Review · {f}'],
+  'quiz.short': ['Bugünün derslerinde şu an sadece {n} soru var (hedef {want}). Başka dersten soru eklenmedi.', 'Today\'s subjects only have {n} questions right now (goal {want}). No questions from other subjects were added.'],
   'quiz.right': ['✅ Doğru! ', '✅ Correct! '],
   'quiz.wrong': ['❌ Yanlış. ', '❌ Wrong. '],
   'quiz.next': ['Sonraki soru', 'Next question'],

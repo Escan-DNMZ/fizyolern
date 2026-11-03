@@ -8,6 +8,7 @@ import * as store from './store.js';
 import { week, examFaecher, getPrivate } from './private.js';
 import { ckWeight, allowedInDaily, itemQuiz, itemsOfQuestion } from './checkliste.js';
 import { t, tx, lang } from './i18n.js';
+import { faecherInText } from './faecher.js';
 import './strings.js';
 
 export function shuffle(arr) {
@@ -382,7 +383,8 @@ const addDays = (iso, k) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d
 // Fächer, die in den Kursnamen eines Tages vorkommen („ANA 1 + O/C (…)“ → Anatomie, O/C)
 export function kursFaecher(kurse, faecher = FAECHER) {
   const text = (kurse || []).join(' ').replace(/PT-Befund/g, 'PT Befund');
-  return faecher.filter((f) => (f.length <= 3 ? new RegExp(`(^|[^A-Za-zÄÖÜäöü])${f.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}($|[^A-Za-zÄÖÜäöü])`).test(text) : text.includes(f)) || (f === 'Anatomie' && /\bANA\b/.test(text)));
+  const byAlias = (kurse || []).flatMap((k) => faecherInText(k, faecher)); // „All ANA ×2“, „Allg. Anatomie“, „OC“ …
+  return faecher.filter((f) => byAlias.includes(f) || (f.length <= 3 ? new RegExp(`(^|[^A-Za-zÄÖÜäöü])${f.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}($|[^A-Za-zÄÖÜäöü])`).test(text) : text.includes(f)) || (f === 'Anatomie' && /\bANA\b/.test(text)));
 }
 
 // Fach → letzter Unterrichtstag bis heute (aus allen Wochen des Wochenplans)
@@ -410,6 +412,13 @@ function lessonDates() {
   const classes = lastClassDays(today);
   const newest = {};
   for (const l of LESSONS) if (!l.notionOnly && (!newest[l.fach] || lessonNum(l.id) >= lessonNum(newest[l.fach].id))) newest[l.fach] = l;
+  // Echte Daten schlagen die Schätzung: hat ein Fach eine Lektion/Frage mit Datum aus den letzten 7 Tagen
+  // (Notion-Zeile „created“, Feld date), ist DAS das neue Thema – nicht die älteste mitgelieferte Lektion
+  const since = store.today(-NEW_DAYS);
+  for (const l of LESSONS) {
+    const real = [l.date || '', l.created ? tsDay(l.created) : '', ...l.mcq.map((q) => (q.created ? tsDay(q.created) : ''))];
+    if (real.some((d) => d && d >= since)) delete newest[l.fach];
+  }
   for (const l of LESSONS) {
     const ds = [/^\d{4}-\d{2}-\d{2}$/.test(l.date || '') ? l.date : '', l.created ? tsDay(l.created) : '', newest[l.fach] === l ? classes[l.fach] || '' : ''];
     map[l.id] = ds.reduce((a, b) => (b > a ? b : a), '');
@@ -474,15 +483,22 @@ export function questionsByIds(ids) {
   return all.filter((q) => want.has(q.id) && !seen.has(q.id) && seen.add(q.id));
 }
 
-// Fällige Fehler (store.mistakeDue) als Fragen: Fächer des Tages zuerst, dann die am längsten fälligen
-export function dueQuestions(faecher = [], k = 3) {
+// Fach einer Frage für den Morgentest (Lektion → Fach, Gelenkdetail → fach, generierte Anatomie → Anatomie)
+const subjectOf = (q) => lessonFach(q.id) || q.fach || fachOf(q.id) || q.cat;
+
+// Fällige Fehler (store.mistakeDue) als Fragen: Fächer des Tages zuerst (die am längsten fälligen zuerst),
+// Fehler anderer Fächer höchstens maxOther Plätze. Jede bekommt „Tekrar · <Fach>“, damit klar ist, warum sie kommt.
+export function dueQuestions(faecher = [], k = 3, maxOther = k) {
   const quiz = store.get().quiz;
   const qs = questionsByIds(store.dueMistakes()).filter((q) => allowedInDaily(q.id));
   const since = (q) => { const s = quiz[q.id]; return (s.okDays && s.okDays.length ? s.okDays[s.okDays.length - 1] : s.lastWrong) || ''; };
-  return qs
-    .map((q) => ({ q, own: faecher.includes(q.cat) || faecher.includes(q.fach) || faecher.includes(fachOf(q.id)) ? 0 : 1, d: since(q), r: Math.random() }))
-    .sort((a, b) => a.own - b.own || a.d.localeCompare(b.d) || a.r - b.r)
-    .slice(0, k).map((x) => x.q);
+  const sorted = qs
+    .map((q) => ({ q, f: subjectOf(q), d: since(q), r: Math.random() }))
+    .map((x) => ({ ...x, own: faecher.includes(x.f) ? 0 : 1 }))
+    .sort((a, b) => a.own - b.own || a.d.localeCompare(b.d) || a.r - b.r);
+  const own = sorted.filter((x) => !x.own).slice(0, k);
+  const other = sorted.filter((x) => x.own).slice(0, Math.min(maxOther, k - own.length));
+  return [...own, ...other].map((x) => ({ ...x.q, badge: t('quiz.reviewTag', { f: x.f }) }));
 }
 
 // morning = Morgentest des Tages: zusätzlich die neuen Themen des Vortags aus allen Fächern
@@ -541,11 +557,16 @@ export function buildQuiz(category = 'Gemischt', n = 10, extraVocab = [], { morn
   }
   if (category.startsWith('Ders: ') || category === 'Gemischt') {
     const since = prevSchoolDay();
-    const extra = morning ? ALL_LESSON_MCQ().filter((q) => questionDate(q) >= since) : [];
+    const today = category.startsWith('Ders: ') ? category.slice(6).split(',') : [];
+    // Morgentest = Vorbereitung auf die Fächer des Tages: neue Themen des Vortags nur, wenn sie zu diesen Fächern gehören
+    // (Vortag = vor heute: der heutige Unterricht hat am Morgen noch nicht stattgefunden)
+    const extra = morning ? ALL_LESSON_MCQ().filter((q) => { const d = questionDate(q); return today.includes(q.cat) && d >= since && d < store.today(); }) : [];
     // Morgentest / gemischter Test: nur Fragen zu Lernzielen, die schon im Unterricht behandelt wurden
     const ok = (q) => allowedInDaily(q.id);
-    // Morgentest: 2–3 feste Plätze für fällige Fehler (vor dem Anteil neuer Themen); keine fälligen → Plätze für den Rest
-    const due = morning ? dueQuestions(category.slice(6).split(','), Math.min(n >= 10 ? 3 : 2, n)) : [];
+    // Morgentest: 2–3 feste Plätze für fällige Fehler (vor dem Anteil neuer Themen), Fächer des Tages zuerst,
+    // andere Fächer höchstens 1–2 Plätze; keine fälligen → Plätze für den Rest. Zu wenig Fragen → kürzerer Test, nie fachfremd auffüllen.
+    const k = Math.min(n >= 10 ? 3 : 2, n);
+    const due = morning ? dueQuestions(today, k, n >= 10 ? 2 : 1) : [];
     const dueIds = new Set(due.map((q) => q.id));
     const notDue = (q) => ok(q) && !dueIds.has(q.id);
     return [...shuffle(due), ...mixQuiz(qs.filter(notDue), n - due.length, wq, extra.filter(notDue))].map(prepare);

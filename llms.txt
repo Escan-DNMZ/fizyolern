@@ -48,7 +48,7 @@ If you help an editor create pack content: produce the same rows as for "FizyoLe
 - "No page is visible" or "Page not found": the integration is not connected. In Notion open the parent page → ••• → Connections → add it. Sub-pages are included automatically.
 - A page is "not visible" in the sync summary: its title does not contain one of the names above, or it lies outside the connected parent page.
 - Timetable empty: the week heading needs a date range like (19.–23.10.2026), and the table must be a simple table, not a database. Day cells must start with a day name (Mon/Mo/Pzt …).
-- No morning test: the review column needs "Morning test: <subject>" with an app subject name.
+- No morning test: the review column needs "Morning test: <subject>" with an app subject name. The morning test asks only about the subjects named there (plus up to 1-2 labelled due mistakes from other subjects); spellings like PT-Befund, ANA 1, Allg. Anatomie, OC are mapped to the app names.
 - Old version on the phone: close and reopen the app; after a Notion change, tap Settings → Update now.
 
 ## Privacy

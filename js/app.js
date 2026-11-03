@@ -381,8 +381,10 @@ function tomorrowLine() {
 }
 
 // Morgentest-Fächer: Prüfung bald zuerst, dann die Fächer aus dem Wochenplan (nur Fächer mit Fragen)
+// Regel: die Fächer aus „Sabah testi: …“ im Wochenplan. Nur wenn der Plan für heute keine nennt, die Fächer mit Prüfung in ≤ 7 Tagen.
 function morningFaecher(plan = todayPlan()) {
-  return [...new Set([...examFaecher(7), ...((plan && plan.test) || [])])].filter((f) => FAECHER.includes(f));
+  const fromPlan = ((plan && plan.test) || []).filter((f) => FAECHER.includes(f));
+  return fromPlan.length ? fromPlan : examFaecher(7).filter((f) => FAECHER.includes(f));
 }
 const morningKat = () => (morningFaecher().length ? 'Ders: ' + morningFaecher().join(',') : '');
 
@@ -851,7 +853,7 @@ function renderReading() {
 function saveQuiz() {
   store.get().quizRun = quiz ? {
     date: quiz.date || store.today(), cat: quiz.cat || '', donus: !!quiz.donus, qs: quiz.qs, i: quiz.i, right: quiz.right,
-    wrong: quiz.wrong.map((q) => quiz.qs.indexOf(q)).filter((i) => i >= 0), answers: quiz.answers || {}, finished: !!quiz.finished, endAt: quiz.endAt || 0,
+    wrong: quiz.wrong.map((q) => quiz.qs.indexOf(q)).filter((i) => i >= 0), answers: quiz.answers || {}, finished: !!quiz.finished, endAt: quiz.endAt || 0, ...(quiz.want ? { want: quiz.want } : {}),
   } : null;
   store.save();
 }
@@ -881,7 +883,7 @@ function renderQuizStart(_, params = new URLSearchParams()) {
     const n = donus ? 5 : kat.startsWith('Hatalar: ') ? 30 : store.get().settings.quizGoal;
     const qs = buildQuiz(kat, n, store.get().customVocab, { morning: !donus && kat === morningKat() });
     if (!qs.length) toast(t('quiz.none'));
-    else { startQuiz({ qs, i: 0, right: 0, wrong: [], finished: false, cat: kat, donus }); return renderQuizQuestion(); }
+    else { startQuiz({ qs, i: 0, right: 0, wrong: [], finished: false, cat: kat, donus, want: n }); return renderQuizQuestion(); }
   }
   if (quiz && !quiz.finished) return renderQuizQuestion();
   // gerade beendet (z. B. zurück aus der 3D-Ansicht): Ergebnis statt Kategorieauswahl zeigen
@@ -912,7 +914,8 @@ function renderQuizQuestion() {
   if (quiz.i >= quiz.qs.length) return renderQuizEnd();
   const q = quiz.qs[quiz.i];
   view.innerHTML = `
-    <div class="row"><span class="badge">${esc(q.cat)}</span><span class="spacer"></span><span class="muted small">${quiz.i + 1} / ${quiz.qs.length}</span></div>
+    <div class="row"><span class="badge">${esc(q.badge || q.cat)}</span><span class="spacer"></span><span class="muted small">${quiz.i + 1} / ${quiz.qs.length}</span></div>
+    ${quiz.i === 0 && quiz.want > quiz.qs.length ? `<div class="muted small" style="margin:6px 0 0">${t('quiz.short', { n: quiz.qs.length, want: quiz.want })}</div>` : ''}
     <div class="progress"><div style="width:${(quiz.i / quiz.qs.length) * 100}%"></div></div>
     <div class="question">${escGap(q.q)}</div>
     ${q.opts.map((o, i) => `<button class="opt" data-i="${i}">${esc(o)}</button>`).join('')}

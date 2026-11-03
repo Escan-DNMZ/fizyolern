@@ -1,6 +1,6 @@
 // Service Worker: alle App-Dateien offline verfügbar machen.
 // Bei jeder Änderung an den Dateien VERSION erhöhen, damit Handys die neue Version laden.
-const VERSION = 'fizyolern-v57';
+const VERSION = 'fizyolern-v58';
 const FILES = [
   './',
   './index.html',
@@ -16,6 +16,7 @@ const FILES = [
   './js/store.js',
   './js/quizgen.js',
   './js/lessons.js',
+  './js/faecher.js',
   './js/anatomy3d.js',
   './js/data/anatomy.js',
   './js/data/muscle3d.js', './js/data/landmarks.js', './js/data/axes.js',

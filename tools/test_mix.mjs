@@ -1,4 +1,4 @@
-// Tests für die Testmischung: neue Themen (letzte 7 Tage) ≥ 60 %, ungestellte zuerst, Vortags-Themen im Morgentest.
+// Tests für die Testmischung: neue Themen (letzte 7 Tage) ≥ 60 %, ungestellte zuerst, Vortags-Themen der Tagesfächer im Morgentest.
 // Aufruf: node tools/test_mix.mjs
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -89,18 +89,25 @@ ok(onlyNew.length === 10, 'nur neue Fragen → 10 neue');
 const onlyOld = Q.mixQuiz([...[...Array(5)].map((_, i) => mk('T:y' + i))], 10, () => 1);
 ok(onlyOld.length === 5, 'weniger Fragen als n → alle');
 
-// Morgentest: Fach des Tages zuerst, Vortags-Themen (anderes Fach) immer dabei, am Ende
-let morningOk = true, minHyg = 99, minNewM = 99;
+// Morgentest = nur die Fächer des Tages: Vortags-Themen eines anderen Fachs (Hygiene) kommen nicht
+let onlyPhysio = true, minNewM = 99;
 for (let k = 0; k < RUNS; k++) {
   const qs = Q.buildQuiz('Ders: Physiologie', 10, [], { morning: true });
+  minNewM = Math.min(minNewM, qs.filter((q) => NEW.has(q.id)).length);
+  if (qs.length !== 10 || !qs.every((q) => q.cat === 'Physiologie')) onlyPhysio = false;
+}
+ok(onlyPhysio, 'Morgentest Physiologie: keine Vortags-Themen aus Hygiene, nur Physiologie');
+ok(minNewM >= 6, `Morgentest: mind. 60 % neue Themen (min. ${minNewM}/10)`);
+// Gehört das Vortags-Thema zu den Fächern des Tages, kommt es sicher (am Ende)
+let minHyg = 99, hygLast = true;
+for (let k = 0; k < RUNS; k++) {
+  const qs = Q.buildQuiz('Ders: Physiologie,Hygiene', 10, [], { morning: true });
   const h = qs.filter((q) => HYG.has(q.id)).length;
   minHyg = Math.min(minHyg, h);
-  minNewM = Math.min(minNewM, qs.filter((q) => NEW.has(q.id) || HYG.has(q.id)).length);
-  if (qs.length !== 10 || !qs.slice(-h).every((q) => HYG.has(q.id)) || !qs.slice(0, 10 - h).every((q) => q.cat === 'Physiologie')) morningOk = false;
+  if (!h || !qs.slice(-Math.min(h, 3)).every((q) => HYG.has(q.id))) hygLast = false;
 }
-ok(minHyg === 3, `Morgentest: 3 Vortags-Fragen aus Hygiene (min. ${minHyg})`);
-ok(morningOk, 'Morgentest: erst Physiologie, dann Vortags-Themen');
-ok(minNewM >= 6, `Morgentest: mind. 60 % neue Themen (min. ${minNewM}/10)`);
+ok(minHyg >= 3, `Morgentest Physiologie + Hygiene: Vortags-Themen aus Hygiene dabei (min. ${minHyg})`);
+ok(hygLast, 'Morgentest: Vortags-Themen am Ende');
 
 // Wochenplan: neueste mitgelieferte Lektion eines Fachs gilt als am Unterrichtstag behandelt
 const mon = new Date(); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7));

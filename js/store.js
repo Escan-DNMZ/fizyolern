@@ -75,7 +75,7 @@ function cleanQuizRun(r) {
     if (opts.length < 2 || opts.length > 8 || !Number.isInteger(q.ans) || q.ans < 0 || q.ans >= opts.length) return null;
     qs.push({
       id: str(q.id, 300), cat: str(q.cat, 100), q: str(q.q, 3000), opts, ans: q.ans, x: str(q.x, 3000),
-      ...(q.xEn ? { xEn: str(q.xEn, 3000) } : {}), ...(q.lesson ? { lesson: str(q.lesson, 200) } : {}), ...(q.fach ? { fach: str(q.fach, 100) } : {}),
+      ...(q.xEn ? { xEn: str(q.xEn, 3000) } : {}), ...(q.lesson ? { lesson: str(q.lesson, 200) } : {}), ...(q.fach ? { fach: str(q.fach, 100) } : {}), ...(q.badge ? { badge: str(q.badge, 120) } : {}),
     });
   }
   const n = qs.length;
@@ -83,7 +83,7 @@ function cleanQuizRun(r) {
     date: r.date, cat: str(r.cat, 300), donus: !!r.donus, qs, i: int(r.i, 0, n, 0), right: int(r.right, 0, n, 0),
     wrong: (Array.isArray(r.wrong) ? r.wrong : []).filter((i) => Number.isInteger(i) && i >= 0 && i < n),
     answers: dict(r.answers, (v, k) => (/^\d{1,2}$/.test(k) && +k < n && Number.isInteger(v) && v >= 0 && v < qs[+k].opts.length ? v : undefined)),
-    finished: !!r.finished, endAt: num(r.endAt, 0, 1e15),
+    finished: !!r.finished, endAt: num(r.endAt, 0, 1e15), ...(r.want ? { want: int(r.want, 1, 60, n) } : {}),
   };
 }
 export function sanitize(raw) {

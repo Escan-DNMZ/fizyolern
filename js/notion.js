@@ -7,6 +7,7 @@
 //  • Die Content-Security-Policy in index.html erlaubt Verbindungen nur zu 'self' und api.notion.com.
 import { setPrivate, ownPrivate, cleanSegments, cleanText, cardFront } from './private.js';
 import { t } from './i18n.js';
+import { canonFach, faecherInText } from './faecher.js';
 import './strings.js';
 
 const API = 'https://api.notion.com/v1';
@@ -115,7 +116,10 @@ function faecherIn(text, faecher) {
   const t = ' ' + lower(text).replace(/[-–]/g, ' ') + ' ';
   const alias = { Anatomie: ['anatomie', 'ana '], 'PT Befund': ['pt befund'], 'PT Grundlagen': ['pt grundlagen'] };
   const all = [...new Set([...faecher, ...EXTRA_FAECHER])];
+  // zusätzlich die Kurzformen aus faecher.js („All ANA“, „Allg. Anatomie“, „OC“, „Befund“ …), Teil für Teil
+  const byAlias = faecherInText(text, all);
   return all.filter((f) => {
+    if (byAlias.includes(f)) return true;
     if (f.length <= 3 && !Object.hasOwn(alias, f)) return new RegExp(`[^a-zäöüß]${lower(f).replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}[^a-zäöüß]`).test(t); // AM, AKL, KI, PPS, O/C
     return (Object.hasOwn(alias, f) ? alias[f] : [lower(f)]).some((a) => t.includes(a));
   });
@@ -367,7 +371,7 @@ export async function rowsFromPages(pages) {
     if (!typ) continue;
     rows.push({
       h: await sha16(p.id.replace(/-/g, '')),
-      fach: get('Fach'),
+      fach: canonFach(get('Fach')), // „PT-Befund“ → „PT Befund“
       lektion: get('Lektion'),
       typ,
       frage: get('Frage'),

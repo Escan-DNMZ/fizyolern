@@ -3,6 +3,7 @@
 // LESSONS und FAECHER werden an Ort und Stelle aktualisiert, damit alle Importe die neuen Daten sehen.
 import { LESSONS as BUILTIN } from './data/lessons.js';
 import { getPrivate } from './private.js';
+import { canonFach } from './faecher.js';
 
 export const LESSONS = [];
 export const FAECHER = [];
@@ -44,7 +45,9 @@ const FIELD = { Kern: ['kern', 'de'], MCQ: ['mcq', 'q'], Offen: ['open', 'q'], W
 export function mergeLessons(builtin, rows = []) {
   const list = builtin.map((l) => ({ ...l, kern: [...l.kern], mcq: [...l.mcq], open: [...l.open], vocab: [...l.vocab] }));
   let skipped = 0;
-  for (const r of rows) {
+  for (const row of rows) {
+    // „PT-Befund“, „ANA 1“ … → fester Fachname, sonst entstünde ein zweites Fach (und der Morgentest fände die Fragen nicht)
+    const r = row.fach ? { ...row, fach: canonFach(row.fach) } : row;
     const item = rowToItem(r);
     if (!item || !r.fach) { skipped++; continue; }
     let l = findLesson(list, r.fach, r.lektion);
