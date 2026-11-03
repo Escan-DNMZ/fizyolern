@@ -354,6 +354,7 @@ addStrings({
   'pq.title': ['🎯 Noktayı bul', '🎯 Find the point'],
   'pq.notReady': ['3D model henüz hazır değil', 'The 3D model is not ready yet'],
   'pq.tapBone': ['Kemiğin üzerine dokun', 'Tap on the bone'],
+  'pq.otherSide': ['↻ Bu nokta kemiğin öbür yüzünde – modeli çevirip tekrar dokun', '↻ This point is on the other side of the bone – turn the model and tap again'],
   'pq.zoom': ['🔍 Çok yakın! Yakınlaştırıp tekrar dokun', '🔍 Very close! Zoom in and tap again'],
   'pq.showPoint': ['Bu noktayı modelde göster.', 'Show this point on the model.'],
   'pq.origin': ['nereden başlar?', '– where does it start?'],

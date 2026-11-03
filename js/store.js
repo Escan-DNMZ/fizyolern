@@ -169,6 +169,12 @@ const MIGRATIONS = {
     clearLmWrong(s, ['lm:tuberculum_pubicum', 'lm:symphysis_pubica', 'lm:o:adductor_longus', 'lm:o:gracilis', 'lm:o:rectus_abdominis', 'lm:linea_aspera', 'lm:o:vastus_medialis',
       'lm:o:vastus_lateralis', 'lm:o:biceps_femoris', 'lm:i:adductor_longus', 'lm:i:adductor_brevis', 'lm:i:adductor_magnus']);
   },
+  // Labium-Fragen: 0,8 cm Toleranz war kleiner als ein Fingertipp (Tipp neben dem Punkt → „Bu Linea aspera“);
+  // Promontorium lag auf dem Kreuzbeinflügel statt am vorderen oberen Rand von S1 in der Mittellinie
+  lmLabiaPromo2026(s) {
+    clearLmWrong(s, ['lm:labium_mediale_lineae_asperae', 'lm:labium_laterale_lineae_asperae', 'lm:linea_aspera', 'lm:o:vastus_medialis',
+      'lm:o:vastus_lateralis', 'lm:o:biceps_femoris', 'lm:i:adductor_longus', 'lm:i:adductor_brevis', 'lm:i:adductor_magnus', 'lm:promontorium']);
+  },
   // Fehler-Logik mit lastWrong/okDays: ältere Stände ableiten (nichts löschen).
   // lastWrong = letzter Tag, an dem die Frage in days[].wrong steht, sonst last (wenn die Serie 0 ist);
   // war die letzte Antwort richtig und später als der Fehltag, zählt dieser Tag als ein richtiger Tag.

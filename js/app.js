@@ -1432,7 +1432,7 @@ const pqSetChips = (cur) => `<div class="chips" style="margin-top:8px">${Object.
 // area = Fläche/Loch/Linie: feste Toleranz, nicht durch Nachbarpunkte verkleinert
 const PQ_TOL = { crista_iliaca: { tol: 0.035, area: true }, linea_aspera: { tol: 0.02, sy: 0.2, area: true },
   // die Lippen der Linea aspera liegen ~1 cm auseinander: eng in der Breite, großzügig in der Höhe
-  labium_mediale_lineae_asperae: { tol: 0.008, sy: 0.3, area: true }, labium_laterale_lineae_asperae: { tol: 0.008, sy: 0.3, area: true }, foramen_obturatum: { tol: 0.025, area: true }, acetabulum: { tol: 0.025, area: true },
+  labium_mediale_lineae_asperae: { tol: 0.008, sy: 0.3, area: true }, labium_laterale_lineae_asperae: { tol: 0.008, sy: 0.3, area: true }, foramen_obturatum: { tol: 0.025, area: true, hole: true }, acetabulum: { tol: 0.025, area: true, hole: true },
   linea_intertrochanterica: { tol: 0.025 }, tuberositas_glutea: { tol: 0.02, sy: 0.5 },
   condylus_medialis_femoris: { tol: 0.022 }, condylus_lateralis_femoris: { tol: 0.022 },
   tuberculum_adductorium: { tol: 0.013 }, epicondylus_medialis_femoris: { tol: 0.013 },
@@ -1467,6 +1467,8 @@ function buildPointQuiz(set, only = null) {
   return shuffle([...pts, ...wpick(all.filter((q) => q.kind !== 'point'), PQ_ROUNDS - pts.length, w)]);
 }
 
+// nur zum Prüfen auf dem eigenen Rechner: Quiz mit bestimmten Fragen starten (wie anatomy3d.js window.__anat)
+if (location.hostname === 'localhost') window.__pq = (set, only) => startPointQuiz(set, only);
 function startPointQuiz(set = 'pelvis', only = null) {
   if (focusState) exitFocus();
   if (!Object.hasOwn(PQ_SETS, set)) set = 'pelvis'; // unbekannter Name aus einem Link
@@ -1498,28 +1500,54 @@ function pqTol(l) {
   return { ...base, tol: Math.min(base.tol || 0.02, Math.max(0.012, nn * 0.6)) };
 }
 
+// Teile einer größeren Struktur (of/side, z. B. Labium mediale/laterale der Linea aspera): der Tipp zählt,
+// wenn er im Bereich der Ober-Struktur und auf der richtigen Seite ihrer Mittellinie liegt. Die Lippen liegen im Modell
+// nur ~1 cm auseinander – eine eigene Toleranz in Fingerbreite gibt es dort nicht.
+function pqJudge(l, hit, ray) {
+  const r = viewer.judgePoint(l, hit, ray, pqTol(l));
+  const parent = l.of && findLandmark(l.of);
+  if (r.ok || !parent || !hit) return r;
+  const zone = viewer.judgePoint(parent, hit, ray, pqTol(parent));
+  if (!zone.ok) return r;
+  const sibs = LANDMARKS.filter((x) => x.of === l.of);
+  const mid = sibs.reduce((s, x) => s + Math.abs(x.pos[0]), 0) / sibs.length;
+  const ax = Math.abs(hit.x);
+  const sideOk = l.side === 'medial' ? ax <= mid : ax >= mid;
+  return sideOk ? { ...r, ok: true, d: Math.min(r.d, zone.d) } : { ...r, other: sibs.find((x) => x !== l && x.side !== l.side) };
+}
+// liegt der gefragte Punkt in Blickrichtung hinter dem getroffenen Knochen (Rückseite), nah am Strahl?
+function pqBehind(best, hit, ray) {
+  if ((PQ_TOL[best.l.id] || {}).hole) return false; // Loch/Pfanne: Punkt liegt bewusst nicht auf der Oberfläche
+  const p = best.pos;
+  const cp = ray.closestPointToPoint(p, p.clone());
+  return cp.distanceTo(p) <= pqTol(best.l).tol && p.distanceTo(ray.origin) > hit.distanceTo(ray.origin) + 0.008;
+}
+
 function onQuizTap(hit, ray) {
   if (!pq || pq.answer || pq.k >= pq.qs.length) return;
   const q = pq.qs[pq.k];
   let best = null;
   for (const l of q.ans) {
-    const r = viewer.judgePoint(l, hit, ray, pqTol(l));
-    if (!best || r.d < best.d) best = { ...r, l };
+    const r = pqJudge(l, hit, ray);
+    if (!best || r.d < best.d || (r.ok && !best.ok)) best = { ...r, l };
   }
   if (!hit && !best.ok) { toast(t('pq.tapBone')); return; }
+  // Punkt liegt auf der anderen Seite des Knochens genau hinter dem Tipp → nicht werten, Modell drehen lassen
+  if (!best.ok && hit && pqBehind(best, hit, ray)) { toast(t('pq.otherSide')); return; }
   // Innerhalb der Toleranz des gefragten Punkts = richtig, auch wenn ein Nachbarpunkt näher liegt.
   // Nur daneben: liegt der Tipp in der Toleranz eines anderen Punkts, sagen, welcher das war („Bu X“).
   if (!best.ok) {
     let near = null;
     for (const o of pq.lms || []) {
       if (q.ans.includes(o)) continue;
-      const r = viewer.judgePoint(o, hit, ray, pqTol(o));
+      if (best.l && best.l.of === o.id) continue; // Ober-Struktur des gefragten Teils (Linea aspera bei Labium): Seite entscheidet
+      const r = pqJudge(o, hit, ray);
       if (r.ok && (!near || r.d < near.d)) near = { d: r.d, o };
     }
-    if (near) best = { ...best, other: near.o };
+    if (near && !best.other) best = { ...best, other: near.o };
   }
   // knapp daneben, aber so weit herausgezoomt, dass 2 cm kaum ein Fingertipp sind → nicht werten
-  if (!best.ok && !best.other && best.d < 0.05 && viewer.pxPer(best.pos, 0.02) < 22) { toast(t('pq.zoom')); return; }
+  if (!best.ok && best.d < 0.05 && viewer.pxPer(best.pos, 0.02) < 22) { toast(t('pq.zoom')); return; }
   answerPoint(q, best.ok, { tap: hit, best });
 }
 
