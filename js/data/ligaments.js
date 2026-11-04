@@ -38,10 +38,21 @@ export const LIGAMENTS = [
     fn: 'stärkstes Außenband, reißt selten', tr: 'talus + fibula + arka' },
   { id: 'lig_deltoideum', la: 'Lig. deltoideum', gelenk: 'art_talocruralis', knochen: ['tibia', 'talus', 'calcaneus', 'pes'],
     fn: 'Innenband des OSG, verhindert die Valgisierung', tr: 'Δ delta = üçgen/yelpaze · iç bağ' },
+  // Teile des Lig. deltoideum (teil = Oberband) – alle entspringen am Malleolus medialis
+  { id: 'lig_deltoideum_tibionavicularis', la: 'Pars tibionavicularis (Lig. deltoideum)', gelenk: 'art_talocruralis', knochen: ['tibia', 'pes'], teil: 'lig_deltoideum',
+    fn: 'vorderer oberflächlicher Teil des Innenbands, vom Malleolus medialis zum Os naviculare', tr: 'tibia → os naviculare' },
+  { id: 'lig_deltoideum_tibiocalcanea', la: 'Pars tibiocalcanea (Lig. deltoideum)', gelenk: 'art_talocruralis', knochen: ['tibia', 'calcaneus'], teil: 'lig_deltoideum',
+    fn: 'mittlerer oberflächlicher Teil des Innenbands, vom Malleolus medialis zum Sustentaculum tali', tr: 'tibia → kalkaneus (sustentaculum tali)' },
+  { id: 'lig_deltoideum_tibiotalaris_anterior', la: 'Pars tibiotalaris anterior (Lig. deltoideum)', gelenk: 'art_talocruralis', knochen: ['tibia', 'talus'], teil: 'lig_deltoideum',
+    fn: 'tiefer vorderer Teil des Innenbands, vom Malleolus medialis zum Talushals', tr: 'tibia → talus (ön)' },
+  { id: 'lig_deltoideum_tibiotalaris_posterior', la: 'Pars tibiotalaris posterior (Lig. deltoideum)', gelenk: 'art_talocruralis', knochen: ['tibia', 'talus'], teil: 'lig_deltoideum',
+    fn: 'tiefer hinterer Teil des Innenbands, vom Malleolus medialis zur medialen Hinterfläche des Talus', tr: 'tibia → talus (arka)' },
   { id: 'lig_tibiofibulare', la: 'Lig. tibiofibulare anterius/posterius (Syndesmose)', gelenk: 'art_talocruralis', knochen: ['tibia', 'fibula'],
     fn: 'hält die Malleolengabel zusammen', tr: 'syn + desmos = birlikte bağ' },
   { id: 'lig_talocalcaneum_interosseum', la: 'Lig. talocalcaneum interosseum', gelenk: 'art_subtalaris', knochen: ['talus', 'calcaneus'],
     fn: 'trennt vordere und hintere Kammer, wichtigster Stabilisator des USG', tr: 'interosseum = kemikler arası' },
+  { id: 'lig_calcaneonaviculare_plantare', la: 'Lig. calcaneonaviculare plantare (Pfannenband)', gelenk: 'art_subtalaris', knochen: ['calcaneus', 'pes'],
+    fn: 'vom Sustentaculum tali zum Os naviculare, trägt den Taluskopf und sichert das Längsgewölbe', tr: 'Pfanne = yuva · talus başını alttan taşır' },
   { id: 'lig_bifurcatum', la: 'Lig. bifurcatum', gelenk: 'art_subtalaris', knochen: ['calcaneus', 'pes'],
     fn: 'Y-förmig: Lig. calcaneonaviculare + Lig. calcaneocuboideum', tr: 'bi + furca = iki çatal' },
   { id: 'lig_plantare_longum', la: 'Lig. plantare longum', gelenk: 'art_subtalaris', knochen: ['calcaneus', 'pes'],
@@ -77,8 +88,10 @@ export function ligamentQuestion(s, seed = '') {
   if (!own.length) return null;
   const h = hash(seed + s.id);
   const lig = own[h % own.length];
-  const near = own.filter((l) => l.id !== lig.id);
-  const far = LIGAMENTS.filter((l) => l.id !== lig.id && !near.includes(l));
+  // Oberband und seine Teile nie als Ablenker (Lig. deltoideum wäre bei „Pars tibiocalcanea“ auch richtig)
+  const related = (l) => l.id === lig.id || l.teil === lig.id || lig.teil === l.id;
+  const near = own.filter((l) => !related(l));
+  const far = LIGAMENTS.filter((l) => !related(l) && !near.includes(l));
   const pool = [...near, ...far.sort((a, b) => hash(seed + a.id) - hash(seed + b.id))];
   const wrong = pool.slice(0, 3);
   const opts = [lig, ...wrong].sort((a, b) => hash(seed + a.id + 'o') - hash(seed + b.id + 'o'));

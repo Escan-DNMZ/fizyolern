@@ -1441,6 +1441,8 @@ function renderFocusSheet(k) {
     <p class="small" style="margin:6px 0" lang="de">${esc(s.fn)}</p>
     <div class="muted small">${flag()} ${esc(s.tr)}</div>
     ${joint ? `<div class="small" style="margin-top:6px">${t('f.ligJoint')} <button class="chip lm-go" data-go="${joint.id}" lang="la">${esc(shortName(joint))}</button></div>` : ''}
+    ${info.parts.length ? `<div class="small muted" style="margin-top:6px">${t('f.ligParts')}</div><div class="lm-list" lang="la">${info.parts.map(ligChip).join('')}</div>` : ''}
+    ${info.parent ? `<div class="small" style="margin-top:6px">${t('f.ligParent')} ${ligChip(info.parent)}</div>` : ''}
     ${info.others.length ? `<div class="small muted" style="margin-top:6px">${t('f.ligOthers')}</div><div class="lm-list" lang="la">${info.others.map(ligChip).join('')}</div>` : ''}
     <p class="muted small" style="margin:8px 0 0">${t('f.ligLegend')}</p>
     ${foot(false)}`;

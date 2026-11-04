@@ -346,6 +346,8 @@ addStrings({
   'f.legend.parts': [' · parçaya dokunarak seç', ' · tap a part to select it'],
   'f.ligs': ["🔗 Bağlar – dokununca 3D'de tek başına görünür:", '🔗 Ligaments – tap one to see it on its own in 3D:'],
   'f.ligJoint': ['Eklem:', 'Joint:'],
+  'f.ligParts': ['Parçaları (hepsi turuncu, her biri adıyla):', 'Its parts (all orange, each with its name):'],
+  'f.ligParent': ['Şu bağın parçası:', 'Part of:'],
   'f.ligOthers': ['Aynı eklemin diğer bağları:', 'Other ligaments of this joint:'],
   'f.ligLegend': ['🟠 bu bağ · 🟢 aynı eklemin diğer bağları (soluk) · bağa dokun → o bağ', '🟠 this ligament · 🟢 other ligaments of the joint (faint) · tap a ligament → that one'],
   'lig.3d': ["🧊 3D'de gör", '🧊 see in 3D'],

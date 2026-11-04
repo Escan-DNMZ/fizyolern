@@ -19,7 +19,7 @@ for (const l of LIGAMENTS) ok(LIG3D[l.id], `3D-Form fehlt: ${l.id}`);
 for (const id of Object.keys(LIG3D)) ok(LIGAMENTS.some((l) => l.id === id), `3D-Form ohne Band: ${id}`);
 
 for (const [id, g] of Object.entries(LIG3D)) {
-  ok((g.bands && g.bands.length) || g.ring, `${id}: weder Züge noch Ring`);
+  ok((g.bands && g.bands.length) || g.ring || (g.parts && g.parts.every((x) => LIG3D[x] && !LIG3D[x].parts)), `${id}: weder Züge, Ring noch gültige Teile`);
   for (const b of g.bands || []) {
     ok(b.length === 2 && pt(b[0]) && pt(b[1]), `${id}: Zug braucht zwei Punkte [x,y,z]`);
     const d = dist(b[0], b[1]);

@@ -668,12 +668,12 @@ export class Anatomy3D {
     }
   }
 
-  _show(kit, data, box, factor, dir) {
+  _show(kit, data, box, factor, dir, minDist) {
     this.scene.add(kit.root);
     this.focus = { root: kit.root, mats: kit.mats, labels: kit.labels, parts: [], deeper: [], activePart: null, ...data };
     this.applyVisibility();
     this.applyViewOffset();
-    this.focusBox(box, factor, dir);
+    this.focusBox(box, factor, dir, minDist);
   }
 
   enterFocus(id, { ghosts = [] } = {}) {
@@ -786,7 +786,7 @@ export class Anatomy3D {
     }
     // Bänder: am Gelenk alle Bänder des Gelenks, am Knochen alle, die dort ansetzen
     const ligIds = LIGAMENTS.filter((l) => LIG3D[l.id] && (isJoint ? l.gelenk === id : l.knochen.includes(id))).map((l) => l.id);
-    this._ligs(kit, ligIds, null, isJoint);
+    this._ligs(kit, ligIds.filter((l) => !LIG3D[l].parts), null, isJoint); // Bänder mit Teilen (Lig. deltoideum) über ihre Teile zeichnen
     this._ghosts(kit, ghosts.filter((g) => g !== id), skip);
     const c = box.getCenter(new THREE.Vector3());
     this._show(kit, { id, kind: isBone ? 'bone' : 'joint', axisCenter }, box, isBone ? 1.6 : 2.2, new THREE.Vector3(0.35, 0.15, c.z < -0.04 ? -1 : 1).normalize());
@@ -808,12 +808,16 @@ export class Anatomy3D {
   // Bänder als kleine Bänder (Kapseln) zwischen Ursprung und Ansatz; hi = hervorgehobenes Band, label = Namen zeigen
   _ligs(kit, ids, hi = null, label = true) {
     const box = new THREE.Box3();
-    for (const id of ids) {
+    const hiParts = (hi && LIG3D[hi].parts) || [];
+    // Oberband → seine Teile (jeder Teil mit eigenem Namen)
+    const flat = [...new Set(ids.flatMap((id) => LIG3D[id].parts || [id]))];
+    for (const id of flat) {
       const g = LIG3D[id];
       const lig = LIGAMENTS.find((l) => l.id === id);
-      const on = !hi || id === hi;
-      const mat = kit.mat({ color: id === hi ? COLORS.ligamentHi : COLORS.ligament, roughness: 0.45, transparent: !on, opacity: on ? 1 : 0.45, depthWrite: on });
-      const w = (g.w || 0.0022) * (id === hi ? 1.3 : 1);
+      const isHi = id === hi || hiParts.includes(id);
+      const on = !hi || isHi;
+      const mat = kit.mat({ color: isHi ? COLORS.ligamentHi : COLORS.ligament, roughness: 0.45, transparent: !on, opacity: on ? 1 : 0.45, depthWrite: on });
+      const w = (g.w || 0.0022) * (isHi ? 1.3 : 1);
       const meshes = [];
       if (g.ring) {
         const m = new THREE.Mesh(new THREE.TorusGeometry(g.ring.r, w, 8, 32), mat);
@@ -835,7 +839,9 @@ export class Anatomy3D {
       for (const m of meshes) { m.userData = { own: true, ligament: id }; m.renderOrder = 5; kit.root.add(m); }
       if (label && on && lig) {
         const [a, b] = (g.bands || [[g.ring && g.ring.c, g.ring && g.ring.c]])[0];
-        kit.labels.push(this.addLabel(lig.la.replace(/\s*\(.*\)$/, ''), V(a).add(V(b)).multiplyScalar(0.5), 'lbl-lig'));
+        // Teile mit gemeinsamem Ursprung (Fächer) nahe am Ansatz beschriften, sonst überlappen die Namen
+        const t = lig.teil ? 0.8 : 0.5;
+        kit.labels.push(this.addLabel(lig.la.replace(/\s*\(.*\)$/, ''), V(a).lerp(V(b), t), 'lbl-lig'));
       }
     }
     return box;
@@ -847,26 +853,30 @@ export class Anatomy3D {
     if (!lig) return null;
     const kit = this._kit();
     const own = lig.knochen.flatMap((b) => this._leftMeshes(b));
-    const others = LIGAMENTS.filter((l) => l.id !== id && l.gelenk === lig.gelenk && LIG3D[l.id]).map((l) => l.id);
-    const box = this._ligs(kit, [id, ...others], id);
+    // übrige Bänder des Gelenks; Oberband und Teile des gewählten Bands nicht doppelt
+    const fam = (l) => l.id === id || l.teil === id || l.id === lig.teil;
+    const others = LIGAMENTS.filter((l) => !fam(l) && l.gelenk === lig.gelenk && LIG3D[l.id]).map((l) => l.id);
+    const drawOthers = others.filter((o) => !LIGAMENTS.some((l) => l.teil === o)); // Oberbänder über ihre Teile
+    const box = this._ligs(kit, [id, ...drawOthers], id);
     box.expandByScalar(0.03);
     // beteiligte Knochen halb durchsichtig – Bänder im Gelenkinneren (Kreuzbänder, Lig. capitis femoris) bleiben sichtbar
     const boneMat = kit.mat({ color: COLORS.bone, roughness: 0.65, transparent: true, opacity: 0.6, depthWrite: false });
     own.forEach((m) => kit.root.add(cloneMesh(m, boneMat)));
     this._contextBones(kit, box, () => false, new Set(own), 0.06);
     // Kamera auf das Band selbst (nicht auf alle Bänder des Gelenks)
-    const g = LIG3D[id];
     const view = new THREE.Box3();
-    (g.bands || []).flat().forEach((p) => view.expandByPoint(V(p)));
-    if (g.ring) view.expandByPoint(V(g.ring.c));
+    for (const g of (LIG3D[id].parts || [id]).map((x) => LIG3D[x])) {
+      (g.bands || []).flat().forEach((p) => view.expandByPoint(V(p)));
+      if (g.ring) view.expandByPoint(V(g.ring.c));
+    }
     view.expandByScalar(0.025);
     // von der Seite schauen, auf der das Band liegt (weg von der Mitte der beteiligten Knochen); leicht von vorne
     const out = view.getCenter(new THREE.Vector3()).sub(boxOf(own).getCenter(new THREE.Vector3()));
     out.y = 0;
     if (out.lengthSq() < 1e-6) out.set(0, 0, 1);
     out.normalize().add(new THREE.Vector3(0, 0.25, 0.35));
-    this._show(kit, { id, kind: 'ligament' }, view, 2.2, out.normalize());
-    return { kind: 'ligament', others };
+    this._show(kit, { id, kind: 'ligament' }, view, 1.6, out.normalize(), 0.25); // kleine Bänder näher heranholen
+    return { kind: 'ligament', others, parts: LIG3D[id].parts || [], parent: lig.teil || null };
   }
 
   // Knochenpunkt: Knochen kräftig, Muskeln mit Ursprung (grün) / Ansatz (blau) / Umlenkung (orange) halbtransparent
@@ -1241,10 +1251,10 @@ export class Anatomy3D {
     }
   }
 
-  focusBox(box, factor = 2.6, viewDir = null) {
+  focusBox(box, factor = 2.6, viewDir = null, minDist = 0.35) {
     const c = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3()).length();
-    const dist = THREE.MathUtils.clamp(size * factor, 0.35, 2.6);
+    const dist = THREE.MathUtils.clamp(size * factor, minDist, 2.6);
     const dir = viewDir ? viewDir.clone() : new THREE.Vector3().subVectors(this.camera.position, this.controls.target).normalize();
     this.goal = { target: c, pos: c.clone().add(dir.multiplyScalar(dist)) };
   }
