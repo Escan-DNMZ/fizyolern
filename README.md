@@ -102,6 +102,7 @@ The project shows how someone with a clear idea and deep knowledge of a field ca
 ### 1. A plan for every day (*Bugün* = Today)
 - Today's and tomorrow's classes, read from my weekly timetable in Notion. If several weeks are planned ahead, the right one is picked by date.
 - A checklist with a progress ring and a streak: morning test for today's subjects, mistake cards, homework cards, 5 words of the day, the muscle and bone of the day.
+- The bone/joint of the day also lists its **important ligaments** (e.g. femur → Lig. iliofemorale, cruciate ligaments) with function and a word-root hint, plus one **ligament question of the day** (multiple choice, counts like a test answer). Data: `js/data/ligaments.js`.
 - **Way-home mode** (opens when the day's last class ends, read from the weekly plan; no classes that day = no way-home mode), steps that can each be skipped with one tap:
   1. today's wrong answers;
   2. mistake cards for today's subjects;

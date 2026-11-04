@@ -12,6 +12,7 @@ import { renderReport } from './report.js';
 import { containsFuzzy } from './fuzzy.js';
 import { LANDMARKS, findLandmark, shortLa } from './data/landmarks.js';
 import { axesOf } from './data/axes.js';
+import { ligamentsFor, ligamentQuestion } from './data/ligaments.js';
 import { todaysWords, weekWords, markKnown, recordWord, questionFor, checkTyped, typeLabel, WORDS_PER_DAY } from './words.js';
 import * as M3 from './data/muscle3d.js';
 import { UEBUNGEN } from './data/uebungen.js';
@@ -347,6 +348,7 @@ function renderToday() {
         <a class="btn" href="#/ders/${b.id}">${t('btn.openLesson')}</a>
         <a class="btn ghost" href="#/3d?id=${b.id}">${t('btn.show3d')}</a>
       </div>
+      ${ligBlock(b)}
     </div>
 
     ${[6, 0].includes(new Date().getDay()) ? `<a class="card row" href="#/cumartesi" style="text-decoration:none;color:inherit;border:2px solid var(--accent)"><span class="grow"><div class="eyebrow">${t('today.weekly')}</div><h2>${t('today.weeklyH')}</h2><div class="muted small">${t('today.weeklySub')}</div></span><span class="chev">›</span></a>` : ''}
@@ -370,6 +372,45 @@ function renderToday() {
       <div class="card" style="margin:0"><div class="muted small">${t('stat.cards')}</div><h2>${Object.values(s.srs).filter((c) => c.int >= 1).length}</h2></div>
     </div>
   `;
+  bindLigQuiz();
+}
+
+// ───────────────────────── Bänder zum Knochen/Gelenk des Tages ─────────────────────────
+// Liste der wichtigen Bänder + eine tägliche Bandfrage (Antwort zählt wie eine Testfrage)
+function ligBlock(b) {
+  const ligs = ligamentsFor(b);
+  if (!ligs.length) return '';
+  const q = ligamentQuestion(b, store.today());
+  const done = store.day().ligQ;
+  return `<div class="lig-box" style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px">
+    <div class="eyebrow">${t('today.ligs')}</div>
+    ${ligs.slice(0, 6).map((l) => `<div class="small" style="margin:4px 0"><b lang="la">${esc(l.la)}</b> <span lang="de">– ${esc(l.fn)}</span><div class="muted small">${esc(l.tr)}</div></div>`).join('')}
+    ${q ? `<div id="ligQ" data-ans="${q.ans}" data-qid="${esc(q.id)}" style="margin-top:10px">
+      <div class="eyebrow">${t('today.ligQ')}</div>
+      <p class="small" lang="de"><b>${esc(q.q)}</b></p>
+      ${q.opts.map((o, i) => `<button class="opt${done ? (i === q.ans ? ' correct' : done.pick === i ? ' wrong' : '') : ''}" data-i="${i}" ${done ? 'disabled' : ''} lang="la">${esc(o)}</button>`).join('')}
+      <div class="small muted" id="ligFb">${done ? (done.ok ? t('today.ligRight') : t('today.ligWrong', { x: esc(q.opts[q.ans]) })) : ''}</div>
+    </div>` : ''}
+  </div>`;
+}
+
+function bindLigQuiz() {
+  const box = $('#ligQ');
+  if (!box || store.day().ligQ) return;
+  const ans = +box.dataset.ans;
+  $$('.opt', box).forEach((btn) => btn.addEventListener('click', () => {
+    const i = +btn.dataset.i;
+    const ok = i === ans;
+    store.recordQuiz(box.dataset.qid, ok);
+    store.day().ligQ = { pick: i, ok };
+    store.save();
+    $$('.opt', box).forEach((x) => {
+      x.disabled = true;
+      if (+x.dataset.i === ans) x.classList.add('correct');
+      else if (x === btn) x.classList.add('wrong');
+    });
+    $('#ligFb', box).innerHTML = ok ? t('today.ligRight') : t('today.ligWrong', { x: esc($$('.opt', box)[ans].textContent) });
+  }));
 }
 
 // „Yarın: Physiologie + AM“ – Kursnamen ohne Lehrer/Raum
