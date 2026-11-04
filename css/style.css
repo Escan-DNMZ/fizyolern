@@ -273,8 +273,11 @@ body.focus3d .hud-top .chips, body.focus3d .hud-top .slider, body.focus3d .searc
 
 /* ───── Knochenpunkte, Achsen, Schritt-für-Schritt-Ansicht ───── */
 .lbl3d.lbl-lm { background: #9333ea; }
+.lbl3d.lbl-lig { background: #0f9488; }
+.lbl3d.lbl-part { background: #e8dcc2; color: #3b3326; }
 .lbl3d.lbl-via { background: #d97706; }
 .lbl3d.lbl-axis { color: #fff; }
+.badge.ligament { background: color-mix(in srgb, #0f9488 18%, transparent); color: #0f9488; }
 .badge.landmark { background: color-mix(in srgb, #9333ea 18%, transparent); color: #9333ea; }
 .stepper { display: flex; align-items: center; gap: 8px; margin: -2px 30px 8px 0; }
 .stepper .count { flex: 1; text-align: center; font-weight: 700; font-size: 13px; }

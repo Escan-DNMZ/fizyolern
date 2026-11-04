@@ -12,7 +12,9 @@ import { renderReport } from './report.js';
 import { containsFuzzy } from './fuzzy.js';
 import { LANDMARKS, findLandmark, shortLa } from './data/landmarks.js';
 import { axesOf } from './data/axes.js';
-import { ligamentsFor, ligamentQuestion } from './data/ligaments.js';
+import { LIGAMENTS, ligamentsFor, ligamentQuestion } from './data/ligaments.js';
+import { LIG3D } from './data/lig3d.js';
+import { partLatin } from './data/boneparts.js';
 import { todaysWords, weekWords, markKnown, recordWord, questionFor, checkTyped, typeLabel, WORDS_PER_DAY } from './words.js';
 import * as M3 from './data/muscle3d.js';
 import { UEBUNGEN } from './data/uebungen.js';
@@ -54,7 +56,8 @@ const ivlLabel = (s) => (lang() === 'en' ? String(s).replace(/dk$/, 'm').replace
 // Zahl mit Dezimalkomma (TR) bzw. -punkt (EN)
 const dec = (x) => (lang() === 'en' ? String(x) : String(x).replace('.', ','));
 // Struktur oder Knochenpunkt
-const findAny = (id) => findStructure(id) || (findLandmark(id) ? { ...findLandmark(id), kind: 'landmark' } : null);
+const findLig = (id) => { const l = LIGAMENTS.find((x) => x.id === id); return l ? { ...l, kind: 'ligament' } : null; };
+const findAny = (id) => findStructure(id) || (findLandmark(id) ? { ...findLandmark(id), kind: 'landmark' } : null) || findLig(id);
 const shortName = (s) => (s.kind === 'landmark' ? shortLa(s) : s.la.replace(/\s*\(.*\)$/, ''));
 // Grundwortschatz: live aus Notion, falls synchronisiert – sonst die mitgelieferte Kopie
 const gwWords = () => (getPrivate() && getPrivate().gw && getPrivate().gw.length ? getPrivate().gw : GRUNDWORTSCHATZ);
@@ -384,7 +387,7 @@ function ligBlock(b) {
   const done = store.day().ligQ;
   return `<div class="lig-box" style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px">
     <div class="eyebrow">${t('today.ligs')}</div>
-    ${ligs.slice(0, 6).map((l) => `<div class="small" style="margin:4px 0"><b lang="la">${esc(l.la)}</b> <span lang="de">– ${esc(l.fn)}</span><div class="muted small">${esc(l.tr)}</div></div>`).join('')}
+    ${ligs.slice(0, 6).map((l) => `<div class="small" style="margin:4px 0"><b lang="la">${esc(l.la)}</b> <span lang="de">– ${esc(l.fn)}</span><div class="muted small">${esc(l.tr)}${LIG3D[l.id] ? ` · <a href="#/3d?ids=${l.id}">${t('lig.3d')}</a>` : ''}</div></div>`).join('')}
     ${q ? `<div id="ligQ" data-ans="${q.ans}" data-qid="${esc(q.id)}" style="margin-top:10px">
       <div class="eyebrow">${t('today.ligQ')}</div>
       <p class="small" lang="de"><b>${esc(q.q)}</b></p>
@@ -1279,7 +1282,9 @@ async function render3D(_, params) {
         viewer = new Anatomy3D($('#canvas3d'), { onSelect: (sid, o) => (o && o.focus ? openFrom(sid) : showSheet(sid)) });
         viewer.onPart = (k) => (k && k.group ? showTourStep(tour.ids.indexOf(k.group)) : renderFocusSheet(k));
         viewer.onLandmark = (lid) => (focusState ? openFrom(lid) : startFocus(lid));
+        viewer.onLigament = (lid) => openFrom(lid);
         viewer.onQuizTap = onQuizTap;
+        if (location.hostname === 'localhost') window.__viewer = viewer; // nur lokal: Koordinaten im Modell nachmessen
         $('#hint3d').textContent = t('h3d.hint');
         setup3DControls();
       }).catch((e) => {
@@ -1374,6 +1379,8 @@ function stepperHtml() {
 
 const lmChip = (l, prefix = '') => `<button class="chip lm-go" data-go="${l.id}">${prefix}${esc(shortLa(l))}</button>`;
 const muscleChip = (id) => { const m = findStructure(id); return m ? `<button class="chip lm-go" data-go="${id}">${esc(m.la)}</button>` : ''; };
+const ligChip = (id) => { const l = findLig(id); return l ? `<button class="chip lm-go" data-go="${id}">🔗 ${esc(shortName(l))}</button>` : ''; };
+const ligLine = (ids) => (ids && ids.length ? `<div class="small muted" style="margin-top:6px">${t('f.ligs')}</div><div class="lm-list" lang="la">${ids.map(ligChip).join('')}</div>` : '');
 
 function renderFocusSheet(k) {
   if (!focusState) return;
@@ -1415,14 +1422,28 @@ function renderFocusSheet(k) {
     <p class="small" style="margin:6px 0">${esc(s.typ || '')}</p>
     ${s.merk ? `<dl class="facts small" lang="de"><dt>Wichtige Strukturen</dt><dd>${esc(s.merk)}</dd></dl>` : ''}
     ${lms.length ? `<div class="small muted" style="margin-top:6px">${t('f.boneLms')}</div><div class="lm-list">${lms.map((l) => lmChip(l)).join('')}</div>` : ''}
+    ${ligLine(info.ligaments)}
     ${foot()}`;
   } else if (info.kind === 'joint') {
     body = `${head(kindLabel('joint'), 'joint')}
     <p class="small" style="margin:6px 0">${esc(s.typ || '')}</p>
     <dl class="facts small" lang="de"><dt>Neutral-Null</dt><dd>${esc(s.nn || '')}</dd>${s.baender ? `<dt>Bänder</dt><dd>${esc(s.baender)}</dd>` : ''}</dl>
+    ${ligLine(info.ligaments)}
     ${info.axes.length ? `<button class="btn ghost block" id="axesBtn" style="margin-top:8px">${focusState.axes ? t('f.axesHide') : t('f.axesShow')}</button>
       ${focusState.axes ? `<div class="small" style="margin-top:8px" lang="de">${info.axes.map((a) => `<div style="margin:4px 0"><span class="dot" style="background:${a.color}"></span><b>${esc(a.la)}</b> <span class="muted">(${esc(tx(a))})</span> → ${esc(a.mv)} <span class="muted">· in der ${esc(a.ebene)}</span></div>`).join('')}</div>` : ''}` : ''}
     ${foot()}`;
+  } else if (info.kind === 'ligament') {
+    const joint = findStructure(s.gelenk);
+    body = `${stepperHtml()}
+    <button class="close" aria-label="${t('f.allBody')}">✕</button>
+    <span class="badge ligament">${kindLabel('ligament')}</span>
+    <h2 style="margin:6px 0 0;font-size:18px" lang="la">${esc(s.la)}</h2>
+    <p class="small" style="margin:6px 0" lang="de">${esc(s.fn)}</p>
+    <div class="muted small">${flag()} ${esc(s.tr)}</div>
+    ${joint ? `<div class="small" style="margin-top:6px">${t('f.ligJoint')} <button class="chip lm-go" data-go="${joint.id}" lang="la">${esc(shortName(joint))}</button></div>` : ''}
+    ${info.others.length ? `<div class="small muted" style="margin-top:6px">${t('f.ligOthers')}</div><div class="lm-list" lang="la">${info.others.map(ligChip).join('')}</div>` : ''}
+    <p class="muted small" style="margin:8px 0 0">${t('f.ligLegend')}</p>
+    ${foot(false)}`;
   } else if (info.kind === 'landmark') {
     const bone = findStructure(s.bone);
     const list = (ids, title) => (ids.length ? `<div class="small" style="margin-top:8px"><b>${title}</b></div><div class="lm-list">${ids.map(muscleChip).join('')}</div>` : '');
@@ -1748,6 +1769,7 @@ function showSheet(id) {
   sheet.hidden = false;
   sheet.classList.add('collapsed');
   const summary = s.kind === 'muscle' ? tx(s, 'ftr') : s.kind === 'bone' ? s.typ : `${s.typ}`;
+  const part = s.kind === 'bone' && viewer && viewer.tappedPart ? partLatin(viewer.tappedPart) : null; // z. B. Os naviculare in „pes“
   const more = s.kind === 'muscle'
     ? `<dl class="facts" lang="de"><dt>Ursprung</dt><dd>${esc(s.o)}</dd><dt>Ansatz</dt><dd>${esc(s.i)}</dd><dt>Innervation</dt><dd>${esc(s.inn)}</dd><dt>Funktion</dt><dd>${esc(s.f)}</dd></dl>`
     : s.kind === 'bone'
@@ -1758,6 +1780,7 @@ function showSheet(id) {
     <span class="badge ${s.kind}">${kindLabel(s.kind)}</span>
     <h2 style="margin:6px 0 0;font-size:18px">${esc(s.la)}</h2>
     <div class="muted small">${esc(s.de)} · ${flagFor(s)} ${esc(tx(s))}</div>
+    ${part ? `<div class="small" style="margin-top:4px">👆 <b lang="la">${esc(part.la)}</b> <span class="muted" lang="de">· ${esc(part.de)}</span></div>` : ''}
     <p class="small" style="margin:6px 0">${esc(summary)}</p>
     <div class="more small">${more}${s.k || s.klinik ? `<div class="klinik">🩺 ${esc(s.k || s.klinik)}</div>` : ''}</div>
     <div class="grid2" style="margin-top:8px">

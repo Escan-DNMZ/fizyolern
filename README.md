@@ -102,7 +102,7 @@ The project shows how someone with a clear idea and deep knowledge of a field ca
 ### 1. A plan for every day (*Bugün* = Today)
 - Today's and tomorrow's classes, read from my weekly timetable in Notion. If several weeks are planned ahead, the right one is picked by date.
 - A checklist with a progress ring and a streak: morning test for today's subjects, mistake cards, homework cards, 5 words of the day, the muscle and bone of the day.
-- The bone/joint of the day also lists its **important ligaments** (e.g. femur → Lig. iliofemorale, cruciate ligaments) with function and a word-root hint, plus one **ligament question of the day** (multiple choice, counts like a test answer). Data: `js/data/ligaments.js`.
+- The bone/joint of the day also lists its **important ligaments** (e.g. femur → Lig. iliofemorale, cruciate ligaments) with function and a word-root hint, plus one **ligament question of the day** (multiple choice, counts like a test answer), and a *🧊 see in 3D* link for each ligament. Data: `js/data/ligaments.js`.
 - **Way-home mode** (opens when the day's last class ends, read from the weekly plan; no classes that day = no way-home mode), steps that can each be skipped with one tap:
   1. today's wrong answers;
   2. mistake cards for today's subjects;
@@ -173,6 +173,8 @@ The German state exam has a written, an oral and a practical part, and each must
   - the deeper muscles underneath shown semi-transparent.
 - **Layers:** superficial / middle / deep.
 - **Bony landmarks:** 19 points on the pelvis and leg. Tap one to see which muscles start, end or change direction there.
+- **Ligaments in 3D:** the important ligaments are drawn as small bands from origin to insertion (e.g. the Y-shaped Lig. iliofemorale, the fan of the Lig. deltoideum, the ring of the Lig. anulare radii). A joint shows all its ligaments with names; tap one (or *🧊 see in 3D* on the bone of the day) to see it alone in orange, with the bones semi-transparent so the cruciate ligaments inside the knee stay visible. Data: `js/data/lig3d.js`.
+- **Single bones:** in groups like the foot, hand or spine, tapping a bone shows its own name (e.g. *Os cuneiforme intermedium*, *Os metatarsi III*). The bone's focus view labels each kind of bone once (only *Os metatarsi I*, not all five).
 - **Joint axes:** transverse, sagittal and longitudinal axes drawn through a joint (left picture), each with the movement that happens around it.
 - **Step-by-step viewer:** a question about "the spine" opens the cervical, thoracic and lumbar spine and the sacrum one after another, then all together in four colours (middle picture).
 - **"Find the point" drill:** the app asks "Show the SIAS" or "Where does M. sartorius originate?" and I tap the bone. A wrong tap shows the correct point with its name (right picture).

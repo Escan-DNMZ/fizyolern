@@ -5,6 +5,9 @@ import { BONES, MUSCLES, JOINTS } from './data/anatomy.js';
 import { MUSCLE3D, partNames } from './data/muscle3d.js';
 import { LANDMARKS, findLandmark, landmarksOf, shortLa } from './data/landmarks.js';
 import { axesOf } from './data/axes.js';
+import { LIGAMENTS } from './data/ligaments.js';
+import { LIG3D } from './data/lig3d.js';
+import { partLatin } from './data/boneparts.js';
 
 const V = (p, sx = 1) => new THREE.Vector3(p[0] * sx, p[1], p[2]);
 
@@ -22,6 +25,8 @@ const COLORS = {
   muscle: 0xb8383b,
   tendon: 0xe9e2d0,
   joint: 0x3b82f6,
+  ligament: 0x0f9488,
+  ligamentHi: 0xf59e0b,
   highlight: 0xffc83d,
 };
 
@@ -587,6 +592,7 @@ export class Anatomy3D {
     }
     this.applyVisibility();
     if (!silent) this.onSelect(id);
+    this.tappedPart = ''; // gilt nur für dieses Antippen (Suche/Links zeigen keinen Einzelknochen)
   }
 
   focusOn(group) {
@@ -672,6 +678,7 @@ export class Anatomy3D {
 
   enterFocus(id, { ghosts = [] } = {}) {
     if (findLandmark(id)) return this.enterLandmark(id, { ghosts });
+    if (LIG3D[id]) return this.enterLigament(id);
     const muscle = MUSCLES.find((m) => m.id === id);
     if (!muscle) return this.enterStructure(id, { ghosts });
     const group = this.byId.get(id);
@@ -770,16 +777,96 @@ export class Anatomy3D {
       const lms = LANDMARKS.filter((l) => l.bone === id);
       lms.forEach((l) => this._dot(kit, V(l.pos), 0x9333ea, shortLa(l), 'lbl-lm', l.id, 0.006));
       lmIds = lms.map((l) => l.id);
+      this._partLabels(kit, own, new Set(lms.map((l) => l.la)));
     } else {
       axisCenter = box.getCenter(new THREE.Vector3());
       const jb = new THREE.Box3().setFromCenterAndSize(axisCenter, new THREE.Vector3(0.05, 0.05, 0.05));
       this._contextBones(kit, box, (b) => jb.intersectsBox(new THREE.Box3().setFromObject(b)), skip);
       box.expandByScalar(0.06);
     }
+    // Bänder: am Gelenk alle Bänder des Gelenks, am Knochen alle, die dort ansetzen
+    const ligIds = LIGAMENTS.filter((l) => LIG3D[l.id] && (isJoint ? l.gelenk === id : l.knochen.includes(id))).map((l) => l.id);
+    this._ligs(kit, ligIds, null, isJoint);
     this._ghosts(kit, ghosts.filter((g) => g !== id), skip);
     const c = box.getCenter(new THREE.Vector3());
     this._show(kit, { id, kind: isBone ? 'bone' : 'joint', axisCenter }, box, isBone ? 1.6 : 2.2, new THREE.Vector3(0.35, 0.15, c.z < -0.04 ? -1 : 1).normalize());
-    return { kind: isBone ? 'bone' : 'joint', landmarks: lmIds, axes: isJoint ? axesOf(id) : [] };
+    return { kind: isBone ? 'bone' : 'joint', landmarks: lmIds, axes: isJoint ? axesOf(id) : [], ligaments: ligIds };
+  }
+
+  // Einzelknochen einer Gruppe (z. B. Fußwurzel) beschriften – jede Art nur einmal (Os metatarsi I statt I–V)
+  _partLabels(kit, own, skip = new Set()) {
+    if (own.length < 2) return;
+    const seen = new Set(skip); // schon als Knochenpunkt beschriftet (z. B. Os cuneiforme mediale)
+    for (const m of own) {
+      const n = partLatin(m.userData.part);
+      if (!n || seen.has(n.typ) || seen.has(n.la)) continue;
+      seen.add(n.typ);
+      kit.labels.push(this.addLabel(n.la, boxOf([m]).getCenter(new THREE.Vector3()), 'lbl-part'));
+    }
+  }
+
+  // Bänder als kleine Bänder (Kapseln) zwischen Ursprung und Ansatz; hi = hervorgehobenes Band, label = Namen zeigen
+  _ligs(kit, ids, hi = null, label = true) {
+    const box = new THREE.Box3();
+    for (const id of ids) {
+      const g = LIG3D[id];
+      const lig = LIGAMENTS.find((l) => l.id === id);
+      const on = !hi || id === hi;
+      const mat = kit.mat({ color: id === hi ? COLORS.ligamentHi : COLORS.ligament, roughness: 0.45, transparent: !on, opacity: on ? 1 : 0.45, depthWrite: on });
+      const w = (g.w || 0.0022) * (id === hi ? 1.3 : 1);
+      const meshes = [];
+      if (g.ring) {
+        const m = new THREE.Mesh(new THREE.TorusGeometry(g.ring.r, w, 8, 32), mat);
+        m.position.copy(V(g.ring.c));
+        m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), V(g.ring.axis).normalize());
+        meshes.push(m);
+        box.expandByPoint(V(g.ring.c).addScalar(g.ring.r)).expandByPoint(V(g.ring.c).addScalar(-g.ring.r));
+      }
+      for (const [a, b] of g.bands || []) {
+        const m = capsule(V(a), V(b), w);
+        m.material = mat;
+        meshes.push(m);
+        // größere, unsichtbare Trefferfläche für den Finger
+        const hit = capsule(V(a), V(b), 0.007);
+        hit.material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
+        meshes.push(hit);
+        box.expandByPoint(V(a)).expandByPoint(V(b));
+      }
+      for (const m of meshes) { m.userData = { own: true, ligament: id }; m.renderOrder = 5; kit.root.add(m); }
+      if (label && on && lig) {
+        const [a, b] = (g.bands || [[g.ring && g.ring.c, g.ring && g.ring.c]])[0];
+        kit.labels.push(this.addLabel(lig.la.replace(/\s*\(.*\)$/, ''), V(a).add(V(b)).multiplyScalar(0.5), 'lbl-lig'));
+      }
+    }
+    return box;
+  }
+
+  // Ein Band: beteiligte Knochen kräftig, das Band orange, die übrigen Bänder des Gelenks blass
+  enterLigament(id) {
+    const lig = LIGAMENTS.find((l) => l.id === id);
+    if (!lig) return null;
+    const kit = this._kit();
+    const own = lig.knochen.flatMap((b) => this._leftMeshes(b));
+    const others = LIGAMENTS.filter((l) => l.id !== id && l.gelenk === lig.gelenk && LIG3D[l.id]).map((l) => l.id);
+    const box = this._ligs(kit, [id, ...others], id);
+    box.expandByScalar(0.03);
+    // beteiligte Knochen halb durchsichtig – Bänder im Gelenkinneren (Kreuzbänder, Lig. capitis femoris) bleiben sichtbar
+    const boneMat = kit.mat({ color: COLORS.bone, roughness: 0.65, transparent: true, opacity: 0.6, depthWrite: false });
+    own.forEach((m) => kit.root.add(cloneMesh(m, boneMat)));
+    this._contextBones(kit, box, () => false, new Set(own), 0.06);
+    // Kamera auf das Band selbst (nicht auf alle Bänder des Gelenks)
+    const g = LIG3D[id];
+    const view = new THREE.Box3();
+    (g.bands || []).flat().forEach((p) => view.expandByPoint(V(p)));
+    if (g.ring) view.expandByPoint(V(g.ring.c));
+    view.expandByScalar(0.025);
+    // von der Seite schauen, auf der das Band liegt (weg von der Mitte der beteiligten Knochen); leicht von vorne
+    const out = view.getCenter(new THREE.Vector3()).sub(boxOf(own).getCenter(new THREE.Vector3()));
+    out.y = 0;
+    if (out.lengthSq() < 1e-6) out.set(0, 0, 1);
+    out.normalize().add(new THREE.Vector3(0, 0.25, 0.35));
+    this._show(kit, { id, kind: 'ligament' }, view, 2.2, out.normalize());
+    return { kind: 'ligament', others };
   }
 
   // Knochenpunkt: Knochen kräftig, Muskeln mit Ursprung (grün) / Ansatz (blau) / Umlenkung (orange) halbtransparent
@@ -1195,12 +1282,13 @@ export class Anatomy3D {
       }
       if (this.focus) {
         const pick = [];
-        this.focus.root.traverse((o) => { if (o.isMesh && (o.userData.focusPart !== undefined || o.userData.deepId || o.userData.landmark || o.userData.groupId)) pick.push(o); });
+        this.focus.root.traverse((o) => { if (o.isMesh && (o.userData.focusPart !== undefined || o.userData.deepId || o.userData.landmark || o.userData.groupId || o.userData.ligament)) pick.push(o); });
         const hits = ray.intersectObjects(pick, false);
         const h = hits.find((x) => x.object.userData.landmark) || hits[0]; // Knochenpunkte liegen obenauf
         if (!h) { this.focusPart(null); this.onPart(null); return; }
         const u = h.object.userData;
         if (u.landmark) { if (u.landmark !== this.focus.id) this.onLandmark(u.landmark); }
+        else if (u.ligament) { if (u.ligament !== this.focus.id && this.onLigament) this.onLigament(u.ligament); }
         else if (u.focusPart !== undefined) { this.focusPart(u.focusPart); this.onPart(u.focusPart); }
         else if (u.groupId) this.onPart({ group: u.groupId });
         else this.onSelect(u.deepId, { focus: true });
@@ -1212,6 +1300,7 @@ export class Anatomy3D {
       }
       const visible = this.meshes.filter((m) => m.parent.visible && !(m.material.transparent && m.material.opacity < 0.5 && m.userData.id !== this.selected));
       const hit = ray.intersectObjects(visible, false)[0];
+      this.tappedPart = hit ? hit.object.userData.part || '' : ''; // Einzelknochen für die Karte (z. B. Os naviculare)
       if (hit) this.select(hit.object.userData.id, { focus: false });
       else this.select(null);
     });
