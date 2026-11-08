@@ -48,14 +48,16 @@ export function mockFaecher() {
 // Notenschlüssel wie in vielen Berufsfachschulen (Prozent → Note), nur als grobe Orientierung
 export const noteFor = (pct) => (pct >= 92 ? 1 : pct >= 81 ? 2 : pct >= 67 ? 3 : pct >= 50 ? 4 : pct >= 30 ? 5 : 6);
 
-function startMock(fach) {
-  const mcq = spread(examPool(fach), MOCK_MCQ).map((q) => {
+// lessons = nur diese Lektionen (Sınav hazırlığı: nur die Prüfungsthemen); leer = ganzes Fach
+export function startMock(fach, lessons = []) {
+  const inL = (q) => !lessons.length || lessons.includes(q.lesson);
+  const mcq = spread(examPool(fach).filter(inL), MOCK_MCQ).map((q) => {
     const p = prepare(q);
     return { id: p.id, cat: p.cat, lesson: p.lesson, q: p.q, opts: p.opts, ans: p.ans, x: p.x, xEn: p.xEn, topic: topicName(q) };
   });
-  const open = spread(openFor(fach), MOCK_OPEN).map((q) => ({ id: q.id, q: q.q, a: q.a, kw: q.kw, topic: topicName(q) }));
+  const open = spread(openFor(fach).filter(inL), MOCK_OPEN).map((q) => ({ id: q.id, q: q.q, a: q.a, kw: q.kw, topic: topicName(q) }));
   const s = store.get();
-  s.mockRun = { fach, start: Date.now(), end: Date.now() + MOCK_MIN * 60000, i: 0, mcq, open, pick: {}, text: {} };
+  s.mockRun = { fach, lessons, start: Date.now(), end: Date.now() + MOCK_MIN * 60000, i: 0, mcq, open, pick: {}, text: {} };
   store.save();
   location.hash = '#/deneme/run';
 }
@@ -112,7 +114,7 @@ function renderRun() {
   const answered = (k) => (k < r.mcq.length ? r.pick[r.mcq[k].id] !== undefined : !!(r.text[r.open[k - r.mcq.length].id] || '').trim());
   const nAnswered = [...Array(total).keys()].filter(answered).length;
   view.innerHTML = `
-    <div class="row mock-head"><span class="badge">${esc(r.fach)}</span><span class="spacer"></span><span class="mock-timer" id="mockTimer">⏱️ ${mmss(leftMs())}</span></div>
+    <div class="row mock-head"><span class="badge">${r.lessons && r.lessons.length ? '🎯 ' : ''}${esc(r.fach)}</span><span class="spacer"></span><span class="mock-timer" id="mockTimer">⏱️ ${mmss(leftMs())}</span></div>
     <div class="mock-nav">${[...Array(total).keys()].map((k) => `<button class="${k === i ? 'on' : ''} ${answered(k) ? 'done' : ''} ${k >= r.mcq.length ? 'open' : ''}" data-go="${k}" aria-label="${t('mock.qAria', { n: k + 1 })}">${k + 1}</button>`).join('')}</div>
     <div class="muted small" style="margin:6px 2px">${isOpen ? t('mock.openHint') : t('mock.mc')} · ${t('mock.answered', { a: nAnswered, t: total })}</div>
     <div class="question" lang="de">${escGap(q.q)}</div>
@@ -182,6 +184,7 @@ function finish() {
   store.recordMock({
     date: store.today(),
     fach: r.fach,
+    ...(r.lessons && r.lessons.length ? { lessons: r.lessons } : {}),
     pct: Math.round((got / max) * 100),
     min: Math.max(1, Math.round((Math.min(Date.now(), r.end) - r.start) / 60000)),
     mcq: { r: mcq.filter((q) => q.ok).length, n: mcq.length },
@@ -203,7 +206,7 @@ function renderResult(idx) {
   const rows = Object.entries(m.topics).map(([t, v]) => ({ t, p: v.n ? Math.round((v.r / v.n) * 100) : 0, v })).sort((a, b) => a.p - b.p);
   view.innerHTML = `
     <div class="card" style="text-align:center">
-      <div class="eyebrow">${t('quiz.mockEyebrow')} · ${esc(m.fach)}</div>
+      <div class="eyebrow">${t('quiz.mockEyebrow')} · ${m.lessons ? '🎯 ' : ''}${esc(m.fach)}</div>
       <div class="score">${t('pct', { p: m.pct })}</div>
       <div class="muted">${t('mock.grade', { n: note, r: m.mcq.r, t: m.mcq.n, o: dec(m.open.score), on: m.open.n, min: m.min })}</div>
       <div class="small" style="margin-top:6px">${t(note <= 2 ? 'mock.ready' : note <= 4 ? 'mock.pass' : 'mock.moreWork')}</div>
@@ -223,5 +226,5 @@ function renderResult(idx) {
       <a class="btn ghost" href="#/deneme">${t('mock.list')}</a>
       <button class="btn" id="mockAgain">${t('mock.again')}</button>
     </div>`;
-  $('#mockAgain').addEventListener('click', () => startMock(m.fach));
+  $('#mockAgain').addEventListener('click', () => startMock(m.fach, m.lessons || []));
 }

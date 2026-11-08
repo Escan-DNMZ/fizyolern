@@ -111,6 +111,7 @@ The project shows how someone with a clear idea and deep knowledge of a field ca
   5. today's lesson notes in a large-print reading mode, followed by a 5-question mini test.
 - **Saturday review**: everything I got wrong this week, all mistake cards, the week's words and open questions.
 - **Exam countdown** ("5 days until the PT assessment exam"), read from Notion. Subjects with an exam within 7 days get priority everywhere.
+- **Exam tab** (*Sınav*). When the next exam has a topic list, an extra tab appears: a day-by-day plan through the topics until the exam, today's topic test, term cards, an essay question, progress per topic, and on the day before a mock exam limited to exactly the exam topics.
 
 ### 2. Tests that adapt (*Test*)
 - **Adaptive selection.** Questions I missed come back more often; questions I answered correctly yesterday are skipped today; harder question types unlock as accuracy rises.

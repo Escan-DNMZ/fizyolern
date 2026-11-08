@@ -20,6 +20,7 @@ import * as M3 from './data/muscle3d.js';
 import { UEBUNGEN } from './data/uebungen.js';
 import { masteredLessons, vocabTr, createdToday, DONUS_MAX } from './quizgen.js';
 import { initExam, renderMock } from './exam.js';
+import { initPruefung, renderPruefung, pruefState, TOPIC_QUIZ } from './pruefung.js';
 import { initOral, renderOral, leaveOral } from './oral.js';
 import { initBefund, renderCases } from './befund.js';
 import { renderChecklist, ckFaecher, hasChecklist, summary as ckSummary } from './checkliste.js';
@@ -125,6 +126,20 @@ function deckCards(deck) {
     const rev = deck === 'odev' || (only && !only.includes('Anatomie')) ? [] : revWrong().map((c) => revCard(c, '✗ ' + t('rev.tag')));
     return [...notion, ...rev];
   }
+  if (deck === 'sinav') {
+    // Fachbegriffe der Prüfungsthemen – die Begriffe des heutigen Themas zuerst
+    const ps = pruefState();
+    if (!ps) return [];
+    const seen = new Set();
+    const order = (id) => (ps.todayIds.includes(id) ? 0 : 1);
+    return LESSONS.filter((l) => ps.all.includes(l.id)).sort((a, b) => order(a.id) - order(b.id))
+      .flatMap((l) => l.vocab.map((v) => ({ ...v, id: 'lv:' + v.de, cat: l.fach })))
+      .filter((v) => !seen.has(v.id) && seen.add(v.id)).map((v) => ({
+        id: v.id, tag: '🎯 ' + ps.exam.fach, de: v.de,
+        front: rev ? vocabTr(v) : v.de,
+        back: `<div class="big">${esc(rev ? v.de : vocabTr(v))}</div>${v.ex ? `<div class="sub">„${esc(v.ex)}“</div>` : ''}`,
+      }));
+  }
   if (deck === 'ters' || deck.startsWith('ters:')) {
     const kind = deck.slice(5);
     return reverseCards().filter((c) => !kind || c.kind === kind).map((c) => revCard(c));
@@ -160,6 +175,7 @@ function deckCards(deck) {
 }
 
 const DECKS = () => [
+  ...(pruefState() && deckCards('sinav').length ? [{ id: 'sinav', name: t('deck.sinav', { f: pruefState().exam.fach }), sub: t('deck.sinavSub') }] : []),
   ...(odevList().length ? [{ id: 'odev', name: t('deck.odev'), sub: t('deck.odevSub', { list: [...new Set(odevList().map((f) => f.odev))].join(', ') }) }] : []),
   ...(fehlerList().length || revWrong().length ? [{ id: 'fehler', name: t('deck.fehler'), sub: t(fehlerList().length ? 'deck.fehlerSub' : 'deck.fehlerSubRev') }] : []),
   ...FAECHER.map((f) => ({ id: 'ders:' + f, name: t('deck.ders', { f }), sub: t('deck.dersSub') })),
@@ -180,6 +196,7 @@ let viewer = null; // Anatomy3D-Instanz (lazy)
 let current = '';
 
 initExam({ view, $, $$, esc, escGap, toast, allOpen });
+initPruefung({ view, $, $$, esc, allOpen, toast });
 initOral({ view, $, $$, esc, toast, allOpen });
 initBefund({ view, $, $$, esc, toast, btn3d });
 // 🔊-Knopf für deutsche/lateinische Aussprache
@@ -205,6 +222,7 @@ const routes = {
   oku: { title: 'route.oku', tab: 'bugun', render: renderReading, back: '#/donus' },
   cumartesi: { title: 'route.cumartesi', tab: 'bugun', render: renderSaturday, back: '#/bugun' },
   deneme: { title: 'route.deneme', tab: 'test', render: renderMock, back: '#/test' },
+  sinav: { title: 'route.sinav', tab: 'sinav', render: renderPruefung },
   vaka: { title: 'route.vaka', tab: 'test', render: renderCases, back: 'history' },
   sozlu: { title: 'route.sozlu', tab: 'sorular', render: renderOral, back: '#/sorular' },
   kurs: { title: 'route.kurs', tab: null, render: (args, params) => renderKurs(view, args, params, { toast }), back: 'history' },
@@ -221,6 +239,8 @@ function navigate() {
   if (name !== 'sozlu') leaveOral();
 
   $('#title').textContent = t(r.title);
+  // Tab „Sınav“ nur, solange eine Prüfung mit Themen ansteht (wie das 📌 Ödev-Deck)
+  $('#sinavTab').hidden = !pruefState();
   $$('.tabbar a').forEach((a) => a.classList.toggle('active', a.dataset.tab === r.tab));
   const back = $('#backBtn');
   // 3D-Ansicht aus einer Frage/Lektion geöffnet (#/3d?ids=…): Zurück führt dorthin (z. B. zur laufenden Testfrage)
@@ -259,7 +279,12 @@ function renderToday() {
   // höchstens 20 Fehlerkarten pro Tag (wie in der Kartensitzung)
   const fehlerOpen = Math.min(fehlerCards.filter((c) => store.isNew(c.id) || store.isDue(c.id)).length, Math.max(0, FEHLER_PER_DAY - (d.fehlerSeen || []).length));
   const odevOpen = deckCards('odev').filter((c) => store.isNew(c.id) || store.isDue(c.id)).length;
+  const ps = pruefState();
   const tasks = [
+    // Sınav hazırlığı: Thementest des Tages (Vortag der Prüfung: Deneme sınavı)
+    ...(ps && !ps.examDay ? [ps.review
+      ? { done: (s.mocks || []).some((m) => m.date === store.today() && m.lessons), label: t('task.pruefReview', { f: esc(ps.exam.fach) }), href: '#/sinav' }
+      : { done: !!d.pruef, label: `${t('task.pruef', { t: esc(ps.today.map((x) => x.name).join(' + ')) })}${d.pruef ? ` <span class="muted">${d.pruef.r}/${d.pruef.n}</span>` : ''}`, href: `#/test?kat=${encodeURIComponent(ps.todayKat)}&n=${TOPIC_QUIZ}` }] : []),
     ...(deckCards('odev').length ? [{ done: !odevOpen, label: `${t('task.odev', { list: esc([...new Set(odevList().map((f) => f.odev))].join(', ')) })} <span class="muted">(${t('n.cards', { n: odevOpen })})</span>`, href: '#/oturum/odev' }] : []),
     // Knochenpunkte gehören zur Hausaufgabe (PT Befund) – am 3D-Modell zeigen
     ...(deckCards('odev').length ? [{ done: !!d.lmQuiz, label: `${t('task.lmQuiz')} ${d.lmQuiz ? `<span class="muted">${d.lmQuiz.r}/${d.lmQuiz.n}</span>` : `<span class="muted">${t('task.lmQuizSub')}</span>`}`, href: '#/3d?quiz=pelvis' }] : []),
@@ -446,6 +471,7 @@ function examCard() {
       ${e.topic && !k ? `<div class="muted small" lang="de">${esc(e.topic)} · ${e.date.slice(8, 10)}.${e.date.slice(5, 7)}.</div>` : ''}
     </div>`).join('')}
     ${hw.map((e) => `<div class="small" style="margin-top:6px">${t('hw')}${e.fach ? ' · ' + esc(e.fach) : ''}${e.topic ? ': ' + esc(e.topic) : ''} – <b>${when(e)}</b></div>`).join('')}
+    ${pruefState() ? `<a class="btn block" style="margin-top:10px" href="#/sinav">${t('pr.openTab')}</a>` : ''}
     ${ex.length ? `<div class="grid2" style="margin-top:10px">
       <a class="btn" href="#/deneme">${t('btn.mock')}</a>
       ${FAECHER.includes(ex[0].fach) ? `<a class="btn ghost" href="#/test?kat=${encodeURIComponent('Ders: ' + ex[0].fach)}">${t('btn.quickTest')}</a>` : `<a class="btn ghost" href="#/test">${t('btn.test')}</a>`}
@@ -932,7 +958,8 @@ function renderQuizStart(_, params = new URLSearchParams()) {
     // derselbe Test läuft noch (z. B. zurück aus der 3D-Ansicht über den Tagesplan) → dort weitermachen
     if (quiz && !quiz.finished && quiz.cat === kat) return renderQuizQuestion();
     const donus = params.get('donus') === '1' || kat.startsWith('Dönüş: ');
-    const n = donus ? 5 : kat.startsWith('Hatalar: ') ? 30 : store.get().settings.quizGoal;
+    const nP = parseInt(params.get('n'), 10); // z. B. Thementest im Sınav-Tab (#/test?kat=…&n=15)
+    const n = donus ? 5 : kat.startsWith('Hatalar: ') ? 30 : nP >= 5 && nP <= 40 ? nP : store.get().settings.quizGoal;
     const qs = buildQuiz(kat, n, store.get().customVocab, { morning: !donus && kat === morningKat(), donus });
     if (!qs.length) toast(t('quiz.none'));
     else { startQuiz({ qs, i: 0, right: 0, wrong: [], finished: false, cat: kat, donus, want: n }); return renderQuizQuestion(); }
@@ -967,7 +994,7 @@ function renderQuizQuestion() {
   const q = quiz.qs[quiz.i];
   view.innerHTML = `
     <div class="row"><span class="badge">${esc(q.badge || q.cat)}</span><span class="spacer"></span><span class="muted small">${quiz.i + 1} / ${quiz.qs.length}</span></div>
-    ${quiz.i === 0 && quiz.want > quiz.qs.length ? `<div class="muted small" style="margin:6px 0 0">${t('quiz.short', { n: quiz.qs.length, want: quiz.want })}</div>` : ''}
+    ${quiz.i === 0 && quiz.want > quiz.qs.length ? `<div class="muted small" style="margin:6px 0 0">${t(quiz.cat.startsWith('Lektion: ') ? 'quiz.shortTopic' : 'quiz.short', { n: quiz.qs.length, want: quiz.want })}</div>` : ''}
     <div class="progress"><div style="width:${(quiz.i / quiz.qs.length) * 100}%"></div></div>
     <div class="question">${escGap(q.q)}</div>
     ${q.opts.map((o, i) => `<button class="opt" data-i="${i}">${esc(o)}</button>`).join('')}
@@ -1002,6 +1029,7 @@ function renderQuizEnd() {
   const plan = todayPlan();
   if (morningKat() && quiz.cat === morningKat() && quiz.qs.length) { store.day().morning = true; store.save(); }
   if (quiz.cat === 'Hatalar: bugün') markDonus('hatalar');
+  { const ps = pruefState(); if (ps && ps.todayKat && quiz.cat === ps.todayKat && quiz.qs.length) { store.day().pruef = { r: quiz.right, n: quiz.qs.length }; store.save(); } }
   if (quiz.donus) markDonus('test');
   const n = quiz.qs.length;
   const pct = n ? Math.round((quiz.right / n) * 100) : 0;
@@ -1146,7 +1174,7 @@ function renderCardSession([deckId]) {
   if (!known) { view.innerHTML = `<p class="empty">${t('cards.notFound')}</p><a class="btn block" href="#/kartlar">${t('route.kartlar')}</a>`; return; }
   if (!session || session.deck !== deckId) {
     const cards = deckCards(deckId);
-    let queue = store.buildSession(cards, { noNewLimit: deckId.startsWith('fehler') || deckId === 'odev' });
+    let queue = store.buildSession(cards, { noNewLimit: deckId.startsWith('fehler') || deckId === 'odev' || deckId === 'sinav' });
     let later = 0;
     if (deckId.startsWith('fehler')) {
       // Höchstens 20 Fehlerkarten pro Tag: heutige Fächer zuerst, dann fällige, dann die am häufigsten vergessenen

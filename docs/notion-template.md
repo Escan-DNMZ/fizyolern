@@ -93,6 +93,8 @@ A simple table (with a header row), one row per exam or homework:
 
 You can also use to-do items (type `[] ` in Notion, or paste `- [ ] Anatomie exam 28.10.`). A checked to-do or a status of *done* / *erledigt* / *tamam* counts as finished. Exams in the next 7 days get priority in the app.
 
+**Exam topics → Exam tab.** If the topic column lists the exam's topics separated by commas (e.g. `Zellphysiologie, Erregungsphysiologie, Wundheilung`), the app shows an extra **🎯 Exam** tab for the next exam (up to 60 days ahead). It matches each topic to the lessons of that subject in the question database (by word stem, e.g. *Muskelphysiologie* → lessons with *Muskel…* in the title; *Grundlagen* → the introduction/homeostasis lesson), spreads the topics over the days until the exam (bigger topics get more days, the day before is full review + mock exam), and offers a daily topic test, term cards and a mock exam limited to the exam topics. Topics without matching lessons are listed so you can add questions. Without a topic the tab uses every lesson of the subject.
+
 ---
 
 ## 4. FizyoLern Questions (database, optional)

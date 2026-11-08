@@ -45,7 +45,7 @@ function dict(x, fn) {
   return out;
 }
 const DAY_NUM = ['cards', 'quiz', 'quizRight', 'open', 'cases', 'oral'];
-const DAY_RN = ['wordsMorning', 'wordsReturn', 'wordsWeek', 'lmQuiz'];
+const DAY_RN = ['wordsMorning', 'wordsReturn', 'wordsWeek', 'lmQuiz', 'pruef'];
 const DAY_ARR = ['wrong', 'words', 'fehlerSeen']; // müssen Listen sein
 const DAY_OBJ = ['donus', 'wordRes'];          // müssen Objekte sein
 function cleanDay(v) {
@@ -102,12 +102,15 @@ export function sanitize(raw) {
     days: dict(s.days, (v, k) => (DATE.test(k) ? cleanDay(v) : undefined)),
     start: date(s.start) || null,
     learned: dict(s.learned, (v) => date(v)),
+    // Sınav hazırlığı: Prüfungsschlüssel (Fach|Datum) -> erster Tag des Lernplans (nur wenn benutzt)
+    ...(isObj(s.pruef) && Object.keys(s.pruef).length ? { pruef: dict(s.pruef, (v) => date(v)) } : {}),
     customVocab: (Array.isArray(s.customVocab) ? s.customVocab : []).filter(isObj).slice(0, 2000)
       .map((v) => ({ id: str(v.id, 300) || 'v:' + str(v.de, 200), de: str(v.de, 200), tr: str(v.tr, 300), ex: str(v.ex, 500), cat: str(v.cat, 100) || 'Eigene' }))
       .filter((v) => v.de && v.tr),
     words: dict(s.words, (v) => (isObj(v) ? { box: int(v.box, 0, 6, 0), due: date(v.due) || today(), r: num(v.r), w: num(v.w), c: num(v.c), known: num(v.known), ...(date(v.last) ? { last: v.last } : {}) } : undefined)),
     mocks: (Array.isArray(s.mocks) ? s.mocks : []).filter(isObj).slice(-50).map((m) => ({
       date: date(m.date) || today(), fach: str(m.fach, 100), pct: num(m.pct, 0, 100), min: num(m.min, 0, 600),
+      ...(Array.isArray(m.lessons) && m.lessons.length ? { lessons: strArr(m.lessons).slice(0, 100).map((x) => x.slice(0, 200)) } : {}),
       mcq: rn(m.mcq) || { r: 0, n: 0 }, open: isObj(m.open) ? { score: num(m.open.score), n: num(m.open.n) } : { score: 0, n: 0 },
       topics: dict(m.topics, (v) => rn(v)),
       // Ergebnisdetails (werden beim Anzeigen escaped)
@@ -118,7 +121,7 @@ export function sanitize(raw) {
     // laufender Deneme sınavı / Fall: nur übernehmen, wenn die Struktur stimmt (sonst neu starten)
     mockRun: isObj(s.mockRun) && Array.isArray(s.mockRun.mcq) && Array.isArray(s.mockRun.open) && s.mockRun.mcq.length + s.mockRun.open.length > 0
       && Number.isFinite(s.mockRun.start) && Number.isFinite(s.mockRun.end) && s.mockRun.mcq.every((q) => isObj(q) && Array.isArray(q.opts) && Number.isInteger(q.ans)) && s.mockRun.open.every((q) => isObj(q) && Array.isArray(q.kw))
-      ? { ...s.mockRun, i: int(s.mockRun.i, 0, 200, 0), fach: str(s.mockRun.fach, 100), pick: isObj(s.mockRun.pick) ? s.mockRun.pick : {}, text: isObj(s.mockRun.text) ? s.mockRun.text : {} } : null,
+      ? { ...s.mockRun, i: int(s.mockRun.i, 0, 200, 0), fach: str(s.mockRun.fach, 100), pick: isObj(s.mockRun.pick) ? s.mockRun.pick : {}, text: isObj(s.mockRun.text) ? s.mockRun.text : {}, lessons: strArr(s.mockRun.lessons).slice(0, 100) } : null,
     cases: dict(s.cases, (v) => (isObj(v) ? { n: num(v.n), best: num(v.best, 0, 100), score: num(v.score, 0, 100), missed: strArr(v.missed), ...(date(v.last) ? { last: v.last } : {}) } : undefined)),
     caseRun: isObj(s.caseRun) && typeof s.caseRun.id === 'string' && Array.isArray(s.caseRun.seen || []) && isObj(s.caseRun.f || {}) ? { ...s.caseRun, seen: strArr(s.caseRun.seen), f: dict(s.caseRun.f, (v) => (typeof v === 'string' ? v.slice(0, 5000) : undefined)) } : null,
     ck: dict(s.ck, (v, k) => (isObj(v) && /^ck:[0-9a-f]{16}$/.test(k) ? { lv: int(v.lv, 0, 3, 1), ...(date(v.last) ? { last: v.last } : {}), ...(v.auto ? { auto: true } : {}) } : undefined)),
@@ -350,6 +353,13 @@ export function dueCount(cards) {
 }
 
 // ───── Deneme sınavı ─────
+// Sınav hazırlığı: erster Tag des Lernplans für eine Prüfung – einmal festgelegt, damit der Plan nicht jeden Tag „mitwandert“
+export function pruefStart(key) {
+  state.pruef = state.pruef || {};
+  if (!state.pruef[key]) { state.pruef[key] = today(); save(); }
+  return state.pruef[key];
+}
+
 export function recordMock(result) {
   state.mocks = [...(state.mocks || []), result].slice(-50);
   state.mockRun = null;

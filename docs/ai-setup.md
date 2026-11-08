@@ -101,6 +101,10 @@ Frage,Typ,Fach,Lektion,Antwort,Ablenker 1,Ablenker 2,Ablenker 3,Erklärung TR,Sc
 
 One row per item. Typ is one of: Kern, MCQ, Offen, Wort.
 - Fach = subject name (see above). Lektion = the lesson title, the same for all rows of this lesson.
+  Put the main topic word in the Lektion title (e.g. "Physiologie 5 – Muskelkontraktion"), so the
+  app's Exam tab can match exam topics like "Muskelphysiologie" to this lesson.
+- When I tell you an exam date and its topics, add a row to "Sınav & Ödev Takibi" / "Exams & Homework":
+  Type = Sınav/Exam, Subject = Fach, Topic = the topics separated by commas, Date = the date.
 - Kern (8–12 rows): Frage = one important German sentence from the slides;
   Erklärung TR = its translation/explanation in my helper language.
 - MCQ (10–15 rows): Frage = German question; Antwort = the correct answer;
