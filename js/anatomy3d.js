@@ -187,16 +187,26 @@ function primitive(p, sx) {
 // Muskeln, die es in BodyParts3D nicht gibt: werden als dünne Muskelplatten zwischen
 // Messpunkten am echten Skelett aufgebaut (siehe buildSheetMuscles).
 // Dünne Platte (Muskel als Schicht) aus Querschnitt-Reihen: rows[i][j] = Punkt
+// Flächennormale einer Punktreihen-Fläche, grob über die Nachbarn bestimmt.
+// Bei Reihen von unten nach oben und Punkten von medial nach lateral (linke Seite) zeigt sie nach innen.
+function rowNormal(rows, i, j) {
+  const R = rows.length, C = rows[0].length;
+  const a = rows[Math.min(i + 1, R - 1)][j].clone().sub(rows[Math.max(i - 1, 0)][j]);
+  const b = rows[i][Math.min(j + 1, C - 1)].clone().sub(rows[i][Math.max(j - 1, 0)]);
+  return new THREE.Vector3().crossVectors(a, b).normalize();
+}
+
+// Fläche nach außen wölben: jeder Punkt um h(i, j) Meter entlang der Normalen (für Muskelbäuche)
+function bulge(rows, h) {
+  return rows.map((row, i) => row.map((v, j) => v.clone().addScaledVector(rowNormal(rows, i, j), -h(i, j))));
+}
+
 function slab(rows, thick) {
   const R = rows.length, C = rows[0].length;
   const pos = [], idx = [];
   const front = rows.flat();
-  // Flächennormalen grob über Nachbarn bestimmen, Rückseite um „thick“ nach innen versetzen
-  const nAt = (i, j) => {
-    const a = rows[Math.min(i + 1, R - 1)][j].clone().sub(rows[Math.max(i - 1, 0)][j]);
-    const b = rows[i][Math.min(j + 1, C - 1)].clone().sub(rows[i][Math.max(j - 1, 0)]);
-    return new THREE.Vector3().crossVectors(a, b).normalize();
-  };
+  // Rückseite um „thick“ nach innen versetzen
+  const nAt = (i, j) => rowNormal(rows, i, j);
   const back = [];
   for (let i = 0; i < R; i++) for (let j = 0; j < C; j++) back.push(rows[i][j].clone().addScaledVector(nAt(i, j), -thick));
   [...front, ...back].forEach((v) => pos.push(v.x, v.y, v.z));
@@ -439,23 +449,41 @@ export class Anatomy3D {
 
     const sheets = {};
 
-    // M. rectus abdominis: Crista pubica/Symphyse → Rippenknorpel 5–7 und Proc. xiphoideus, Bauchwand leicht gewölbt
+    // M. rectus abdominis (kein Modell in BodyParts3D): Crista pubica/Symphyse → Rippenknorpel 5–7 und Proc. xiphoideus.
+    // Unten schmal und sehnig, oben breit; drei Intersectiones tendineae (Nabelhöhe, unter dem Xiphoid, dazwischen)
+    // teilen ihn in Bäuche; die laterale Kante reicht höher (5. Rippenknorpel) als die mediale (Xiphoid).
     {
-      const rows = [];
-      const yTop = (cc5.y + cc7.y) / 2;
-      for (let i = 0; i <= 12; i++) {
-        const t = i / 12;
-        const y = lerp(pubis.y + 0.005, yTop, t);
+      const R = 96, C = 12;
+      const y0 = pubis.y + 0.004;
+      const yMed = Math.min(xiph.y + 0.03, cc5.y), yLat = Math.max(cc5.y, (cc5.y + cc7.y) / 2);
+      const ease = (t) => t * t * (3 - 2 * t);
+      const base = [];
+      for (let i = 0; i <= R; i++) {
+        const t = i / R;
         const zLine = lerp(pubis.z + 0.012, costalZ + 0.006, t) + Math.sin(Math.PI * t) * 0.03;
-        const w = lerp(0.03, Math.max(0.06, cc7.x - 0.01), t);
+        const w = lerp(0.026, Math.max(0.062, cc7.x - 0.012), ease(Math.min(1, t * 1.2)));
+        const x0 = lerp(0.004, 0.009, ease(t)); // Linea alba: unten schmal, über dem Nabel breiter
         const row = [];
-        for (let j = 0; j <= 4; j++) {
-          const u = j / 4;
-          row.push(V3(0.008 + w * u, y, zLine - u * u * 0.02));
+        for (let j = 0; j <= C; j++) {
+          const u = j / C;
+          // Furchen leicht gezackt (wie am Präparat), oben weniger nach hinten gekrümmt (liegt auf den Rippenknorpeln)
+          row.push(V3(x0 + w * u, lerp(y0, lerp(yMed, yLat, u), t) + Math.sin(u * Math.PI * 3) * 0.0025 * Math.sin(Math.PI * t), zLine - u * u * lerp(0.02, 0.006, t)));
         }
-        rows.push(row);
+        base.push(row);
       }
-      sheets.rectus_abdominis = slab(rows, 0.008);
+      // Intersectiones: Nabel ≈ Höhe des Beckenkamms (L4), dann zwei darüber
+      const tNav = THREE.MathUtils.clamp((crestTop.y + 0.012 - y0) / ((yMed + yLat) / 2 - y0), 0.3, 0.6);
+      const cuts = [tNav, tNav + (1 - tNav) * 0.36, tNav + (1 - tNav) * 0.7];
+      const groove = (t) => cuts.reduce((m, c) => m * (1 - 0.85 * Math.exp(-(((t - c) / 0.011) ** 2))), 1);
+      const ends = (t) => ease(Math.min(1, t / 0.1)) * ease(Math.min(1, (1 - t) / 0.05)); // Ursprungssehne und Ansatz flach
+      const h = (i, j) => 0.002 + 0.012 * Math.sqrt(Math.sin(Math.PI * (j / C))) * groove(i / R) * (0.3 + 0.7 * ends(i / R));
+      const rows = bulge(base, h);
+      // helle Sehnenstreifen in den Furchen
+      const strips = cuts.map((c) => {
+        const k = Math.round(c * R);
+        return slab(bulge(rows.slice(k - 1, k + 2), () => 0.0042), 0.0012); // knapp über der Muskeloberfläche (Platte ist 4 mm dick)
+      });
+      sheets.rectus_abdominis = [slab(rows, 0.004), ...strips];
     }
 
     // M. transversus abdominis: tiefe Schicht um die Taille, von der Fascia thoracolumbalis bis zur Linea alba
@@ -500,17 +528,20 @@ export class Anatomy3D {
       sheets.quadratus_lumborum = slab(rows, 0.012);
     }
 
-    for (const [id, geo] of Object.entries(sheets)) {
+    for (const [id, geos] of Object.entries(sheets)) {
       const g = this.byId.get(id);
       if (!g) continue;
       for (const m of [...g.children]) { g.remove(m); this.meshes.splice(this.meshes.indexOf(m), 1); }
-      for (const sx of [1, -1]) { // Platten für links bauen und für rechts spiegeln
-        const m = new THREE.Mesh(geo, g.userData.mats[0]);
-        m.scale.x = sx;
-        m.userData = { id, kind: 'muscle', real: false };
-        g.add(m);
-        this.meshes.push(m);
-      }
+      // erste Geometrie = Muskel, weitere = Sehnenstreifen; für links bauen und für rechts spiegeln
+      [].concat(geos).forEach((geo, k) => {
+        for (const sx of [1, -1]) {
+          const m = new THREE.Mesh(geo, g.userData.mats[k ? 1 : 0]);
+          m.scale.x = sx;
+          m.userData = { id, kind: 'muscle', real: false, tendon: k > 0 };
+          g.add(m);
+          this.meshes.push(m);
+        }
+      });
     }
   }
 
@@ -694,7 +725,9 @@ export class Anatomy3D {
     // Teile des Muskels, jeder Teil eine eigene Farbe
     const PALETTE = [0xe4572e, 0xf3a712, 0xa259ff, 0xff6fb5, 0x8d6e63, 0xf97316]; // kein Grün/Blau (= U/A-Marker)
     const parts = [];
+    const tendonMat = mat({ color: COLORS.tendon, roughness: 0.4 });
     for (const m of own) {
+      if (m.userData.tendon && !m.userData.real) { root.add(cloneMesh(m, tendonMat, { focusPart: 0 })); continue; } // Sehnenstreifen (M. rectus abdominis)
       const names = partNames(m.userData.part, muscle);
       let p = parts.find((x) => x.la === names.la);
       if (!p) {

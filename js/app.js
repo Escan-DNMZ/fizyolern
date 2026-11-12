@@ -295,8 +295,8 @@ function renderToday() {
       ? [{ core: true, done: !!d.morning, label: t('task.morning', { list: esc(morningFaecher().map((f) => (examFaecher(7).includes(f) ? '📝 ' + f : f)).join(' + ')) }), href: `#/test?kat=${encodeURIComponent(morningKat())}` }] : []),
     { core: true, done: !!d.wordsMorning, label: `${t('task.wordsMorning', { n: WORDS_PER_DAY })}${d.wordsMorning ? ` <span class="muted">${d.wordsMorning.r}/${d.wordsMorning.n}</span>` : ''}`, href: '#/kelime/sabah' },
     { core: true, done: !!d.wordsReturn, label: `${t('task.wordsReturn', { n: WORDS_PER_DAY })}${d.wordsReturn ? ` <span class="muted">${d.wordsReturn.r}/${d.wordsReturn.n}</span>` : ''}`, href: '#/kelime/donus' },
-    { done: d.lesson, label: t('task.muscle', { name: esc(m.la) }), href: `#/ders/${m.id}` },
-    { done: d.lesson2, label: t(b.kind === 'bone' ? 'task.bone' : 'task.joint', { name: esc(b.de) }), href: `#/ders/${b.id}` },
+    { core: true, done: d.lesson, label: t('task.muscle', { name: esc(m.la) }), href: `#/ders/${m.id}` },
+    { core: true, done: d.lesson2, label: t(b.kind === 'bone' ? 'task.bone' : 'task.joint', { name: esc(b.de) }), href: `#/ders/${b.id}` },
     { done: d.cards >= s.settings.cardsGoal, label: `${t('task.cards', { n: s.settings.cardsGoal })} <span class="muted">(${d.cards}/${s.settings.cardsGoal})</span>`, href: '#/oturum/vocab' },
     // fertiger Morgentest zählt auch für das Tagesziel (er hat so viele Fragen wie das Ziel, außer das Fach hat weniger)
     // ohne Morgentest (kein Wochenplan) ist das Test-Tagesziel Pflicht
