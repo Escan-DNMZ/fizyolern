@@ -307,8 +307,11 @@ function renderToday() {
   const core = tasks.filter((x) => x.core), extra = tasks.filter((x) => !x.core);
   const doneN = core.filter((x) => x.done).length;
   const pct = doneN / core.length;
+  // „Sıradaki“ = erste offene Pflichtaufgabe (groß), „Sonra“ = die übrigen offenen; Erledigtes wandert nach unten
+  const open = core.filter((x) => !x.done);
+  const next = open[0], later = open.slice(1);
+  const hour = new Date().getHours();
   const taskRow = (x) => `<a class="task" href="${x.href}"><span class="check ${x.done ? 'done' : ''}">${x.done ? '✓' : ''}</span><span class="grow">${x.label}</span><span class="chev">›</span></a>`;
-  const C = 2 * Math.PI * 26;
   const streak = store.streak();
   const dateStr = new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -321,19 +324,13 @@ function renderToday() {
 
   view.innerHTML = `
     ${isIOS && !standalone ? `<div class="card install small">${t('install')}</div>` : ''}
-    <div class="card">
-      <div class="hero">
-        <svg class="ring" viewBox="0 0 64 64">
-          <circle class="bg" cx="32" cy="32" r="26"/>
-          <circle class="fg" cx="32" cy="32" r="26" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pct)}"/>
-          <text x="32" y="37" text-anchor="middle" font-size="15" font-weight="800" fill="currentColor">${doneN}/${core.length}</text>
-        </svg>
-        <div>
-          <div class="muted small">${esc(dateStr)}</div>
-          <h2>${doneN === core.length ? t('today.allDone') : t('today.hello')}</h2>
-          <div class="streak">${streak > 0 ? t('today.streak', { n: streak }) : t('today.firstStep')}</div>
-        </div>
-      </div>
+    <div class="hello">
+      <div class="muted small">${esc(dateStr)}</div>
+      <h2>${doneN === core.length ? t('today.allDone') : t(hour < 12 ? 'today.hi.m' : hour < 18 ? 'today.hi.d' : 'today.hi.e')}</h2>
+    </div>
+    <div class="card prog-card">
+      <div class="row"><b class="grow">${t('today.progress', { a: doneN, b: core.length })}</b><span class="streak">${streak > 0 ? t('today.streak', { n: streak }) : t('today.firstStep')}</span></div>
+      <div class="bar" role="img" aria-label="${doneN}/${core.length}"><div style="width:${Math.round(pct * 100)}%"></div></div>
     </div>
 
     ${examCard()}
@@ -345,9 +342,14 @@ function renderToday() {
       ${tomorrowLine()}
     </div>` : tomorrowLine() ? `<div class="card small">${tomorrowLine()}</div>` : ''}
 
-    <div class="list">${core.map(taskRow).join('')}</div>
-    <div class="section-title">${t('today.extra', { a: extra.filter((x) => x.done).length, b: extra.length })}</div>
-    <div class="list">${extra.map(taskRow).join('')}</div>
+    ${next ? `<div class="section-title">${t('today.next')}</div>
+    <a class="next" href="${next.href}"><span class="grow">${next.label}</span><span class="go" aria-hidden="true">›</span></a>` : ''}
+    ${later.length ? `<div class="section-title">${t('today.later')}</div>
+    <div class="list">${later.map(taskRow).join('')}</div>` : ''}
+    ${extra.some((x) => !x.done) ? `<div class="section-title">${t('today.extra', { a: extra.filter((x) => x.done).length, b: extra.length })}</div>
+    <div class="list">${extra.filter((x) => !x.done).map(taskRow).join('')}</div>` : ''}
+    ${tasks.some((x) => x.done) ? `<div class="section-title">${t('today.doneList')}</div>
+    <div class="done-list">${tasks.filter((x) => x.done).map((x) => `<a href="${x.href}"><span class="tick" aria-hidden="true">✓</span><span class="grow">${x.label}</span></a>`).join('')}</div>` : ''}
 
     ${weak.length ? `<div class="section-title">${t('today.weak')}</div>
     <div class="list">

@@ -1,4 +1,4 @@
-/* Thema „Adaçayı“: ruhiges Salbeigrün, gebrochenes Weiß, gut lesbare Schrift (Atkinson Hyperlegible, OFL – fonts/OFL.txt) */
+/* Thema „Keten“: warmes Leinen, Salbeigrün als einziger Akzent, keine grellen Farben; gut lesbare Schrift (Atkinson Hyperlegible, OFL – fonts/OFL.txt) */
 @font-face { font-family: 'Atkinson Hyperlegible'; font-style: normal; font-weight: 400; font-display: swap;
   src: url('../fonts/atkinson-hyperlegible-latin-400-normal.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
 @font-face { font-family: 'Atkinson Hyperlegible'; font-style: normal; font-weight: 400; font-display: swap;
@@ -9,45 +9,47 @@
   src: url('../fonts/atkinson-hyperlegible-latin-ext-700-normal.woff2') format('woff2'); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
 
 :root {
-  --bg: #eef1ec;
-  --card: #fafbf8;
-  --text: #26302a;
-  --muted: #5b685f;
-  --line: #dbe2d9;
-  --accent: #4f7a63;
-  --accent-soft: #dfeadf;
-  --on-accent: #f7faf6;
-  --good: #3f7d55;
-  --good-soft: #dfeee2;
-  --bad: #b4513f;
-  --bad-soft: #f6e3dd;
-  --warn: #875c10;
-  --warn-soft: #f5ead3;
+  --bg: #efe9de;
+  --card: #faf6ee;
+  --text: #2c2a25;
+  --muted: #6a6558;
+  --line: #e4ddcf;
+  --accent: #55694e;
+  --accent-soft: #e3e8da;
+  --on-accent: #ffffff;
+  --good: #4d6b4a;
+  --good-soft: #e1e9d9;
+  --bad: #9c4635;
+  --bad-soft: #f3e0d6;
+  --warn: #7d5a1a;
+  --warn-soft: #f1e4c8;
   --muscle: #b8383b;
   --bone: #c9b48a;
-  --joint: #3b82f6;
-  --shadow: 0 1px 0 #dbe2d9;
-  --tabbar-h: 56px;
+  --joint: #4a78b0;
+  --shadow: 0 1px 0 #e4ddcf;
+  --tabbar-h: 76px;
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-t: env(safe-area-inset-top, 0px);
   color-scheme: light dark;
 }
+/* dunkel: warmes Braun-Grau wie ein Zimmer bei Lampenlicht */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #18201b;
-    --card: #212b25;
-    --text: #e3ebe4;
-    --muted: #96a59a;
-    --line: #2f3b33;
-    --accent: #8dbb9f;
-    --accent-soft: #263a2e;
-    --on-accent: #18201b;
-    --good: #8dc79f;
-    --good-soft: #233a2b;
-    --bad: #e3907e;
-    --bad-soft: #3d2420;
-    --warn: #e0b56a;
-    --warn-soft: #3a2f1b;
+    --bg: #1f1b18;
+    --card: #2a2521;
+    --text: #ece4d8;
+    --muted: #b3a797;
+    --line: #3a332c;
+    --accent: #a9bd9a;
+    --accent-soft: #343a2c;
+    --on-accent: #1f1b18;
+    --good: #a9c79a;
+    --good-soft: #2f3a2a;
+    --bad: #e39a85;
+    --bad-soft: #40271f;
+    --warn: #dfb878;
+    --warn-soft: #3d3220;
+    --joint: #86aede;
     --shadow: none;
   }
 }
@@ -82,25 +84,27 @@ main#view {
 }
 
 /* ───── Tabbar ───── */
+/* schwebende, abgerundete Leiste; der aktive Tab liegt auf einem weichen Salbei-Feld */
 .tabbar {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
-  display: flex; justify-content: space-around;
-  height: calc(var(--tabbar-h) + var(--safe-b)); padding-bottom: var(--safe-b);
-  background: color-mix(in srgb, var(--card) 88%, transparent);
+  position: fixed; left: 12px; right: 12px; bottom: max(8px, calc(var(--safe-b) - 12px)); z-index: 30;
+  display: flex; justify-content: space-around; gap: 2px;
+  height: 62px; padding: 6px;
+  background: color-mix(in srgb, var(--card) 94%, transparent);
   backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  border-top: 0.5px solid var(--line);
+  border: 1px solid var(--line); border-radius: 24px;
 }
 .tabbar a {
-  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  color: var(--muted); text-decoration: none; font-size: 10.5px; font-weight: 600;
+  flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  color: var(--muted); text-decoration: none; font-size: 11.5px; font-weight: 700; border-radius: 18px;
 }
-.tabbar a.active { color: var(--accent); }
+.tabbar a span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.tabbar a.active { color: var(--accent); background: var(--accent-soft); }
 .tabbar a[hidden] { display: none; }
 .list a.pr-now { box-shadow: inset 3px 0 0 var(--accent); }
 .list .progress { margin-top: 6px; }
 
 /* ───── Karten & Elemente ───── */
-.card { background: var(--card); border-radius: 18px; padding: 16px; margin: 12px 0; box-shadow: var(--shadow); }
+.card { background: var(--card); border-radius: 22px; padding: 16px 18px; margin: 12px 0; box-shadow: var(--shadow); }
 .card h2 { margin: 0 0 4px; font-size: 19px; letter-spacing: -.01em; }
 .card h3 { margin: 14px 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
 .card p { margin: 6px 0; }
@@ -115,7 +119,7 @@ main#view {
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  border: 0; border-radius: 14px; padding: 12px 16px; font-weight: 700; cursor: pointer;
+  border: 0; border-radius: 16px; padding: 12px 16px; font-weight: 700; cursor: pointer;
   background: var(--accent); color: var(--on-accent); text-decoration: none; min-height: 44px;
 }
 .btn.block { width: 100%; }
@@ -132,12 +136,12 @@ main#view {
 .chip.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
 
-.list { background: var(--card); border-radius: 18px; overflow: hidden; margin: 12px 0; box-shadow: var(--shadow); }
-.list > * { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-bottom: 0.5px solid var(--line); text-decoration: none; color: inherit; background: none; border-left: 0; border-right: 0; border-top: 0; width: 100%; text-align: left; cursor: pointer; }
+.list { background: var(--card); border-radius: 22px; overflow: hidden; margin: 12px 0; box-shadow: var(--shadow); }
+.list > * { display: flex; align-items: center; gap: 12px; padding: 14px 18px; min-height: 54px; border-bottom: 0.5px solid var(--line); text-decoration: none; color: inherit; background: none; border-left: 0; border-right: 0; border-top: 0; width: 100%; text-align: left; cursor: pointer; }
 .list > *:last-child { border-bottom: 0; }
 .list .grow { flex: 1; min-width: 0; }
 .list .chev { color: var(--muted); }
-.section-title { margin: 22px 4px 6px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.section-title { margin: 22px 6px 8px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
 
 .badge { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--bg); color: var(--muted); white-space: nowrap; }
 .badge.good { background: var(--good-soft); color: var(--good); }
@@ -148,12 +152,21 @@ main#view {
 .badge.joint { background: color-mix(in srgb, var(--joint) 18%, transparent); color: color-mix(in srgb, var(--joint) 62%, var(--text)); }
 
 /* ───── Heute ───── */
-.hero { display: flex; align-items: center; gap: 14px; }
-.ring { width: 64px; height: 64px; flex: none; }
-.ring circle { fill: none; stroke-width: 7; }
-.ring .bg { stroke: var(--line); }
-.ring .fg { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset .6s; transform: rotate(-90deg); transform-origin: 50% 50%; }
-.streak { font-size: 14px; font-weight: 700; color: var(--warn); }
+.hello { padding: 6px 4px 2px; }
+.hello h2 { margin: 2px 0 0; font-size: 28px; line-height: 1.15; letter-spacing: -.01em; }
+.prog-card { display: flex; flex-direction: column; gap: 10px; }
+.bar { height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.bar > div { height: 100%; border-radius: 999px; background: var(--accent); transition: width .6s; }
+.streak { font-size: 14px; font-weight: 700; color: var(--accent); }
+/* „Sıradaki“: die eine Aufgabe, die jetzt dran ist */
+.next { display: flex; align-items: center; gap: 14px; min-height: 84px; padding: 18px; margin: 0 0 12px; border-radius: 22px;
+  background: var(--accent); color: var(--on-accent); text-decoration: none; font-size: 18px; font-weight: 700; line-height: 1.3; }
+.next .muted { color: inherit; opacity: .9; font-size: 14px; font-weight: 400; }
+.next .go { flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--card); color: var(--accent); display: grid; place-items: center; font-size: 24px; }
+.next:active { transform: scale(.99); }
+.done-list { padding: 0 6px; }
+.done-list a { display: flex; align-items: center; gap: 10px; min-height: 40px; color: var(--muted); text-decoration: none; font-size: 15px; }
+.done-list .tick { color: var(--accent); font-weight: 700; }
 .task { display: flex; align-items: center; gap: 12px; }
 .check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line); flex: none; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--muted); }
 .check.done { background: var(--good); border-color: var(--good); font-size: 14px; color: var(--on-accent); }
@@ -256,6 +269,7 @@ input[type=text], input[type=search], input[type=number], input[type=password] {
 body.focus3d .hud-more { display: none; }
 /* zugeklappte Karten auf „Bugün“ (Muskel/Knochen des Tages) */
 details.fold > summary { list-style: none; gap: 10px; }
+details.fold > summary .grow { flex: 1; min-width: 0; }
 details.fold > summary::-webkit-details-marker { display: none; }
 details.fold > summary .chev { transition: transform .2s; color: var(--muted); font-size: 20px; }
 details.fold[open] > summary .chev { transform: rotate(90deg); }
