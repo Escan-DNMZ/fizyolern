@@ -283,27 +283,31 @@ function renderToday() {
   const tasks = [
     // Sınav hazırlığı: Thementest des Tages (Vortag der Prüfung: Deneme sınavı)
     ...(ps && !ps.examDay ? [ps.review
-      ? { done: (s.mocks || []).some((m) => m.date === store.today() && m.lessons), label: t('task.pruefReview', { f: esc(ps.exam.fach) }), href: '#/sinav' }
-      : { done: !!d.pruef, label: `${t('task.pruef', { t: esc(ps.today.map((x) => x.name).join(' + ')) })}${d.pruef ? ` <span class="muted">${d.pruef.r}/${d.pruef.n}</span>` : ''}`, href: `#/test?kat=${encodeURIComponent(ps.todayKat)}&n=${TOPIC_QUIZ}` }] : []),
-    ...(deckCards('odev').length ? [{ done: !odevOpen, label: `${t('task.odev', { list: esc([...new Set(odevList().map((f) => f.odev))].join(', ')) })} <span class="muted">(${t('n.cards', { n: odevOpen })})</span>`, href: '#/oturum/odev' }] : []),
+      ? { core: true, done: (s.mocks || []).some((m) => m.date === store.today() && m.lessons), label: t('task.pruefReview', { f: esc(ps.exam.fach) }), href: '#/sinav' }
+      : { core: true, done: !!d.pruef, label: `${t('task.pruef', { t: esc(ps.today.map((x) => x.name).join(' + ')) })}${d.pruef ? ` <span class="muted">${d.pruef.r}/${d.pruef.n}</span>` : ''}`, href: `#/test?kat=${encodeURIComponent(ps.todayKat)}&n=${TOPIC_QUIZ}` }] : []),
+    ...(deckCards('odev').length ? [{ core: true, done: !odevOpen, label: `${t('task.odev', { list: esc([...new Set(odevList().map((f) => f.odev))].join(', ')) })} <span class="muted">(${t('n.cards', { n: odevOpen })})</span>`, href: '#/oturum/odev' }] : []),
     // Knochenpunkte gehören zur Hausaufgabe (PT Befund) – am 3D-Modell zeigen
     ...(deckCards('odev').length ? [{ done: !!d.lmQuiz, label: `${t('task.lmQuiz')} ${d.lmQuiz ? `<span class="muted">${d.lmQuiz.r}/${d.lmQuiz.n}</span>` : `<span class="muted">${t('task.lmQuizSub')}</span>`}`, href: '#/3d?quiz=pelvis' }] : []),
     // erledigte Aufgabe bleibt (abgehakt) stehen, statt zu verschwinden
-    ...(fehlerOpen || (d.fehlerSeen || []).length ? [{ done: !fehlerOpen, label: `${t('task.fehler')} <span class="muted">(${t('n.cards', { n: fehlerOpen })})</span>`, href: '#/oturum/fehler' }] : []),
+    ...(fehlerOpen || (d.fehlerSeen || []).length ? [{ core: true, done: !fehlerOpen, label: `${t('task.fehler')} <span class="muted">(${t('n.cards', { n: fehlerOpen })})</span>`, href: '#/oturum/fehler' }] : []),
     // Morgentest: Fächer aus dem Wochenplan + Fächer mit Prüfung in ≤ 7 Tagen (📝)
     ...(morningKat()
-      ? [{ done: !!d.morning, label: t('task.morning', { list: esc(morningFaecher().map((f) => (examFaecher(7).includes(f) ? '📝 ' + f : f)).join(' + ')) }), href: `#/test?kat=${encodeURIComponent(morningKat())}` }] : []),
-    { done: !!d.wordsMorning, label: `${t('task.wordsMorning', { n: WORDS_PER_DAY })}${d.wordsMorning ? ` <span class="muted">${d.wordsMorning.r}/${d.wordsMorning.n}</span>` : ''}`, href: '#/kelime/sabah' },
-    { done: !!d.wordsReturn, label: `${t('task.wordsReturn', { n: WORDS_PER_DAY })}${d.wordsReturn ? ` <span class="muted">${d.wordsReturn.r}/${d.wordsReturn.n}</span>` : ''}`, href: '#/kelime/donus' },
+      ? [{ core: true, done: !!d.morning, label: t('task.morning', { list: esc(morningFaecher().map((f) => (examFaecher(7).includes(f) ? '📝 ' + f : f)).join(' + ')) }), href: `#/test?kat=${encodeURIComponent(morningKat())}` }] : []),
+    { core: true, done: !!d.wordsMorning, label: `${t('task.wordsMorning', { n: WORDS_PER_DAY })}${d.wordsMorning ? ` <span class="muted">${d.wordsMorning.r}/${d.wordsMorning.n}</span>` : ''}`, href: '#/kelime/sabah' },
+    { core: true, done: !!d.wordsReturn, label: `${t('task.wordsReturn', { n: WORDS_PER_DAY })}${d.wordsReturn ? ` <span class="muted">${d.wordsReturn.r}/${d.wordsReturn.n}</span>` : ''}`, href: '#/kelime/donus' },
     { done: d.lesson, label: t('task.muscle', { name: esc(m.la) }), href: `#/ders/${m.id}` },
     { done: d.lesson2, label: t(b.kind === 'bone' ? 'task.bone' : 'task.joint', { name: esc(b.de) }), href: `#/ders/${b.id}` },
     { done: d.cards >= s.settings.cardsGoal, label: `${t('task.cards', { n: s.settings.cardsGoal })} <span class="muted">(${d.cards}/${s.settings.cardsGoal})</span>`, href: '#/oturum/vocab' },
     // fertiger Morgentest zählt auch für das Tagesziel (er hat so viele Fragen wie das Ziel, außer das Fach hat weniger)
-    { done: d.quiz >= s.settings.quizGoal || !!d.morning, label: `${t('task.quiz', { n: s.settings.quizGoal })} <span class="muted">(${d.quiz}/${s.settings.quizGoal})</span>`, href: '#/test' },
+    // ohne Morgentest (kein Wochenplan) ist das Test-Tagesziel Pflicht
+    { core: !morningKat(), done: d.quiz >= s.settings.quizGoal || !!d.morning, label: `${t('task.quiz', { n: s.settings.quizGoal })} <span class="muted">(${d.quiz}/${s.settings.quizGoal})</span>`, href: '#/test' },
     { done: d.open >= 1, label: t('task.open'), href: `#/soru/${encodeURIComponent(nextOpenQuestion().id)}` },
   ];
-  const doneN = tasks.filter((t) => t.done).length;
-  const pct = doneN / tasks.length;
+  // Ring und „alles erledigt“ zählen nur die Pflichtaufgaben (Schule, Fehler, Morgentest, Wörter); der Rest ist freiwillig
+  const core = tasks.filter((x) => x.core), extra = tasks.filter((x) => !x.core);
+  const doneN = core.filter((x) => x.done).length;
+  const pct = doneN / core.length;
+  const taskRow = (x) => `<a class="task" href="${x.href}"><span class="check ${x.done ? 'done' : ''}">${x.done ? '✓' : ''}</span><span class="grow">${x.label}</span><span class="chev">›</span></a>`;
   const C = 2 * Math.PI * 26;
   const streak = store.streak();
   const dateStr = new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
@@ -322,11 +326,11 @@ function renderToday() {
         <svg class="ring" viewBox="0 0 64 64">
           <circle class="bg" cx="32" cy="32" r="26"/>
           <circle class="fg" cx="32" cy="32" r="26" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pct)}"/>
-          <text x="32" y="37" text-anchor="middle" font-size="15" font-weight="800" fill="currentColor">${doneN}/${tasks.length}</text>
+          <text x="32" y="37" text-anchor="middle" font-size="15" font-weight="800" fill="currentColor">${doneN}/${core.length}</text>
         </svg>
         <div>
           <div class="muted small">${esc(dateStr)}</div>
-          <h2>${doneN === tasks.length ? t('today.allDone') : t('today.hello')}</h2>
+          <h2>${doneN === core.length ? t('today.allDone') : t('today.hello')}</h2>
           <div class="streak">${streak > 0 ? t('today.streak', { n: streak }) : t('today.firstStep')}</div>
         </div>
       </div>
@@ -341,9 +345,9 @@ function renderToday() {
       ${tomorrowLine()}
     </div>` : tomorrowLine() ? `<div class="card small">${tomorrowLine()}</div>` : ''}
 
-    <div class="list">
-      ${tasks.map((t) => `<a class="task" href="${t.href}"><span class="check ${t.done ? 'done' : ''}">${t.done ? '✓' : ''}</span><span class="grow">${t.label}</span><span class="chev">›</span></a>`).join('')}
-    </div>
+    <div class="list">${core.map(taskRow).join('')}</div>
+    <div class="section-title">${t('today.extra', { a: extra.filter((x) => x.done).length, b: extra.length })}</div>
+    <div class="list">${extra.map(taskRow).join('')}</div>
 
     ${weak.length ? `<div class="section-title">${t('today.weak')}</div>
     <div class="list">
@@ -356,28 +360,28 @@ function renderToday() {
 
     ${LESSONS.length ? `<a class="card row" href="#/dersler" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">${t('today.fromNotion')}</div><h2>${t('today.lessonNotes')}</h2><div class="muted small">${t('today.lessonNotesSub', { n: LESSONS.length })}</div></span><span class="chev">›</span></a>` : ''}
 
-    <div class="card">
-      <div class="eyebrow">${t('today.muscleOfDay')}</div>
+    <details class="card fold" data-fold="muscle"${foldOpen.muscle ? ' open' : ''}>
+      <summary><span class="grow"><div class="eyebrow">${t('today.muscleOfDay')}</div>
       <h2>${esc(m.la)}</h2>
-      <div class="muted">${esc(m.de)} · ${esc(tx(m))}</div>
+      <div class="muted small">${esc(m.de)} · ${esc(tx(m))}</div></span><span class="chev">›</span></summary>
       <p class="small">${esc(tx(m, 'ftr'))}</p>
       <div class="grid2">
         <a class="btn" href="#/ders/${m.id}">${t('btn.openLesson')}</a>
         <a class="btn ghost" href="#/3d?id=${m.id}">${t('btn.show3d')}</a>
       </div>
-    </div>
+    </details>
 
-    <div class="card">
-      <div class="eyebrow">${t(b.kind === 'bone' ? 'today.boneOfDay' : 'today.jointOfDay')}</div>
+    <details class="card fold" data-fold="bone"${foldOpen.bone ? ' open' : ''}>
+      <summary><span class="grow"><div class="eyebrow">${t(b.kind === 'bone' ? 'today.boneOfDay' : 'today.jointOfDay')}</div>
       <h2>${esc(b.de)}</h2>
-      <div class="muted">${esc(b.la)} · ${esc(tx(b))}</div>
+      <div class="muted small">${esc(b.la)} · ${esc(tx(b))}${ligamentQuestion(b, store.today()) && !d.ligQ ? ` · <b>${t('today.ligOpen')}</b>` : ''}</div></span><span class="chev">›</span></summary>
       <p class="small">${esc(b.typ)}</p>
       <div class="grid2">
         <a class="btn" href="#/ders/${b.id}">${t('btn.openLesson')}</a>
         <a class="btn ghost" href="#/3d?id=${b.id}">${t('btn.show3d')}</a>
       </div>
       ${ligBlock(b)}
-    </div>
+    </details>
 
     ${[6, 0].includes(new Date().getDay()) ? `<a class="card row" href="#/cumartesi" style="text-decoration:none;color:inherit;border:2px solid var(--accent)"><span class="grow"><div class="eyebrow">${t('today.weekly')}</div><h2>${t('today.weeklyH')}</h2><div class="muted small">${t('today.weeklySub')}</div></span><span class="chev">›</span></a>` : ''}
     ${(() => {
@@ -401,7 +405,10 @@ function renderToday() {
     </div>
   `;
   bindLigQuiz();
+  // auf-/zugeklappt merken, solange die App offen ist
+  $$('details[data-fold]', view).forEach((el) => el.addEventListener('toggle', () => { foldOpen[el.dataset.fold] = el.open; }));
 }
+const foldOpen = {};
 
 // ───────────────────────── Bänder zum Knochen/Gelenk des Tages ─────────────────────────
 // Liste der wichtigen Bänder + eine tägliche Bandfrage (Antwort zählt wie eine Testfrage)
@@ -948,6 +955,20 @@ const topicLabel = (c) => (c.startsWith('Ders: ') ? t('topic.ders', { f: c.slice
 const catLabel = (c) => (c.startsWith('Lernziel: ') ? t('cat.ck') : c === 'Gemischt' ? t('cat.mixed') : c === 'Hatalar: bugün' ? t('cat.wrongToday') : c === 'Hatalar: hafta' ? t('cat.wrongWeek') : c.startsWith('Ders: ') ? topicLabel(c) : c);
 let quizCat = 'Gemischt';
 
+// Kategorien in Gruppen: Gemischt (+ Sonderkategorie), Fächer von heute, übrige Fächer, Anatomie-Themen
+function catGroups() {
+  const all = quizCategories();
+  const today = todayFaecher().filter((f) => FAECHER.includes(f)).map((f) => 'Ders: ' + f);
+  const faecher = all.filter((c) => c.startsWith('Ders: ') && !today.includes(c));
+  const topics = all.filter((c) => c !== 'Gemischt' && !c.startsWith('Ders: '));
+  return [
+    ['', ['Gemischt', ...(all.includes(quizCat) ? [] : [quizCat])]],
+    [t('quiz.grpToday'), today],
+    [t(today.length ? 'quiz.grpOther' : 'quiz.grpFaecher'), faecher],
+    [t('quiz.grpTopics'), topics],
+  ].filter(([, cats]) => cats.length);
+}
+
 function renderQuizStart(_, params = new URLSearchParams()) {
   const kat = params.get('kat');
   if (quiz && quiz.date && quiz.date !== store.today()) { quiz = null; saveQuiz(); } // Test von gestern nicht fortsetzen
@@ -972,9 +993,10 @@ function renderQuizStart(_, params = new URLSearchParams()) {
   view.innerHTML = `
     <div class="card">
       <h2>${t('quiz.choose')}</h2>
-      <div class="chips" style="margin-top:10px">
-        ${[...quizCategories(), ...(quizCategories().includes(quizCat) ? [] : [quizCat])].map((c) => `<button class="chip ${c === quizCat ? 'on' : ''}" data-cat="${esc(c)}">${esc(catLabel(c))}</button>`).join('')}
-      </div>
+      ${catGroups().map(([h, cats]) => `${h ? `<div class="eyebrow" style="margin-top:14px">${h}</div>` : ''}
+      <div class="chips" style="margin-top:${h ? 6 : 10}px">
+        ${cats.map((c) => `<button class="chip ${c === quizCat ? 'on' : ''}" data-cat="${esc(c)}">${esc(catLabel(c))}</button>`).join('')}
+      </div>`).join('')}
       <button class="btn block" id="startQuiz" style="margin-top:16px">${t('quiz.start', { n: store.get().settings.quizGoal })}</button>
     </div>
     <a class="card row" href="#/deneme" style="text-decoration:none;color:inherit"><span class="grow"><div class="eyebrow">${t('quiz.mockEyebrow')}</div><h2>${t('quiz.mockH')}</h2><div class="muted small">${t('quiz.mockSub')}</div></span><span class="chev">›</span></a>
@@ -1758,6 +1780,12 @@ function setup3DControls() {
     const on = !e.currentTarget.classList.contains('on');
     e.currentTarget.classList.toggle('on', on);
     viewer.setIsolated(on);
+  });
+  $('#moreBtn').addEventListener('click', (e) => {
+    const on = !e.currentTarget.classList.contains('on');
+    e.currentTarget.classList.toggle('on', on);
+    $('#hudMore').hidden = !on;
+    viewer.applyViewOffset(); // Leiste ist jetzt höher/niedriger
   });
   $('#opacity3d').addEventListener('input', (e) => viewer.setMuscleOpacity(+e.target.value));
   $$('[data-depth]').forEach((b) => b.addEventListener('click', () => {

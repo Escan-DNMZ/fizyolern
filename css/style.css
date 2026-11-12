@@ -251,6 +251,14 @@ input[type=text], input[type=search], input[type=number], input[type=password] {
 /* ───── 3D: Schichten, Fokusmodus, Beschriftungen ───── */
 .depth-chips { align-items: center; }
 .depth-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-right: 2px; }
+.hud-more { display: flex; flex-direction: column; gap: 8px; }
+.hud-more[hidden] { display: none; }
+body.focus3d .hud-more { display: none; }
+/* zugeklappte Karten auf „Bugün“ (Muskel/Knochen des Tages) */
+details.fold > summary { list-style: none; gap: 10px; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary .chev { transition: transform .2s; color: var(--muted); font-size: 20px; }
+details.fold[open] > summary .chev { transform: rotate(90deg); }
 .focus-exit { display: none; align-self: flex-start; }
 body.focus3d .focus-exit { display: inline-block; }
 body.focus3d .hud-top .chips, body.focus3d .hud-top .slider, body.focus3d .search-wrap { display: none; }
