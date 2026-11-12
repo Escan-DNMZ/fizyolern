@@ -9,6 +9,7 @@ import { LIGAMENTS } from './data/ligaments.js';
 import { LIG3D } from './data/lig3d.js';
 import { partLatin } from './data/boneparts.js';
 
+const HINT_H = 64; // Hinweiszeile unter dem Modell (px)
 const V = (p, sx = 1) => new THREE.Vector3(p[0] * sx, p[1], p[2]);
 
 // Passt schematische Muskel- und Gelenkpunkte an das echte BodyParts3D-Skelett an:
@@ -1137,8 +1138,23 @@ export class Anatomy3D {
   applyViewOffset() {
     const w = this.container.clientWidth, h = this.container.clientHeight;
     if (this.focus && w && h) this.camera.setViewOffset(w, h, 0, h * 0.22, w, h);
+    // Gesamtansicht: Modell unter die Bedienleiste schieben, damit sie den Kopf nicht verdeckt
+    else if (w && h && this._hud()) this.camera.setViewOffset(w, h, 0, -(this._hud() - HINT_H) / 2, w, h);
     else this.camera.clearViewOffset();
     this.camera.updateProjectionMatrix();
+  }
+
+  // Höhe der Bedienleiste über dem Modell (px)
+  _hud() {
+    const el = this.container.parentElement && this.container.parentElement.querySelector('.hud-top');
+    return el ? el.offsetHeight : 0;
+  }
+
+  // Kameraabstand, bei dem der ganze Körper zwischen Bedienleiste und Hinweiszeile passt
+  overviewDist() {
+    const h = this.container.clientHeight;
+    const free = h ? Math.max(0.4, (h - this._hud() - HINT_H) / h) : 1;
+    return Math.max(3.5, 1.9 / (2 * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2)) * free));
   }
 
   exitFocus() {
@@ -1260,7 +1276,7 @@ export class Anatomy3D {
   }
 
   resetView() {
-    this.goal = { target: new THREE.Vector3(0, 0.98, 0), pos: new THREE.Vector3(0, 0.98, 3.5) };
+    this.goal = { target: new THREE.Vector3(0, 0.98, 0), pos: new THREE.Vector3(0, 0.98, this.overviewDist()) };
   }
 
   view(name) {
@@ -1330,6 +1346,8 @@ export class Anatomy3D {
     if (this.running) return;
     this.running = true;
     this.resize();
+    // erster Start: ganzen Körper zeigen (Abstand hängt von der Höhe der Bedienleiste ab)
+    if (!this.started) { this.started = true; this.camera.position.z = this.overviewDist(); }
     const loop = () => {
       if (!this.running) return;
       if (this.goal) {

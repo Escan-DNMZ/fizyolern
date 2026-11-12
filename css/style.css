@@ -12,7 +12,7 @@
   --bg: #eef1ec;
   --card: #fafbf8;
   --text: #26302a;
-  --muted: #66736a;
+  --muted: #5b685f;
   --line: #dbe2d9;
   --accent: #4f7a63;
   --accent-soft: #dfeadf;
@@ -21,7 +21,7 @@
   --good-soft: #dfeee2;
   --bad: #b4513f;
   --bad-soft: #f6e3dd;
-  --warn: #a8741a;
+  --warn: #875c10;
   --warn-soft: #f5ead3;
   --muscle: #b8383b;
   --bone: #c9b48a;
@@ -143,9 +143,9 @@ main#view {
 .badge.good { background: var(--good-soft); color: var(--good); }
 .badge.bad { background: var(--bad-soft); color: var(--bad); }
 .badge.warn { background: var(--warn-soft); color: var(--warn); }
-.badge.muscle { background: color-mix(in srgb, var(--muscle) 18%, transparent); color: var(--muscle); }
-.badge.bone { background: color-mix(in srgb, var(--bone) 30%, transparent); color: color-mix(in srgb, var(--bone) 60%, var(--text)); }
-.badge.joint { background: color-mix(in srgb, var(--joint) 18%, transparent); color: var(--joint); }
+.badge.muscle { background: color-mix(in srgb, var(--muscle) 18%, transparent); color: color-mix(in srgb, var(--muscle) 50%, var(--text)); }
+.badge.bone { background: color-mix(in srgb, var(--bone) 30%, transparent); color: color-mix(in srgb, var(--bone) 35%, var(--text)); }
+.badge.joint { background: color-mix(in srgb, var(--joint) 18%, transparent); color: color-mix(in srgb, var(--joint) 62%, var(--text)); }
 
 /* ───── Heute ───── */
 .hero { display: flex; align-items: center; gap: 14px; }
@@ -155,8 +155,8 @@ main#view {
 .ring .fg { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset .6s; transform: rotate(-90deg); transform-origin: 50% 50%; }
 .streak { font-size: 14px; font-weight: 700; color: var(--warn); }
 .task { display: flex; align-items: center; gap: 12px; }
-.check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line); flex: none; display: grid; place-items: center; font-size: 14px; color: var(--on-accent); }
-.check.done { background: var(--good); border-color: var(--good); }
+.check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line); flex: none; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--muted); }
+.check.done { background: var(--good); border-color: var(--good); font-size: 14px; color: var(--on-accent); }
 
 .install { background: var(--warn-soft); color: var(--text); }
 
@@ -179,6 +179,7 @@ textarea {
   width: 100%; min-height: 160px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card);
   color: var(--text); font: inherit; padding: 12px; resize: vertical;
 }
+input[type=checkbox] { width: 20px; height: 20px; flex: none; accent-color: var(--accent); }
 input[type=text], input[type=search], input[type=number], input[type=password] {
   width: 100%; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--text);
   font: inherit; font-size: 16px; padding: 10px 12px;
@@ -280,8 +281,8 @@ body.focus3d .hud-top .chips, body.focus3d .hud-top .slider, body.focus3d .searc
 .lbl3d.lbl-part { background: #e8dcc2; color: #3b3326; }
 .lbl3d.lbl-via { background: #d97706; }
 .lbl3d.lbl-axis { color: #fff; }
-.badge.ligament { background: color-mix(in srgb, #0f9488 18%, transparent); color: #0f9488; }
-.badge.landmark { background: color-mix(in srgb, #9333ea 18%, transparent); color: #9333ea; }
+.badge.ligament { background: color-mix(in srgb, #0f9488 18%, transparent); color: color-mix(in srgb, #0f9488 62%, var(--text)); }
+.badge.landmark { background: color-mix(in srgb, #9333ea 18%, transparent); color: color-mix(in srgb, #9333ea 62%, var(--text)); }
 .stepper { display: flex; align-items: center; gap: 8px; margin: -2px 30px 8px 0; }
 .stepper .count { flex: 1; text-align: center; font-weight: 700; font-size: 13px; }
 .stepper .chip:disabled { opacity: .35; }
