@@ -29,6 +29,10 @@ const cases = [
   ['das Kribbeln / kribbeln', 'der Kribbeln', 'close:Artikel falsch'],  // Verbvariante darf falschen Artikel nicht retten
 ];
 const kw = [
+  // hoch-/tiefgestellte Zeichen im Schlüsselbegriff: getipptes CO2 / H+ muss zählen
+  ['Bicarbonat bindet H+ und es entsteht CO2, das ausgeatmet wird.', 'CO₂', true],
+  ['Bicarbonat bindet H+ und es entsteht CO2, das ausgeatmet wird.', 'H⁺', true],
+  ['Es entsteht Wasser und Sauerstoff.', 'CO₂', false],
   ['Der Sensor misst den Istwert, das Regelzentrum vergleicht.', 'Regelzentrum', true],
   ['das regelzentrom vergleicht', 'Regelzentrum', true],
   ['Ansatz am Trochanter major', 'Trochanter major', true],

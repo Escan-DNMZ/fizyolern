@@ -5,6 +5,8 @@
 export function fold(s, { keepParens = false } = {}) {
   return String(s || '')
     .toLowerCase()
+    // CO₂ = CO2, H⁺ = H+, HCO₃⁻ = HCO3-: hoch-/tiefgestellte Zeichen wie getippt behandeln
+    .replace(/[₀-₉]/g, (c) => String(c.charCodeAt(0) - 0x2080)).replace(/[⁰¹²³⁴-⁹]/g, (c) => '0123456789'['⁰¹²³⁴⁵⁶⁷⁸⁹'.indexOf(c)]).replace(/[⁺₊]/g, '+').replace(/[⁻₋]/g, '-')
     .replace(/\([^)]*\)/g, (m) => (keepParens ? m : ' '))  // Klammerzusätze entfernen (bei Wörtern), im Fließtext behalten
     .replace(/[()[\]]/g, keepParens ? ' ' : '')
     .replace(/[|.,!?;:„“”"'’]/g, '')
