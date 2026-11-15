@@ -15,6 +15,8 @@
   <img src="docs/screenshots/test.png" width="230" alt="Test question with explanation">
 </p>
 
+<sub>The screenshots on this page were taken before the current look (*Keten*, see [Design](#design-calm-on-purpose)). The screens work the same; colours, the Today layout and the tab bar have changed.</sub>
+
 ---
 
 ## In one minute
@@ -39,11 +41,12 @@ Explanations are in a **helper language you choose in Settings: Turkish or Engli
 
 | | |
 |---|---|
-| **21** lessons in **9** subjects | Anatomy, physiology, PT basics, PT assessment, orthopaedics/surgery, training science, massage, hygiene, psychology |
-| **830+** multiple-choice questions | 377 hand-written (337 of them from the lesson notes), plus questions generated automatically from the anatomy data |
-| **100+** open (essay) questions | Answers typed in German, checked for the required key terms |
+| **23** lessons in **9** subjects | Anatomy, physiology, PT basics, PT assessment, orthopaedics/surgery, training science, massage, hygiene, psychology |
+| **860+** multiple-choice questions | Hand-written from the lesson notes, plus questions generated automatically from the anatomy data |
+| **110** open (essay) questions | Answers typed in German, checked for the required key terms |
 | **56** muscles, **23** bone groups, **12** joints | Each with origin, insertion, innervation and function, or range of motion, in German and Latin with Turkish and English explanations |
-| **19** bony landmarks in 3D | SIAS, Tuber ischiadicum, Trochanter major and others, each linked to the muscles attached there |
+| **100** bony landmarks in 3D | SIAS, Tuber ischiadicum, Trochanter major and many more, each placed on the real bone model and linked to the muscles attached there |
+| **30** ligaments in 3D | Hip, knee, ankle, shoulder and elbow ligaments drawn as bands from origin to insertion; every end is checked against the bone model by an automatic test |
 | **600+** vocabulary items | Basic medical vocabulary, lesson terms, and 55 gym exercises linked to the muscles they train |
 | **7** patient cases | Practice for the practical exam: history → examination → assessment form → therapy plan |
 | **3** oral exam subjects | Anatomie, Physiologie and Spezielle Krankheitslehre with the official time limits, questions read aloud in German |
@@ -101,7 +104,11 @@ The project shows how someone with a clear idea and deep knowledge of a field ca
 
 ### 1. A plan for every day (*Bugün* = Today)
 - Today's and tomorrow's classes, read from my weekly timetable in Notion. If several weeks are planned ahead, the right one is picked by date.
-- A checklist with a progress ring and a streak: morning test for today's subjects, mistake cards, homework cards, 5 words of the day, the muscle and bone of the day.
+- **One thing at a time.** The screen greets you, shows a progress bar and the streak, and then exactly one task as *Up next* (a large card). Below it: *Later* (the other required tasks), *If you have time* (optional ones) and *Done*.
+- **Required and optional tasks.** Required: exam topic test, homework cards, mistake cards, morning test for today's subjects, the 5 words of the day (morning and way home), the muscle and the bone of the day. Optional: "find the point" in 3D, extra card reviews, an essay question. The progress bar counts only the required ones, so the day's goal stays reachable. Without a morning test (no weekly plan), the 10 quiz questions are required instead.
+- The muscle and the bone of the day are folded cards: tap to open the details.
+- **Weak topics:** the three topics with the lowest accuracy, each with a one-tap test.
+- **Learning-goal checklist** (optional, from Notion pages titled *Checkliste – <subject>*): the goals covered in class, with a self-rating (😊 🙂 😕 😵). The morning test uses only goals that were already covered.
 - The bone/joint of the day also lists its **important ligaments** (e.g. femur → Lig. iliofemorale, cruciate ligaments) with function and a word-root hint, plus one **ligament question of the day** (multiple choice, counts like a test answer), and a *🧊 see in 3D* link for each ligament. Data: `js/data/ligaments.js`.
 - **Way-home mode** (opens when the day's last class ends, read from the weekly plan; no classes that day = no way-home mode), steps that can each be skipped with one tap:
   1. today's wrong answers;
@@ -120,6 +127,7 @@ The project shows how someone with a clear idea and deep knowledge of a field ca
 - **Way home asks today's new questions first.** Questions you added to Notion today (e.g. during class) come first in the way-home mini quiz, newest and unasked first, up to 10; their lesson is read first too. Fewer than 5 → filled up with questions from the lesson you just read.
 - **Varied formats.** Single answer, "which statement is false", matching, ordering, case studies and numbers.
 - **Generated anatomy questions.** "Where does M. … insert?", "Which nerve supplies …?". The wrong options come from the same body region and have similar length, so the answer cannot be guessed from the layout. The explanation names the muscle each wrong option belongs to.
+- **Grouped categories.** The start screen lists *Mixed*, today's subjects, the other subjects, and the anatomy topics under their own headings, so the right test is one tap away.
 - **3D button.** When a question mentions anatomy, a button after the answer opens every structure it names in the 3D model.
 
 ### 3. Practising for the state exam
@@ -167,13 +175,13 @@ The German state exam has a written, an oral and a practical part, and each must
   <img src="docs/screenshots/3d-find-the-point.png" width="230" alt="Find-the-point drill on the pelvis">
 </p>
 
-- **Real anatomical models** of the skeleton and 56 muscles from the BodyParts3D research database. 4 muscles missing from the database are reconstructed from skeletal landmarks. Rotate with one finger, zoom with two.
+- **Real anatomical models** of the skeleton and 56 muscles from the BodyParts3D research database. 4 muscles missing from the database are reconstructed from skeletal landmarks; M. rectus abdominis is modelled with its muscle bellies and the three Intersectiones tendineae. Rotate with one finger, zoom with two.
 - **Focus mode** for one muscle at a time:
   - its parts in different colours (e.g. the three parts of the deltoid);
   - origin and insertion marked on the bone with the landmark name ("Ursprung: Spina ischiadica");
   - the deeper muscles underneath shown semi-transparent.
-- **Layers:** superficial / middle / deep.
-- **Bony landmarks:** 19 points on the pelvis and leg. Tap one to see which muscles start, end or change direction there.
+- **Layers:** superficial / middle / deep, plus muscle opacity; both sit behind one *Layers* button so the model keeps most of the screen.
+- **Bony landmarks:** 100 points on the real bones. Tap one to see which muscles start, end or change direction there.
 - **Ligaments in 3D:** the important ligaments are drawn as small bands from origin to insertion (e.g. the Y-shaped Lig. iliofemorale, the ring of the Lig. anulare radii). The Lig. deltoideum is split into its four parts (Pars tibionavicularis, tibiocalcanea, tibiotalaris anterior/posterior), each with its own name and card; the Pfannenband (Lig. calcaneonaviculare plantare) is included too. A joint shows all its ligaments with names; tap one (or *🧊 see in 3D* on the bone of the day) to see it alone in orange, with the bones semi-transparent so the cruciate ligaments inside the knee stay visible. Data: `js/data/lig3d.js`. **Accuracy test:** `tools/test_lig_anatomie.mjs` reads the real bone model and checks every ligament end: it must lie on the surface of the right bone and match textbook rules (e.g. VKB from the lateral femoral condyle to the front of the tibial plateau, Lig. collaterale tibiale 4–10 cm below the joint line, Lig. conoideum medial and behind the Lig. trapezoideum). A new ligament without a rule fails the test.
 - **Single bones:** in groups like the foot, hand or spine, tapping a bone shows its own name (e.g. *Os cuneiforme intermedium*, *Os metatarsi III*). The bone's focus view labels each kind of bone once (only *Os metatarsi I*, not all five).
 - **Joint axes:** transverse, sagittal and longitudinal axes drawn through a joint (left picture), each with the movement that happens around it.
@@ -196,6 +204,20 @@ Much of the first year is homework like *"learn the pelvic landmarks and the hip
 ### 9. Lesson notes and AI tutor report
 - Each lesson has key sentences in German with a Turkish translation, a test, essay questions and vocabulary, plus a link to the original note.
 - **Status report.** One tap turns the day's progress into a message for an AI tutor. The message gives context, the study streak, cards (reviews vs. new), weak subjects, the most frequent mistakes in readable form, and homework. The tutor can then explain weak topics and set a mini exam.
+
+---
+
+## Design: calm on purpose
+
+The app is opened every day, often tired and on the way home. The current look, *Keten* (linen), is built for that:
+
+- a warm linen background with cream cards, and **one** accent colour, sage green; no neon, no gradients;
+- a warm dark theme (brown-grey, like a room in lamp light) that follows the phone's light/dark setting;
+- one clearly marked next step on the Today screen instead of a long list;
+- a floating, rounded tab bar with a soft field behind the active tab;
+- the **Atkinson Hyperlegible** font, large tap targets (≥ 40 px) and text contrast of at least 4.5 : 1 in both themes, checked screen by screen.
+
+Colours in the 3D model (muscle red, bone, ligament, origin green / insertion blue) are kept, because they carry meaning.
 
 ---
 
@@ -411,10 +433,9 @@ The app finds the pages by title. Titles work in **English, German or Turkish**.
 
 ```bash
 python -m http.server 8765          # then open http://localhost:8765
-node tools/test_check.mjs           # answer checking
-node tools/test_structures.mjs      # term detection for the 3D buttons
-node tools/test_reverse.mjs         # reverse cards (muscles by landmark / nerve)
+for t in tools/test_*.mjs; do node $t; done   # all 18 test files (answer check, morning test, mistakes, ligaments on the bone model …)
 node tools/audit_content.mjs        # content audit of all questions and cards
+python tools/check_sw.py            # every file the app imports is in the offline cache
 python tools/bump_sw.py             # after any change, so phones load the new version
 ```
 
@@ -428,7 +449,8 @@ python tools/bump_sw.py             # after any change, so phones load the new v
 | `js/notion.js`, `js/private.js` | Read-only Notion sync, on-device private data |
 | `js/exam.js`, `js/report.js` | Mock exam, daily status report |
 | `js/anatomy3d.js` | 3D viewer: focus mode, landmarks, axes, step-by-step, "find the point" |
-| `js/data/` | Anatomy, landmarks, axes, lessons, vocabulary, questions, gym exercises |
+| `js/data/` | Anatomy, landmarks, ligaments (`ligaments.js`, `lig3d.js`), axes, lessons, vocabulary, questions, gym exercises |
+| `css/style.css` | The whole look: colour tokens for the light and dark theme at the top |
 | `tools/` | Build scripts (lessons, 3D models, icons) and checks |
 </details>
 
@@ -444,6 +466,8 @@ python tools/bump_sw.py             # after any change, so phones load the new v
 | Dönüş yolu | Way home (afternoon review) |
 | Ödevlerim · Hatalarım | My homework · My mistakes |
 | Günün kası / kemiği | Muscle / bone of the day |
+| Sıradaki · Sonra · Vaktin kalırsa · Tamamlanan | Up next · Later · If you have time · Done |
+| Sınav | Exam (tab that appears before an exam) |
 | Noktayı bul | Find the point |
 | Deneme sınavı | Mock exam |
 | Sözlü sınav | Oral exam |

@@ -18,6 +18,7 @@ Never ask the user to paste their Notion secret (ntn_…) into the chat, and nev
    - In Notion, open the parent page of the study pages → ••• → Connections → add the integration.
    - In the app: Settings → Notion connection → paste the key → Connect and update.
    - The pages must have the expected titles and formats. The ready-to-paste template is at https://github.com/Escan-DNMZ/fizyolern/blob/main/docs/notion-template.md
+   - The first screen ("Bugün"/Today) shows one task as "Sıradaki / Up next", then "Sonra / Later" (required), "Vaktin kalırsa / If you have time" (optional) and "Tamamlanan / Done". The progress bar counts only required tasks.
 5. Backup: Settings → Download backup (a JSON file). Restore it on the new device with Settings → Restore backup, then paste the Notion key again (the key is not part of the backup).
 
 ## If the user wants their slides or timetable turned into Notion pages
