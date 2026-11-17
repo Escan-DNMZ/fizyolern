@@ -1783,7 +1783,7 @@ function setup3DControls() {
     e.currentTarget.classList.toggle('on', on);
     viewer.setIsolated(on);
   });
-  $('#moreBtn').addEventListener('click', (e) => {
+  $('#layersBtn').addEventListener('click', (e) => {
     const on = !e.currentTarget.classList.contains('on');
     e.currentTarget.classList.toggle('on', on);
     $('#hudMore').hidden = !on;
@@ -1848,7 +1848,7 @@ function showSheet(id) {
       <a class="btn" href="#/ders/${s.id}">${t('btn.openLesson')}</a>
     </div>`;
   $('.close', sheet).addEventListener('click', () => viewer.select(null));
-  $('#moreBtn').addEventListener('click', (e) => {
+  $('#moreBtn', sheet).addEventListener('click', () => {
     startFocus(s.id); // Kas: parçalar + Ursprung/Ansatz · Kemik: kemik noktaları · Eklem: hareket eksenleri
   });
 }
